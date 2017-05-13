@@ -2,6 +2,7 @@ from tkinter import *
 import random
 import time
 import numpy as np
+import csv
 
 class Ball:
 
@@ -73,7 +74,7 @@ class Ball:
             self.convertloc += float(self.x)
         elif self.leftorright != 0 :
             self.convertloc += self.leftorright * abs(float(self.x))
-        print('convertloc', self.convertloc)
+        # print('convertloc', self.convertloc)
         
         if pos[1] <= 0:  # 공의 남쪽이 가리키는 좌표가 0보다 작아진다면 공이 위쪽 화면 밖으로 나가버리므로
 
@@ -88,18 +89,18 @@ class Ball:
             self.x = 3  # 공을 오른쪽으로 돌린다.
             if self.leftorright == 0:
                 self.leftorright = -1
-                print('left',self.leftorright)
-                print('pos',pos[0])
-                print('convert',self.convertloc)
+                # print('left',self.leftorright)
+                # print('pos',pos[0])
+                # print('convert',self.convertloc)
 
         if pos[2] >= self.canvas_width:  # 공의 동쪽이 가리키는 좌표가 공의 넓이보다 크다면 공이 화면 오른쪽으로 나가버림
 
             self.x = -3  # 공을 왼쪽으로 돌린다.
             if self.leftorright == 0:
                 self.leftorright = 1
-                print('left',self.leftorright)
-                print('pos',pos[0])
-                print('convert',self.convertloc)
+                # print('left',self.leftorright)
+                # print('pos',pos[0])
+                # print('convert',self.convertloc)
         # if self.startloc(pos) != None:
         #     self.ball_start.append(self.startloc(pos))
 
@@ -180,24 +181,57 @@ class machine_learning(object):
         return loss
 
     @staticmethod
-    def gradient_descent(x, alpha=0.000003, descent_cnt=10000):
+    def gradient_descent(x, alpha=0.00000001, descent_cnt=100000):
         X = x[:, 0:4]
         Y = x[:, 4]
         M = len(x)
+        minloss =10**9
         WEIGHT = np.zeros((4,1))
         loss_history = np.zeros((descent_cnt, 1))
 
         for cnt in range(descent_cnt):
+            predictions = X.dot(WEIGHT).flatten()
 
-            for idx in range(M):
-                dtheta = np.sum((X.dot(WEIGHT) - Y) * X[:, idx]) / len(Y)
+            errors_x1 = (predictions - Y) * X[:, 0]
+            errors_x2 = (predictions - Y) * X[:, 1]
+            errors_x3 = (predictions - Y) * X[:, 2]
+            errors_w0 = (predictions - Y) * X[:, 3]
 
-                WEIGHT[idx][0] = WEIGHT[idx][0] - alpha * dtheta
+            WEIGHT[0][0] = WEIGHT[0][0] - alpha * (1.0 / M) * errors_x1.sum()
+            WEIGHT[1][0] = WEIGHT[1][0] - alpha * (1.0 / M) * errors_x2.sum()
+            WEIGHT[2][0] = WEIGHT[2][0] - alpha * (1.0 / M) * errors_x3.sum()
+            WEIGHT[3][0] = WEIGHT[3][0] - alpha * (1.0 / M) * errors_w0.sum()
 
+            # for idx in range(M):
+            #     dtheta = np.sum((X.dot(WEIGHT) - Y) * X[:, idx]) / len(x)
+            #     WEIGHT[idx][0] = WEIGHT[idx][0] - alpha * dtheta
             loss_history[cnt, 0] = machine_learning.Loss(X, Y, WEIGHT)
 
-        return WEIGHT, loss_history
+            if minloss >= loss_history[cnt,0]:
+                minloss = loss_history[cnt,0]
+            elif minloss < loss_history[cnt,0]:
+                break
+        return WEIGHT, loss_history, minloss
 
+def saveCSV(loc='d:\python\data\pingpong.csv'):
+    if not loc is None:
+        f = open((loc), 'a')
+        w = csv.writer(f, delimiter=',', lineterminator='\n')
+
+        for key in ball_loc_save:
+            w.writerow(key)
+        f.close()
+
+#
+# def readCSV(loc ='d:\python\data\pingpong.csv' ):  # 파일로 저장된 가중치값을 읽어들일 때 사용하는 메소드
+#     if loc != 'None':
+#         try:
+#             file = open(loc, 'r')  # 파일은 __main__절에서 다음 형식으로 저장됨.
+#
+#             values_list = csv.reader(file)
+#             return values_list
+#         except FileNotFoundError:
+#             return None
 
 tk = Tk()  # tk 를 인스턴스화 한다.
 
@@ -226,7 +260,7 @@ start = False
 
 # 공을 약간 움직이고 새로운 위치로 화면을 다시 그리며, 잠깐 잠들었다가 다시 시작해 ! "
 
-for i in range(10000):
+for i in range(1):
 
     if ball.hit_bottom == False:
 
@@ -235,10 +269,10 @@ for i in range(10000):
         paddle.move(paddle.x,0)
 
         paddle.draw()
-        print('start', len(ball.ball_start))
-        print(ball.ball_start)
-        print('end', len(ball.ball_end))
-        print(ball.ball_end)
+        # print('start', len(ball.ball_start))
+        # print(ball.ball_start)
+        # print('end', len(ball.ball_end))
+        # print(ball.ball_end)
     tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
 
     tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
@@ -251,8 +285,15 @@ for idx_start in range(0,len(ball.ball_start)-1):
         ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
     except IndexError:
         continue
-print(ball_loc_save)
+# print(ball_loc_save)
+# saveCSV()
 
-machine_learning.gradient_descent(np.array(ball_loc_save))
-print(machine_learning.gradient_descent(np.array(ball_loc_save)))
+pingpong = [data for data in csv.reader(open('d:\python\data\pingpong.csv', 'r'))]
+for pp in range(len(pingpong)):
+    for p in range(5):
+        pingpong[pp][p] = float(pingpong[pp][p])
+
+
+machine_learning.gradient_descent(np.array(pingpong))
+print(machine_learning.gradient_descent(np.array(pingpong)))
 
