@@ -3,7 +3,7 @@ import random
 import time
 import numpy as np
 import csv
-
+from copy import deepcopy
 class Ball:
 
     def __init__(self, canvas, paddle, color, save=False):
@@ -181,7 +181,7 @@ class machine_learning(object):
         return loss
 
     @staticmethod
-    def gradient_descent(x, alpha=0.00000001, descent_cnt=100000):
+    def gradient_descent(x, alpha=0.0000001, descent_cnt=10000):
         X = x[:, 0:4]
         Y = x[:, 4]
         M = len(x)
@@ -197,6 +197,7 @@ class machine_learning(object):
             errors_x3 = (predictions - Y) * X[:, 2]
             errors_w0 = (predictions - Y) * X[:, 3]
 
+            WEIGHT_backup = deepcopy(WEIGHT)
             WEIGHT[0][0] = WEIGHT[0][0] - alpha * (1.0 / M) * errors_x1.sum()
             WEIGHT[1][0] = WEIGHT[1][0] - alpha * (1.0 / M) * errors_x2.sum()
             WEIGHT[2][0] = WEIGHT[2][0] - alpha * (1.0 / M) * errors_x3.sum()
@@ -209,8 +210,10 @@ class machine_learning(object):
 
             if minloss >= loss_history[cnt,0]:
                 minloss = loss_history[cnt,0]
+                alpha *= 1.1
             elif minloss < loss_history[cnt,0]:
-                break
+                alpha *= 0.5
+                WEIGHT = WEIGHT_backup
         return WEIGHT, loss_history, minloss
 
 def saveCSV(loc='d:\python\data\pingpong.csv'):
@@ -222,6 +225,16 @@ def saveCSV(loc='d:\python\data\pingpong.csv'):
             w.writerow(key)
         f.close()
 
+def normalize(x):
+    n = len(x[0])
+    for i in range(n):
+        mean = np.mean(x[:, i])
+        std = np.std(x[:, i])
+        if std ==0:
+            x[:, i] = 0
+        else:
+            x[:, i] = (x[:, i] - mean) / std
+    return x
 #
 # def readCSV(loc ='d:\python\data\pingpong.csv' ):  # 파일로 저장된 가중치값을 읽어들일 때 사용하는 메소드
 #     if loc != 'None':
@@ -292,8 +305,13 @@ pingpong = [data for data in csv.reader(open('d:\python\data\pingpong.csv', 'r')
 for pp in range(len(pingpong)):
     for p in range(5):
         pingpong[pp][p] = float(pingpong[pp][p])
+pingpong= np.array(pingpong)
+weight = machine_learning.gradient_descent(pingpong)[0]
+print(weight)
 
-
-machine_learning.gradient_descent(np.array(pingpong))
-print(machine_learning.gradient_descent(np.array(pingpong)))
+def prediction(a,b,c,d,weight):
+    return weight[0]*a +weight[1]*b +weight[2] *c + weight[3] *d
+print(prediction(388,2,-3,1,weight))
+print(prediction(57,1,-3,1,weight))
+print(prediction(249,2,-3,1,weight))
 
