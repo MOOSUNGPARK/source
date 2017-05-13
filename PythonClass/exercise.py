@@ -18,7 +18,8 @@ class Ball:
         self.save = save
         self.ball_start = []
         self.ball_end = []
-        self.convertloc = 0
+        self.convertloc = self.canvas.coords(self.id)[0]
+        self.leftorright = 0
 
     def hit_paddle(self, pos):  # 패들에 공이 튀기게 하는 함수
         paddle_pos = self.canvas.coords(self.paddle.id)
@@ -34,10 +35,28 @@ class Ball:
     #     paddle_pos = self.canvas.coords(self.paddle.id)
     #     if 290>pos[1] >=285 and pos[3] <= paddle_pos[3] and self.y < 0:  # 공이 패들 통과할 때의 좌표
     #         return [pos[0], self.x, self.y]
+
     def endloc(self,pos):
         paddle_pos = self.canvas.coords(self.paddle.id)
         if 290 > pos[1] >= 285 and pos[3] <= paddle_pos[3] and self.y > 0:  # 공이 패들 통과할 때의 좌표
             return pos[0]
+    def convertendloc(self,convertlock):
+        cnt = 0
+        if convertlock in range(486) :
+            return convertlock
+        elif convertlock <0 :
+            while True:
+                if cnt % 2 == 0 and cnt * -485 - convertlock in range(486):
+                    return cnt * -485 - convertlock
+
+                elif cnt % 2 == 1 and (cnt+1) * 485 + convertlock in range(486):
+                    return (cnt+1) * 485 + convertlock
+                cnt += 1
+        elif convertlock > 485 :
+            while True:
+                cnt += 1
+                if cnt * 485 - convertlock in range(486) :
+                    return cnt * 485 - convertlock
 
 
     def draw(self):
@@ -47,7 +66,11 @@ class Ball:
         pos = self.canvas.coords(self.id)  # 볼의 현재 좌표를 출력해준다. 공 좌표( 서쪽(0) , 남쪽(1) , 동쪽(2), 북쪽(3) )
         # [ 255,29,270,44]
         paddle_pos = self.canvas.coords(self.paddle.id)
-        self.convertloc = pos[0] + float(self.x)
+        if self.leftorright == 0 :
+            self.convertloc += float(self.x)
+        elif self.leftorright != 0 :
+            self.convertloc += self.leftorright * abs(float(self.x))
+        print('convertloc', self.convertloc)
         
         if pos[1] <= 0:  # 공의 남쪽이 가리키는 좌표가 0보다 작아진다면 공이 위쪽 화면 밖으로 나가버리므로
 
@@ -60,14 +83,23 @@ class Ball:
         if pos[0] <= 0:  # 공의 서쪽이 가리키는 좌표가 0보다 작으면 공이 화면 왼쪽으로 나가버리므로
 
             self.x = 3  # 공을 오른쪽으로 돌린다.
+            if self.leftorright == 0:
+                self.leftorright = -1
+                print('left',self.leftorright)
+                print('pos',pos[0])
+                print('convert',self.convertloc)
 
         if pos[2] >= self.canvas_width:  # 공의 동쪽이 가리키는 좌표가 공의 넓이보다 크다면 공이 화면 오른쪽으로 나가버림
 
             self.x = -3  # 공을 왼쪽으로 돌린다.
-
+            if self.leftorright == 0:
+                self.leftorright = 1
+                print('left',self.leftorright)
+                print('pos',pos[0])
+                print('convert',self.convertloc)
         # if self.startloc(pos) != None:
         #     self.ball_start.append(self.startloc(pos))
-
+        #
         if self.endloc(pos) != None:
             self.ball_end.append(self.endloc(pos))
 
@@ -76,6 +108,10 @@ class Ball:
             self.x = random.choice(range(-3,4))
             self.y = -3  # 공을 위로 올린다.
             self.ball_start.append([pos[0], self.x, self.y])
+            self.ball_end.append(self.convertloc)
+            self.ball_end.append(self.convertendloc((self.convertloc)))
+            self.convertloc = pos[0]
+            self.leftorright = 0
 
 class Paddle:
 
