@@ -1,6 +1,7 @@
 from tkinter import *
 import random
 import time
+import numpy as np
 
 class Ball:
 
@@ -54,9 +55,11 @@ class Ball:
                 cnt += 1
         elif convertlock > 485 :
             while True:
+                if cnt % 2 == 0 and  (cnt+2) * 485 - convertlock in range(486):
+                    return (cnt+2) * 485 - convertlock
+                elif cnt % 2 == 1 and (cnt+1) * -485 + convertlock in range(486):
+                    return (cnt+1) * -485 + convertlock
                 cnt += 1
-                if cnt * 485 - convertlock in range(486) :
-                    return cnt * 485 - convertlock
 
 
     def draw(self):
@@ -99,17 +102,17 @@ class Ball:
                 print('convert',self.convertloc)
         # if self.startloc(pos) != None:
         #     self.ball_start.append(self.startloc(pos))
-        #
-        if self.endloc(pos) != None:
-            self.ball_end.append(self.endloc(pos))
+
+        # if self.endloc(pos) != None:
+        #     self.ball_end.append(self.endloc(pos))
 
 
         if self.hit_paddle(pos) == True:  # 패들 판에 부딪히면 위로 튕겨올라가게
             self.x = random.choice(range(-3,4))
             self.y = -3  # 공을 위로 올린다.
-            self.ball_start.append([pos[0], self.x, self.y])
+            self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
             self.ball_end.append(self.convertloc)
-            self.ball_end.append(self.convertendloc((self.convertloc)))
+            # self.ball_end.append(self.convertendloc((self.convertloc)))
             self.convertloc = pos[0]
             self.leftorright = 0
 
@@ -162,6 +165,40 @@ class Paddle:
         self.x = x
 
 
+class machine_learning(object):
+    def __init__(self, ball_loc_save, alpha=0.01):
+        self.ball_loc_save = ball_loc_save
+        self.x = ball_loc_save[:,0:4]
+        self.y = ball_loc_save[:,4]
+        self.m = len(self.x)
+        self.weight = np.zeros((4, 1))
+        self.alpha = alpha
+
+    @staticmethod
+    def Loss(x, y, weight):
+        loss = np.sum((x.dot(weight) - y) ** 2) / (2 * len(x))
+        return loss
+
+    @staticmethod
+    def gradient_descent(x, alpha=0.000003, descent_cnt=10000):
+        X = x[:, 0:4]
+        Y = x[:, 4]
+        M = len(x)
+        WEIGHT = np.zeros((4,1))
+        loss_history = np.zeros((descent_cnt, 1))
+
+        for cnt in range(descent_cnt):
+
+            for idx in range(M):
+                dtheta = np.sum((X.dot(WEIGHT) - Y) * X[:, idx]) / len(Y)
+
+                WEIGHT[idx][0] = WEIGHT[idx][0] - alpha * dtheta
+
+            loss_history[cnt, 0] = machine_learning.Loss(X, Y, WEIGHT)
+
+        return WEIGHT, loss_history
+
+
 tk = Tk()  # tk 를 인스턴스화 한다.
 
 tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
@@ -189,7 +226,7 @@ start = False
 
 # 공을 약간 움직이고 새로운 위치로 화면을 다시 그리며, 잠깐 잠들었다가 다시 시작해 ! "
 
-for i in range(3000):
+for i in range(10000):
 
     if ball.hit_bottom == False:
 
@@ -206,12 +243,16 @@ for i in range(3000):
 
     tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
 
-    time.sleep(0.01)  # 무한 루프중에 100분의 1초마다 잠들어라 !
+    # time.sleep(0.01)  # 무한 루프중에 100분의 1초마다 잠들어라 !
 ball_loc_save = []
 
-# for idx_start in range(0,len(ball.ball_start)):
-#     ball_loc_save.append([ball.ball_end[idx_start+1], ball.ball_start[idx_start]])
-#
-#
-# print(ball_loc_save)
+for idx_start in range(0,len(ball.ball_start)-1):
+    try:
+        ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
+    except IndexError:
+        continue
+print(ball_loc_save)
+
+machine_learning.gradient_descent(np.array(ball_loc_save))
+print(machine_learning.gradient_descent(np.array(ball_loc_save)))
 
