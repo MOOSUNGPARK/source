@@ -10,7 +10,7 @@ class Ball:
         self.paddle = paddle
         self.id = canvas.create_oval(10, 10, 25, 25, fill=color)  # 공 크기 및 색깔
         self.canvas.move(self.id, 245, 100)  # 공을 캔버스 중앙으로 이동
-        self.x = random.sample(range(-3,4),1)  # 처음 공이 패들에서 움직일때 왼쪽으로 올라갈지 오른쪽으로 올라갈지 랜덤으로 결정되는 부분
+        self.x = random.choice(range(-3,4))  # 처음 공이 패들에서 움직일때 왼쪽으로 올라갈지 오른쪽으로 올라갈지 랜덤으로 결정되는 부분
         self.y = -3  # 처음 공이 패들에서 움직일때 위로 올라가는 속도
         self.canvas_height = self.canvas.winfo_height()  #캔버스의 현재 높이를 반환한다.(공이 화면에서 사라지지 않기위해)
         self.canvas_width = self.canvas.winfo_width()  # 캔버스의 현재 넓이를 반환한다.(공이 화면에서 사라지지 않기위해)
@@ -18,6 +18,7 @@ class Ball:
         self.save = save
         self.ball_start = []
         self.ball_end = []
+        self.convertloc = 0
 
     def hit_paddle(self, pos):  # 패들에 공이 튀기게 하는 함수
         paddle_pos = self.canvas.coords(self.paddle.id)
@@ -46,7 +47,8 @@ class Ball:
         pos = self.canvas.coords(self.id)  # 볼의 현재 좌표를 출력해준다. 공 좌표( 서쪽(0) , 남쪽(1) , 동쪽(2), 북쪽(3) )
         # [ 255,29,270,44]
         paddle_pos = self.canvas.coords(self.paddle.id)
-
+        self.convertloc = pos[0] + float(self.x)
+        
         if pos[1] <= 0:  # 공의 남쪽이 가리키는 좌표가 0보다 작아진다면 공이 위쪽 화면 밖으로 나가버리므로
 
             self.y = 3  # 공을 아래로 떨어뜨린다. (공이 위로 올라갈수로 y 의 값이 작아지므로 아래로 내리려면 다시 양수로)
