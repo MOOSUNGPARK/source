@@ -4,7 +4,7 @@ import time
 
 class Ball:
 
-    def __init__(self, canvas, paddle, color):
+    def __init__(self, canvas, paddle, color, save=False):
 
         self.canvas = canvas
         self.paddle = paddle
@@ -15,14 +15,29 @@ class Ball:
         self.canvas_height = self.canvas.winfo_height()  #캔버스의 현재 높이를 반환한다.(공이 화면에서 사라지지 않기위해)
         self.canvas_width = self.canvas.winfo_width()  # 캔버스의 현재 넓이를 반환한다.(공이 화면에서 사라지지 않기위해)
         self.hit_bottom = False
+        self.save = save
+        self.ball_start = []
+        self.ball_end = []
 
     def hit_paddle(self, pos):  # 패들에 공이 튀기게 하는 함수
-
         paddle_pos = self.canvas.coords(self.paddle.id)
-        if pos[2] >= paddle_pos[0] and pos[0] <= paddle_pos[2]:  # 공이 패들에 내려오기 직전 좌표
+        if self.save ==True :
             if pos[3] >= paddle_pos[1] and pos[3] <= paddle_pos[3]:  # 공이 패들에 닿았을때 좌표
                 return True
+        elif self.save ==False:
+            if pos[2] >= paddle_pos[0] and pos[0] <= paddle_pos[2]:  # 공이 패들에 내려오기 직전 좌표
+                if pos[3] >= paddle_pos[1] and pos[3] <= paddle_pos[3]:  # 공이 패들에 닿았을때 좌표
+                    return True
         return False
+    # def startloc(self, pos):
+    #     paddle_pos = self.canvas.coords(self.paddle.id)
+    #     if 290>pos[1] >=285 and pos[3] <= paddle_pos[3] and self.y < 0:  # 공이 패들 통과할 때의 좌표
+    #         return [pos[0], self.x, self.y]
+    def endloc(self,pos):
+        paddle_pos = self.canvas.coords(self.paddle.id)
+        if 290 > pos[1] >= 285 and pos[3] <= paddle_pos[3] and self.y > 0:  # 공이 패들 통과할 때의 좌표
+            return pos[0]
+
 
     def draw(self):
 
@@ -30,6 +45,7 @@ class Ball:
         # 공이 화면 밖으로 나가지 않게 해준다
         pos = self.canvas.coords(self.id)  # 볼의 현재 좌표를 출력해준다. 공 좌표( 서쪽(0) , 남쪽(1) , 동쪽(2), 북쪽(3) )
         # [ 255,29,270,44]
+        paddle_pos = self.canvas.coords(self.paddle.id)
 
         if pos[1] <= 0:  # 공의 남쪽이 가리키는 좌표가 0보다 작아진다면 공이 위쪽 화면 밖으로 나가버리므로
 
@@ -47,10 +63,17 @@ class Ball:
 
             self.x = -3  # 공을 왼쪽으로 돌린다.
 
-        if self.hit_paddle(pos) == True:  # 패들 판에 부딪히면 위로 튕겨올라가게
-            self.x = random.sample(range(-3,4),1)
-            self.y = -3  # 공을 위로 올린다.
+        # if self.startloc(pos) != None:
+        #     self.ball_start.append(self.startloc(pos))
 
+        if self.endloc(pos) != None:
+            self.ball_end.append(self.endloc(pos))
+
+
+        if self.hit_paddle(pos) == True:  # 패들 판에 부딪히면 위로 튕겨올라가게
+            self.x = random.choice(range(-3,4))
+            self.y = -3  # 공을 위로 올린다.
+            self.ball_start.append([pos[0], self.x, self.y])
 
 class Paddle:
 
@@ -122,29 +145,35 @@ tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신�
 
 paddle = Paddle(canvas, 'blue')
 
-ball = Ball(canvas, paddle, 'red')
+ball = Ball(canvas, paddle, 'red', save=True)
 
 start = False
 
 # 공을 약간 움직이고 새로운 위치로 화면을 다시 그리며, 잠깐 잠들었다가 다시 시작해 ! "
 
-while 1:
+for i in range(3000):
 
     if ball.hit_bottom == False:
 
         ball.draw()
 
-        y =300
-
-
         paddle.move(paddle.x,0)
 
         paddle.draw()
-
+        print('start', len(ball.ball_start))
+        print(ball.ball_start)
+        print('end', len(ball.ball_end))
+        print(ball.ball_end)
     tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
 
     tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
 
     time.sleep(0.01)  # 무한 루프중에 100분의 1초마다 잠들어라 !
+ball_loc_save = []
 
+# for idx_start in range(0,len(ball.ball_start)):
+#     ball_loc_save.append([ball.ball_end[idx_start+1], ball.ball_start[idx_start]])
+#
+#
+# print(ball_loc_save)
 
