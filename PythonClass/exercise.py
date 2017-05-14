@@ -153,16 +153,22 @@ class Paddle:
                 elif cnt % 2 == 1 and (cnt+1) * -485 + convertloc in range(486):
                     return (cnt+1) * -485 + convertloc
                 cnt += 1
-    def predict_move(self,loc):
+    def predict_move(self,convertloc):
+        loc = self.convertendloc(convertloc)
         pos = self.canvas.coords(self.id)
-        while  (pos[0]+pos[2])*0.5 >loc-1 or (pos[0]+pos[2])*0.5 <loc+1:
+        # if (pos[0]+pos[2])*0.5 >loc-4 or (pos[0]+pos[2])*0.5 <loc+4:
+        if round((pos[0] + pos[2]) * 0.5) in range(loc-4, loc +5):
+            self.x=0
+            print('stop')
+            return
+        else:
             if pos[0] < loc :
                 self.x = 3
+                print('+3')
             elif pos[0] > loc :
-                self.x = 3
-            else :
-                self.x = 0
-
+                self.x = -3
+                print('-3')
+        return self.x, 'loc',loc, 'pos',round((pos[0]+pos[2])*0.5)
 
     def turn_left(self, evt):  # 패들의 방향을 전환하는 함수
 
@@ -266,59 +272,59 @@ def normalize(x, idx=range(4)):
 #         except FileNotFoundError:
 #             return None
 
-tk = Tk()  # tk 를 인스턴스화 한다.
-
-tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
-
-tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.
-
-tk.wm_attributes("-topmost", 1)  # 다른 모든 창들 앞에 캔버스를 가진 창이 위치할것을 tkinter 에게 알려준다.
-
-canvas = Canvas(tk, width=500, height=400, bd=0, highlightthickness=0)
+# tk = Tk()  # tk 를 인스턴스화 한다.
+#
+# tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
+#
+# tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.
+#
+# tk.wm_attributes("-topmost", 1)  # 다른 모든 창들 앞에 캔버스를 가진 창이 위치할것을 tkinter 에게 알려준다.
+#
+# canvas = Canvas(tk, width=500, height=400, bd=0, highlightthickness=0)
 
 # bg=0,highlightthickness=0 은 캔버스 외곽에 둘러싼
 
 # 외곽선이 없도록 하는것이다. (게임화면이 좀더 좋게)
 
 
-canvas.pack()  # 앞의 코드에서 전달된 폭과 높이는 매개변수에 따라 크기를 맞추라고 캔버스에에 말해준다.
-
-tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
-
-paddle = Paddle(canvas, 'blue')
-
-ball = Ball(canvas, paddle, 'red', save=True)
-
-start = False
+# canvas.pack()  # 앞의 코드에서 전달된 폭과 높이는 매개변수에 따라 크기를 맞추라고 캔버스에에 말해준다.
+#
+# tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
+#
+# paddle = Paddle(canvas, 'blue')
+#
+# ball = Ball(canvas, paddle, 'red', save=True)
+#
+# start = False
 
 # 공을 약간 움직이고 새로운 위치로 화면을 다시 그리며, 잠깐 잠들었다가 다시 시작해 ! "
-
-for i in range(1):
-
-    if ball.hit_bottom == False:
-
-        ball.draw()
-
-        paddle.move(paddle.x,0)
-
-        paddle.draw()
+#
+# for i in range(1):
+#
+#     if ball.hit_bottom == False:
+#
+#         ball.draw()
+#
+#         paddle.move(paddle.x,0)
+#
+#         paddle.draw()
         # print('start', len(ball.ball_start))
         # print(ball.ball_start)
         # print('end', len(ball.ball_end))
         # print(ball.ball_end)
-    tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
+    # tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
 
-    tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
+    # tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
 
     # time.sleep(0.01)  # 무한 루프중에 100분의 1초마다 잠들어라 !
-ball_loc_save = []
-
-for idx_start in range(0,len(ball.ball_start)-1):
-    try:
-        ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
-    except IndexError:
-        continue
-print(ball_loc_save)
+# ball_loc_save = []
+#
+# for idx_start in range(0,len(ball.ball_start)-1):
+#     try:
+#         ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
+#     except IndexError:
+#         continue
+# print(ball_loc_save)
 # saveCSV()
 
 
@@ -403,9 +409,6 @@ paddle = Paddle(canvas, 'blue')
 
 ball = Ball(canvas, paddle, 'red', save=False)
 
-start = False
-
-
 
 while True:
 
@@ -413,10 +416,14 @@ while True:
 
         ball.draw()
         try :
-            paddle.predict_move(paddle.convertendloc(prediction(ball.ball_start[-1],weight)))
+            convertloc = int(prediction(ball.ball_start[-1], weight)[0])
+            # paddle.predict_move(paddle.convertendloc(prediction(ball.ball_start[-1],weight)))
+            print('prediction',paddle.predict_move(convertloc))
+            print(ball.ball_start[-1])
             paddle.move(paddle.x,0)
         except IndexError:
-            paddle.move(ball.x,0)
+            paddle.move(random.choice([-3,3]),0)
+            print('nono')
         paddle.draw()
         # print('start', len(ball.ball_start))
         # print(ball.ball_start)
