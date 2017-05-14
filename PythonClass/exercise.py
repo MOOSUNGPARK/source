@@ -409,7 +409,6 @@ paddle = Paddle(canvas, 'blue')
 
 ball = Ball(canvas, paddle, 'red', save=False)
 
-
 while True:
 
     if ball.hit_bottom == False:
