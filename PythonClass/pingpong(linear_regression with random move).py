@@ -122,7 +122,7 @@ class Paddle:
     def predict_move(self, convertloc):
         loc = self.convertendloc(convertloc)
         pos = self.canvas.coords(self.id)
-        if round((pos[0] + pos[2]) * 0.5) in range(loc - 4, loc + 5):
+        if pos[0]  <loc and pos[2]  > loc+15:
             self.x = 0
             print('stop')
         else:
@@ -132,7 +132,7 @@ class Paddle:
             elif pos[0] > loc:
                 self.x = -3
                 print('-3')
-        return self.x, 'loc', loc, 'pos', round((pos[0] + pos[2]) * 0.5)
+        return self.x, 'loc', loc, 'pos', (pos[0],pos[2])
 
     def turn_left(self, evt):  # 패들의 방향을 전환하는 함수
         self.x = -3
