@@ -109,10 +109,10 @@ class Ball:
 
 
         if self.hit_paddle(pos) == True:  # 패들 판에 부딪히면 위로 튕겨올라가게
-            self.x = random.choice(range(-3,4))
+            # self.x = random.choice(range(-3,4))
             self.y = -3  # 공을 위로 올린다.
             self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
-            self.ball_end.append(self.convertloc)
+            self.ball_end.append([pos[0],self.convertloc])
             # self.ball_end.append(self.convertendloc((self.convertloc)))
             self.convertloc = pos[0]
             self.leftorright = 0
@@ -181,11 +181,11 @@ class machine_learning(object):
         return loss
 
     @staticmethod
-    def gradient_descent(x, alpha=0.0000001, descent_cnt=10000):
+    def gradient_descent(x, alpha=0.1, descent_cnt=1000):
         X = x[:, 0:4]
         Y = x[:, 4]
         M = len(x)
-        minloss =10**9
+        minloss =10**20
         WEIGHT = np.zeros((4,1))
         loss_history = np.zeros((descent_cnt, 1))
 
@@ -198,6 +198,7 @@ class machine_learning(object):
             errors_w0 = (predictions - Y) * X[:, 3]
 
             WEIGHT_backup = deepcopy(WEIGHT)
+            #beta = theta - alpha * (X.T.dot(X.dot(beta)-y)/m)
             WEIGHT[0][0] = WEIGHT[0][0] - alpha * (1.0 / M) * errors_x1.sum()
             WEIGHT[1][0] = WEIGHT[1][0] - alpha * (1.0 / M) * errors_x2.sum()
             WEIGHT[2][0] = WEIGHT[2][0] - alpha * (1.0 / M) * errors_x3.sum()
@@ -208,15 +209,15 @@ class machine_learning(object):
             #     WEIGHT[idx][0] = WEIGHT[idx][0] - alpha * dtheta
             loss_history[cnt, 0] = machine_learning.Loss(X, Y, WEIGHT)
 
-            if minloss >= loss_history[cnt,0]:
-                minloss = loss_history[cnt,0]
-                alpha *= 1.1
-            elif minloss < loss_history[cnt,0]:
-                alpha *= 0.5
-                WEIGHT = WEIGHT_backup
-        return WEIGHT, loss_history, minloss
+            # if minloss >= loss_history[cnt,0]:
+            #     minloss = loss_history[cnt,0]
+            #     alpha *= 1.1
+            # elif minloss < loss_history[cnt,0]:
+            #     alpha *= 0.5
+            #     WEIGHT = WEIGHT_backup
+        return WEIGHT, loss_history
 
-def saveCSV(loc='d:\python\data\pingpong.csv'):
+def saveCSV(loc='d:\python\data\pingpong_new.csv'):
     if not loc is None:
         f = open((loc), 'a')
         w = csv.writer(f, delimiter=',', lineterminator='\n')
@@ -225,15 +226,16 @@ def saveCSV(loc='d:\python\data\pingpong.csv'):
             w.writerow(key)
         f.close()
 
-def normalize(x):
+def normalize(x, idx=range(4)):
     n = len(x[0])
     for i in range(n):
-        mean = np.mean(x[:, i])
-        std = np.std(x[:, i])
-        if std ==0:
-            x[:, i] = 0
-        else:
-            x[:, i] = (x[:, i] - mean) / std
+        if i in idx:
+            mean = np.mean(x[:, i])
+            std = np.std(x[:, i])
+            if std ==0:
+                x[:, i] = 0
+            else:
+                x[:, i] = (x[:, i] - mean) / std
     return x
 #
 # def readCSV(loc ='d:\python\data\pingpong.csv' ):  # 파일로 저장된 가중치값을 읽어들일 때 사용하는 메소드
@@ -298,20 +300,49 @@ for idx_start in range(0,len(ball.ball_start)-1):
         ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
     except IndexError:
         continue
-# print(ball_loc_save)
+print(ball_loc_save)
 # saveCSV()
 
-pingpong = [data for data in csv.reader(open('d:\python\data\pingpong.csv', 'r'))]
+
+
+
+
+pingpong = [data for data in csv.reader(open('d:\python\data\pingpong_new.csv', 'r'))]
 for pp in range(len(pingpong)):
     for p in range(5):
         pingpong[pp][p] = float(pingpong[pp][p])
 pingpong= np.array(pingpong)
+print(pingpong)
+pingpong = normalize(pingpong,range(4))
+print(pingpong)
 weight = machine_learning.gradient_descent(pingpong)[0]
+print(machine_learning.gradient_descent(pingpong))
 print(weight)
 
-def prediction(a,b,c,d,weight):
-    return weight[0]*a +weight[1]*b +weight[2] *c + weight[3] *d
-print(prediction(388,2,-3,1,weight))
-print(prediction(57,1,-3,1,weight))
-print(prediction(249,2,-3,1,weight))
 
+def input_normalize(input, x, idx=range(4)):
+    n = len(x[0])
+    for i in range(n):
+        if i in idx:
+            mean = np.mean(x[:, i])
+            std = np.std(x[:, i])
+            if std ==0:
+                input[i] = 0
+            else:
+                input[i] = (input[i] - mean) / std
+    return input
+
+pingpong = [data for data in csv.reader(open('d:\python\data\pingpong_new.csv', 'r'))]
+for pp in range(len(pingpong)):
+    for p in range(5):
+        pingpong[pp][p] = float(pingpong[pp][p])
+pingpong= np.array(pingpong)
+ninput = input_normalize([317,1,-3,1], pingpong, range(4))
+print('ninput',ninput)
+
+
+def prediction(input,weight):
+    return weight[0]*input[0] +weight[1]*input[1] +weight[2] *input[2] + weight[3] *input[3]
+
+print(prediction(ninput,weight))
+#
