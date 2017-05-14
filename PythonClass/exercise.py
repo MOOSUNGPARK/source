@@ -48,7 +48,7 @@ class Ball:
         # [ 255,29,270,44]
         paddle_pos = self.canvas.coords(self.paddle.id)
         self.convertloc = pos[0] + float(self.x)
-        
+
         if pos[1] <= 0:  # 공의 남쪽이 가리키는 좌표가 0보다 작아진다면 공이 위쪽 화면 밖으로 나가버리므로
 
             self.y = 3  # 공을 아래로 떨어뜨린다. (공이 위로 올라갈수로 y 의 값이 작아지므로 아래로 내리려면 다시 양수로)
