@@ -52,11 +52,11 @@ class Ball:
 
         if pos[1] <= 0:  # 공의 남쪽이 가리키는 좌표가 0보다 작아진다면 공이 위쪽 화면 밖으로 나가버리므로
 
-            self.y = 3  # 공을 아래로 떨어뜨린다. (공이 위로 올라갈수로 y 의 값이 작아지므로 아래로 내리려면 다시 양수로)
+            self.y *= -1  # 공을 아래로 떨어뜨린다. (공이 위로 올라갈수로 y 의 값이 작아지므로 아래로 내리려면 다시 양수로)
 
         if pos[3] >= self.canvas_height:  # 공의 북쪽이 가리키는 좌표가 캔버스의 높이보다 더 크다면 화면 아래로 나가버려서
 
-            self.y = -3  # 공을 위로 올린다. (공이 아래로 내려갈수록 y 값이 커지므로 공을 위로 올릴려면 다시 음수로)
+            self.y *= -1  # 공을 위로 올린다. (공이 아래로 내려갈수록 y 값이 커지므로 공을 위로 올릴려면 다시 음수로)
 
         if pos[0] <= 0:  # 공의 서쪽이 가리키는 좌표가 0보다 작으면 공이 화면 왼쪽으로 나가버리므로
 
@@ -71,7 +71,7 @@ class Ball:
 
         if self.hit_paddle(pos) == True:  # 패들 판에 부딪히면 위로 튕겨올라가게
             self.x = random.choice(range(-5,6))
-            self.y = -3  # 공을 위로 올린다.
+            self.y *= -1  # 공을 위로 올린다.
             self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
             self.ball_end.append(self.convertloc)
             self.convertloc = pos[0]
@@ -145,14 +145,6 @@ class Paddle:
 
 
 class machine_learning(object):
-    def __init__(self, ball_loc_save, alpha=0.01):
-        self.ball_loc_save = ball_loc_save
-        self.x = ball_loc_save[:, 0:4]
-        self.y = ball_loc_save[:, 4]
-        self.m = len(self.x)
-        self.weight = np.zeros((4, 1))
-        self.alpha = alpha
-
     @staticmethod
     def Loss(x, y, weight):
         loss = np.sum((x.dot(weight) - y) ** 2) / (2 * len(x))
@@ -200,7 +192,7 @@ class machine_learning(object):
         return WEIGHT, loss_history
 
 
-def saveCSV(loc='d:\python\data\pingpong_ran.csv'):
+def saveCSV(loc='c:\python\data\pingpong_ran.csv'):
     if not loc is None:
         f = open((loc), 'a')
         w = csv.writer(f, delimiter=',', lineterminator='\n')
@@ -243,13 +235,13 @@ if __name__ == '__main__':
             continue
 
     ################ 세이브 시 활성화 ################
-    saveCSV()
+    #saveCSV()
 
 
 
     ################ 파일 로드 시 활성화 ################
 
-    pingpong = [data for data in csv.reader(open('d:\python\data\pingpong_new.csv', 'r'))]
+    pingpong = [data for data in csv.reader(open('c:\python\data\pingpong_new.csv', 'r'))]
     for pp in range(len(pingpong)):
         for p in range(5):
             pingpong[pp][p] = float(pingpong[pp][p])
