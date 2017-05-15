@@ -6,6 +6,14 @@ import csv
 from copy import deepcopy
 
 
+save_ballloc = None # 'd:\python\data\pingpong_new.csv'
+load_ballloc = 'd:\python\data\pingpong_new.csv'
+save_weightloc = 'd:\python\data\pingpong_weight.csv'
+load_weightloc = save_weightloc
+learning_rate = 0.00001
+trainig_cnt= 100000
+
+
 class Ball:
     def __init__(self, canvas, paddle, color, save=False):
 
@@ -157,8 +165,8 @@ class machine_learning():
         M = len(x)
         minloss = 10 ** 20
 
-        # WEIGHT = np.zeros((4,1)) # 초기 weight
-        WEIGHT = np.array([[1.00532467], [192.09769571], [0.65254131], [-0.21751378]]) # 100000번 돌린 weight
+        WEIGHT = np.zeros((4,1)) # 초기 weight
+#        WEIGHT = np.array([[1.00532467], [192.09769571], [0.65254131], [-0.21751378]]) # 100000번 돌린 weight
         loss_history = np.zeros((descent_cnt, 1))
 
         for cnt in range(descent_cnt):
@@ -191,20 +199,48 @@ class machine_learning():
             #     WEIGHT = WEIGHT_backup
         return WEIGHT, loss_history
 
+class SaveLoad():
+    @staticmethod
+    def saveCSV(ballloc, weightloc):
+        try:
+            f = open((ballloc), 'a')
+            w = csv.writer(f, delimiter=',', lineterminator='\n')
 
-def saveCSV(loc='c:\python\data\pingpong_ran.csv'):
-    if not loc is None:
-        f = open((loc), 'a')
-        w = csv.writer(f, delimiter=',', lineterminator='\n')
+            for key in ball_loc_save:
+                w.writerow(key)
+            f.close()
 
-        for key in ball_loc_save:
-            w.writerow(key)
-        f.close()
+            f = open((weightloc), 'a')
+            w = csv.writer(f, delimiter=',', lineterminator='\n')
+
+            for key in machine_learning.gradient_descent(np.array(ball_loc_save), learning_rate, trainig_cnt)[0]:
+                w.writerow(key)
+            f.close()
+
+        except FileNotFoundError and TypeError:
+            print('No Save')
+
+    @staticmethod
+    def loadCSV(ballloc,weightloc = None):
+        try:
+            if weightloc == None :
+                pingpong = [data for data in csv.reader(open(ballloc, 'r'))]
+                for pp in range(len(pingpong)):
+                    for p in range(5):
+                        pingpong[pp][p] = float(pingpong[pp][p])
+                pingpong = np.array(pingpong)
+                return machine_learning.gradient_descent(pingpong,learning_rate, trainig_cnt)[0]
+            else :
+                weight = [data for data in csv.reader(open(weightloc, 'r'))]
+                return np.array([weight[-4],weight[-3],weight[-2],weight[-1]],dtype=float)
+
+        except FileNotFoundError :
+            print('파일 로드 위치를 지정해주세요')
+
 
 if __name__ == '__main__':
 
     ############# 머신러닝 위한 시뮬레이션용 ###############
-
     tk = Tk()  # tk 를 인스턴스화 한다.
     tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
     tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.
@@ -215,16 +251,12 @@ if __name__ == '__main__':
     tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
     paddle = Paddle(canvas, 'blue')
     ball = Ball(canvas, paddle, 'red', save=True)
-    start = False
-
 
     for i in range(10000):
         if ball.hit_bottom == False:
             ball.draw()
             paddle.move(paddle.x,0)
             paddle.draw()
-    tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
-    tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
 
     ball_loc_save = []
 
@@ -234,23 +266,15 @@ if __name__ == '__main__':
         except IndexError:
             continue
 
-    ################ 세이브 시 활성화 ################
-    #saveCSV()
+    ################ 파일 세이브 ################
+    SaveLoad.saveCSV(save_ballloc,save_weightloc)
 
-
-
-    ################ 파일 로드 시 활성화 ################
-
-    pingpong = [data for data in csv.reader(open('d:\python\data\pingpong_new.csv', 'r'))]
-    for pp in range(len(pingpong)):
-        for p in range(5):
-            pingpong[pp][p] = float(pingpong[pp][p])
-    pingpong = np.array(pingpong)
-    weight = machine_learning.gradient_descent(pingpong)[0]
+    ################ 파일 로드 ################
+    weight = SaveLoad.loadCSV(load_ballloc, load_weightloc)
 
 
     ################# 머신러닝 배운 후 플레이 ##################
-
+    tk.destroy()
     tk = Tk()  # tk 를 인스턴스화 한다.
     tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
     tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.

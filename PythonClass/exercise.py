@@ -6,17 +6,24 @@ import csv
 from copy import deepcopy
 
 
-class Ball:
+save_ballloc = 'd:\python\data\pingpong_new.csv'
+load_ballloc = 'd:\python\data\pingpong_new.csv'
+save_weightloc = 'd:\python\data\pingpong_weight.csv'
+load_weightloc = save_weightloc
+learning_rate = 0.00001
+trainig_cnt= 100000
 
+
+class Ball:
     def __init__(self, canvas, paddle, color, save=False):
 
         self.canvas = canvas
         self.paddle = paddle
         self.id = canvas.create_oval(10, 10, 25, 25, fill=color)  # 공 크기 및 색깔
         self.canvas.move(self.id, 245, 100)  # 공을 캔버스 중앙으로 이동
-        self.x = random.choice([-3,-2,-1,1,2,3])  # 처음 공이 패들에서 움직일때 왼쪽으로 올라갈지 오른쪽으로 올라갈지 랜덤으로 결정되는 부분
+        self.x = random.choice([-4,-3, -2, -1, 1, 2, 3,4])  # 처음 공이 패들에서 움직일때 왼쪽으로 올라갈지 오른쪽으로 올라갈지 랜덤으로 결정되는 부분
         self.y = -3  # 처음 공이 패들에서 움직일때 위로 올라가는 속도
-        self.canvas_height = self.canvas.winfo_height()  #캔버스의 현재 높이를 반환한다.(공이 화면에서 사라지지 않기위해)
+        self.canvas_height = self.canvas.winfo_height()  # 캔버스의 현재 높이를 반환한다.(공이 화면에서 사라지지 않기위해)
         self.canvas_width = self.canvas.winfo_width()  # 캔버스의 현재 넓이를 반환한다.(공이 화면에서 사라지지 않기위해)
         self.hit_bottom = False
         self.save = save
@@ -27,85 +34,60 @@ class Ball:
 
     def hit_paddle(self, pos):  # 패들에 공이 튀기게 하는 함수
         paddle_pos = self.canvas.coords(self.paddle.id)
-        if self.save ==True :
+        if self.save == True:
             if pos[3] >= paddle_pos[1] and pos[3] <= paddle_pos[3]:  # 공이 패들에 닿았을때 좌표
                 return True
-        elif self.save ==False:
+        elif self.save == False:
             if pos[2] >= paddle_pos[0] and pos[0] <= paddle_pos[2]:  # 공이 패들에 내려오기 직전 좌표
                 if pos[3] >= paddle_pos[1] and pos[3] <= paddle_pos[3]:  # 공이 패들에 닿았을때 좌표
                     return True
         return False
-    # def startloc(self, pos):
-    #     paddle_pos = self.canvas.coords(self.paddle.id)
-    #     if 290>pos[1] >=285 and pos[3] <= paddle_pos[3] and self.y < 0:  # 공이 패들 통과할 때의 좌표
-    #         return [pos[0], self.x, self.y]
 
-    def endloc(self,pos):
+
+    def endloc(self, pos):
         paddle_pos = self.canvas.coords(self.paddle.id)
         if 290 > pos[1] >= 285 and pos[3] <= paddle_pos[3] and self.y > 0:  # 공이 패들 통과할 때의 좌표
             return pos[0]
 
-
-
-
     def draw(self):
-
         self.canvas.move(self.id, self.x, self.y)  # 공을 움직이게 하는 부분
-        # 공이 화면 밖으로 나가지 않게 해준다
         pos = self.canvas.coords(self.id)  # 볼의 현재 좌표를 출력해준다. 공 좌표( 서쪽(0) , 남쪽(1) , 동쪽(2), 북쪽(3) )
-        # [ 255,29,270,44]
         paddle_pos = self.canvas.coords(self.paddle.id)
-        if self.leftorright == 0 :
+        if self.leftorright == 0:
             self.convertloc += float(self.x)
-        elif self.leftorright != 0 :
+        elif self.leftorright != 0:
             self.convertloc += self.leftorright * abs(float(self.x))
-        # print('convertloc', self.convertloc)
-        
+
         if pos[1] <= 0:  # 공의 남쪽이 가리키는 좌표가 0보다 작아진다면 공이 위쪽 화면 밖으로 나가버리므로
 
-            self.y = 3  # 공을 아래로 떨어뜨린다. (공이 위로 올라갈수로 y 의 값이 작아지므로 아래로 내리려면 다시 양수로)
+            self.y *= -1  # 공을 아래로 떨어뜨린다. (공이 위로 올라갈수로 y 의 값이 작아지므로 아래로 내리려면 다시 양수로)
 
-        if pos[3] >= self.canvas_height:  #공의 북쪽이 가리키는 좌표가 캔버스의 높이보다 더 크다면 화면 아래로 나가버려서
+        if pos[3] >= self.canvas_height:  # 공의 북쪽이 가리키는 좌표가 캔버스의 높이보다 더 크다면 화면 아래로 나가버려서
 
-            self.y = -3  # 공을 위로 올린다. (공이 아래로 내려갈수록 y 값이 커지므로 공을 위로 올릴려면 다시 음수로)
+            self.y *= -1  # 공을 위로 올린다. (공이 아래로 내려갈수록 y 값이 커지므로 공을 위로 올릴려면 다시 음수로)
 
         if pos[0] <= 0:  # 공의 서쪽이 가리키는 좌표가 0보다 작으면 공이 화면 왼쪽으로 나가버리므로
 
-            self.x = 3  # 공을 오른쪽으로 돌린다.
+            self.x *= -1  # 공을 오른쪽으로 돌린다.
             if self.leftorright == 0:
                 self.leftorright = -1
-                # print('left',self.leftorright)
-                # print('pos',pos[0])
-                # print('convert',self.convertloc)
 
         if pos[2] >= self.canvas_width:  # 공의 동쪽이 가리키는 좌표가 공의 넓이보다 크다면 공이 화면 오른쪽으로 나가버림
-
-            self.x = -3  # 공을 왼쪽으로 돌린다.
+            self.x *= -1  # 공을 왼쪽으로 돌린다.
             if self.leftorright == 0:
                 self.leftorright = 1
-                # print('left',self.leftorright)
-                # print('pos',pos[0])
-                # print('convert',self.convertloc)
-        # if self.startloc(pos) != None:
-        #     self.ball_start.append(self.startloc(pos))
-
-        # if self.endloc(pos) != None:
-        #     self.ball_end.append(self.endloc(pos))
-
 
         if self.hit_paddle(pos) == True:  # 패들 판에 부딪히면 위로 튕겨올라가게
-            # self.x = random.choice(range(-3,4))
-            self.y = -3  # 공을 위로 올린다.
+            self.x = random.choice(range(-5,6))
+            self.y *= -1  # 공을 위로 올린다.
             self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
             self.ball_end.append(self.convertloc)
-            # self.ball_end.append(self.convertendloc((self.convertloc)))
             self.convertloc = pos[0]
             self.leftorright = 0
 
+
 class Paddle:
-
     def __init__(self, canvas, color):
-
         self.canvas = canvas
         self.id = canvas.create_rectangle(0, 0, 100, 10, fill=color)  # 패들의 높이와 넓이 그리고 색깔
         self.canvas.move(self.id, 200, 300)  # 패들 사각형을 200,300 에 위치
@@ -115,85 +97,62 @@ class Paddle:
         self.canvas.bind_all('<KeyPress-Right>', self.turn_right)  # 오른쪽도 마찬가지로 바인딩한다.
 
     def draw(self):
-
         pos = self.canvas.coords(self.id)
-        #print(pos)
-
         if pos[0] <= 0 and self.x < 0:  # 패들의 위치가 왼쪽 끝이고, 이동하려는 방향이 왼쪽이면 함수 종료(이동 안 함)
-
             return
-
-        elif pos[2] >= self.canvas_width and self.x > 0: #패들의 위치가 오른쪽 끝이고,이동하려는 방향이 오른쪽이면 종료
-
+        elif pos[2] >= self.canvas_width and self.x > 0:  # 패들의 위치가 오른쪽 끝이고,이동하려는 방향이 오른쪽이면 종료
             return
-
         self.canvas.move(self.id, self.x, 0)
 
-            # 패들이 화면의 끝에 부딪히면 공처럼 튕기는게 아니라 움직임이 멈춰야한다.
-            # 그래서 왼쪽 x 좌표(pos[0]) 가 0 과 같거나 작으면 self.x = 0 처럼 x 변수에 0 을
-            # 설정한다.  같은 방법으로 오른쪽 x 좌표(pos[2]) 가 캔버스의 폭과 같거나 크면
-            # self.x = 0 처럼 변수에 0 을 설정한다.
-
-    def convertendloc(self,convertloc):
+    def convertendloc(self, convertloc):
         cnt = 0
-        if convertloc in range(486) :
+        if convertloc in range(486):
             return convertloc
-        elif convertloc <0 :
+        elif convertloc < 0:
             while True:
                 if cnt % 2 == 0 and cnt * -485 - convertloc in range(486):
                     return cnt * -485 - convertloc
 
-                elif cnt % 2 == 1 and (cnt+1) * 485 + convertloc in range(486):
-                    return (cnt+1) * 485 + convertloc
+                elif cnt % 2 == 1 and (cnt + 1) * 485 + convertloc in range(486):
+                    return (cnt + 1) * 485 + convertloc
                 cnt += 1
-        elif convertloc > 485 :
+        elif convertloc > 485:
             while True:
-                if cnt % 2 == 0 and  (cnt+2) * 485 - convertloc in range(486):
-                    return (cnt+2) * 485 - convertloc
-                elif cnt % 2 == 1 and (cnt+1) * -485 + convertloc in range(486):
-                    return (cnt+1) * -485 + convertloc
+                if cnt % 2 == 0 and (cnt + 2) * 485 - convertloc in range(486):
+                    return (cnt + 2) * 485 - convertloc
+                elif cnt % 2 == 1 and (cnt + 1) * -485 + convertloc in range(486):
+                    return (cnt + 1) * -485 + convertloc
                 cnt += 1
-    def predict_move(self,convertloc):
+
+    def prediction(self, input, weight):
+        return weight[0] * input[0] + weight[1] * input[1] + weight[2] * input[2] + weight[3] * input[3]
+
+    def predict_move(self, convertloc):
         loc = self.convertendloc(convertloc)
         pos = self.canvas.coords(self.id)
-        # if (pos[0]+pos[2])*0.5 >loc-4 or (pos[0]+pos[2])*0.5 <loc+4:
-        if round((pos[0] + pos[2]) * 0.5) in range(loc-4, loc +5):
-            self.x=0
+        if pos[0]  <loc and pos[2]  > loc+15:
+            self.x = 0
             print('stop')
-            return
         else:
-            if pos[0] < loc :
+            if pos[0] < loc:
                 self.x = 3
                 print('+3')
-            elif pos[0] > loc :
+            elif pos[0] > loc:
                 self.x = -3
                 print('-3')
-        return self.x, 'loc',loc, 'pos',round((pos[0]+pos[2])*0.5)
+        return self.x, 'loc', loc, 'pos', (pos[0],pos[2])
 
     def turn_left(self, evt):  # 패들의 방향을 전환하는 함수
-
         self.x = -3
 
-
     def turn_right(self, evt):
-
         self.x = 3
 
-
-    def move(self,x,y):
-
+    def move(self, x, y):
         self.x = x
 
 
-class machine_learning(object):
-    def __init__(self, ball_loc_save, alpha=0.01):
-        self.ball_loc_save = ball_loc_save
-        self.x = ball_loc_save[:,0:4]
-        self.y = ball_loc_save[:,4]
-        self.m = len(self.x)
-        self.weight = np.zeros((4, 1))
-        self.alpha = alpha
-
+class machine_learning():
     @staticmethod
     def Loss(x, y, weight):
         loss = np.sum((x.dot(weight) - y) ** 2) / (2 * len(x))
@@ -204,13 +163,10 @@ class machine_learning(object):
         X = x[:, 0:4]
         Y = x[:, 4]
         M = len(x)
-        minloss =10**20
-        # WEIGHT = np.zeros((4,1))
-        # [[1.00510631]
-        #  [192.07708646]
-        #  [0.63150038]
-        #  [-0.21050013]]
-        WEIGHT = np.array([[1.00532467],[192.09769571],[0.65254131],[-0.21751378]])
+        minloss = 10 ** 20
+
+        WEIGHT = np.zeros((4,1)) # 초기 weight
+#        WEIGHT = np.array([[1.00532467], [192.09769571], [0.65254131], [-0.21751378]]) # 100000번 돌린 weight
         loss_history = np.zeros((descent_cnt, 1))
 
         for cnt in range(descent_cnt):
@@ -222,15 +178,17 @@ class machine_learning(object):
             errors_w0 = (predictions - Y) * X[:, 3]
 
             WEIGHT_backup = deepcopy(WEIGHT)
-            #beta = theta - alpha * (X.T.dot(X.dot(beta)-y)/m)
+            # beta = theta - alpha * (X.T.dot(X.dot(beta)-y)/m)
             WEIGHT[0][0] = WEIGHT[0][0] - alpha * (1.0 / M) * errors_x1.sum()
             WEIGHT[1][0] = WEIGHT[1][0] - alpha * (1.0 / M) * errors_x2.sum()
             WEIGHT[2][0] = WEIGHT[2][0] - alpha * (1.0 / M) * errors_x3.sum()
             WEIGHT[3][0] = WEIGHT[3][0] - alpha * (1.0 / M) * errors_w0.sum()
 
+            ########## BOLD DRIVER 방법 #########
             # for idx in range(M):
             #     dtheta = np.sum((X.dot(WEIGHT) - Y) * X[:, idx]) / len(x)
             #     WEIGHT[idx][0] = WEIGHT[idx][0] - alpha * dtheta
+
             loss_history[cnt, 0] = machine_learning.Loss(X, Y, WEIGHT)
 
             # if minloss >= loss_history[cnt,0]:
@@ -241,195 +199,105 @@ class machine_learning(object):
             #     WEIGHT = WEIGHT_backup
         return WEIGHT, loss_history
 
-def saveCSV(loc='d:\python\data\pingpong_new.csv'):
-    if not loc is None:
-        f = open((loc), 'a')
-        w = csv.writer(f, delimiter=',', lineterminator='\n')
+class SaveLoad():
+    @staticmethod
+    def saveCSV(ballloc, weightloc):
+        try:
+            f = open((ballloc), 'a')
+            w = csv.writer(f, delimiter=',', lineterminator='\n')
 
-        for key in ball_loc_save:
-            w.writerow(key)
-        f.close()
+            for key in ball_loc_save:
+                w.writerow(key)
+            f.close()
 
-def normalize(x, idx=range(4)):
-    n = len(x[0])
-    for i in range(n):
-        if i in idx:
-            mean = np.mean(x[:, i])
-            std = np.std(x[:, i])
-            if std ==0:
-                x[:, i] = 0
-            else:
-                x[:, i] = (x[:, i] - mean) / std
-    return x
-#
-# def readCSV(loc ='d:\python\data\pingpong.csv' ):  # 파일로 저장된 가중치값을 읽어들일 때 사용하는 메소드
-#     if loc != 'None':
-#         try:
-#             file = open(loc, 'r')  # 파일은 __main__절에서 다음 형식으로 저장됨.
-#
-#             values_list = csv.reader(file)
-#             return values_list
-#         except FileNotFoundError:
-#             return None
+            f = open((weightloc), 'a')
+            w = csv.writer(f, delimiter=',', lineterminator='\n')
 
-# tk = Tk()  # tk 를 인스턴스화 한다.
-#
-# tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
-#
-# tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.
-#
-# tk.wm_attributes("-topmost", 1)  # 다른 모든 창들 앞에 캔버스를 가진 창이 위치할것을 tkinter 에게 알려준다.
-#
-# canvas = Canvas(tk, width=500, height=400, bd=0, highlightthickness=0)
+            for key in machine_learning.gradient_descent(np.array(ball_loc_save), learning_rate, trainig_cnt)[0]:
+                w.writerow(key)
+            f.close()
 
-# bg=0,highlightthickness=0 은 캔버스 외곽에 둘러싼
+        except FileNotFoundError and TypeError:
+            print('No Save')
 
-# 외곽선이 없도록 하는것이다. (게임화면이 좀더 좋게)
+    @staticmethod
+    def loadCSV(ballloc,weightloc = None):
+        try:
+            if weightloc == None :
+                pingpong = [data for data in csv.reader(open(ballloc, 'r'))]
+                for pp in range(len(pingpong)):
+                    for p in range(5):
+                        pingpong[pp][p] = float(pingpong[pp][p])
+                pingpong = np.array(pingpong)
+                return machine_learning.gradient_descent(pingpong,learning_rate, trainig_cnt)[0]
+            else :
+                weight = [data for data in csv.reader(open(weightloc, 'r'))]
+                return np.array([weight[-4],weight[-3],weight[-2],weight[-1]],dtype=float)
+
+        except FileNotFoundError :
+            print('파일 로드 위치를 지정해주세요')
 
 
-# canvas.pack()  # 앞의 코드에서 전달된 폭과 높이는 매개변수에 따라 크기를 맞추라고 캔버스에에 말해준다.
-#
-# tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
-#
-# paddle = Paddle(canvas, 'blue')
-#
-# ball = Ball(canvas, paddle, 'red', save=True)
-#
-# start = False
+if __name__ == '__main__':
 
-# 공을 약간 움직이고 새로운 위치로 화면을 다시 그리며, 잠깐 잠들었다가 다시 시작해 ! "
-#
-# for i in range(1):
-#
-#     if ball.hit_bottom == False:
-#
-#         ball.draw()
-#
-#         paddle.move(paddle.x,0)
-#
-#         paddle.draw()
-        # print('start', len(ball.ball_start))
-        # print(ball.ball_start)
-        # print('end', len(ball.ball_end))
-        # print(ball.ball_end)
-    # tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
+    ############# 머신러닝 위한 시뮬레이션용 ###############
+    tk = Tk()  # tk 를 인스턴스화 한다.
+    tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
+    tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.
+    tk.wm_attributes("-topmost", 1)  # 다른 모든 창들 앞에 캔버스를 가진 창이 위치할것을 tkinter 에게 알려준다.
+    canvas = Canvas(tk, width=500, height=400, bd=0, highlightthickness=0)
 
-    # tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
-
-    # time.sleep(0.01)  # 무한 루프중에 100분의 1초마다 잠들어라 !
-# ball_loc_save = []
-#
-# for idx_start in range(0,len(ball.ball_start)-1):
-#     try:
-#         ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
-#     except IndexError:
-#         continue
-# print(ball_loc_save)
-# saveCSV()
-
-
-
-
-
-pingpong = [data for data in csv.reader(open('d:\python\data\pingpong_new.csv', 'r'))]
-for pp in range(len(pingpong)):
-    for p in range(5):
-        pingpong[pp][p] = float(pingpong[pp][p])
-pingpong= np.array(pingpong)
-# pingpong = normalize(pingpong)
-# print('normal',pingpong)
-weight = machine_learning.gradient_descent(pingpong)[0]
-print(machine_learning.gradient_descent(pingpong))
-print(weight)
-
-
-def input_normalize(input, x, idx=range(4)):
-    n = len(x[0])
-    for i in range(n):
-        if i in idx:
-            mean = np.mean(x[:, i])
-            std = np.std(x[:, i])
-            if std ==0:
-                input[i] = 0
-            else:
-                input[i] = (input[i] - mean) / std
-    return input
-
-# pingpong = [data for data in csv.reader(open('d:\python\data\pingpong_new.csv', 'r'))]
-# for pp in range(len(pingpong)):
-#     for p in range(5):
-#         pingpong[pp][p] = float(pingpong[pp][p])
-# pingpong= np.array(pingpong)
-# ninput = input_normalize([222,-3,-3,1], pingpong, range(4))
-# print('ninput',ninput)
-nninput = [390,3,-3,1]
-
-def prediction(input,weight):
-    return weight[0]*input[0] +weight[1]*input[1] +weight[2] *input[2] + weight[3] *input[3]
-
-
-
-# 42	-3	-3	1	-534
-# 438	-3	-3	1	-138
-# 258	-3	-3	1	-318
-# 390	3	-3	1	966
-# 174	3	-3	1	750
-# 354	3	-3	1	930
-# 138	3	-3	1	714
-# 318	3	-3	1	894
-# 102	3	-3	1	678
-# 282	3	-3	1	858
-# 462	3	-3	1	1038
-# 66	3	-3	1	642
-# 246	3	-3	1	822
-# 426	3	-3	1	1002
-# 30	3	-3	1	606
-# 210	3	-3	1	786
-
-tk = Tk()  # tk 를 인스턴스화 한다.
-
-tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
-
-tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.
-
-tk.wm_attributes("-topmost", 1)  # 다른 모든 창들 앞에 캔버스를 가진 창이 위치할것을 tkinter 에게 알려준다.
-
-canvas = Canvas(tk, width=500, height=400, bd=0, highlightthickness=0)
-
-# bg=0,highlightthickness=0 은 캔버스 외곽에 둘러싼
-
-# 외곽선이 없도록 하는것이다. (게임화면이 좀더 좋게)
-
-
-canvas.pack()  # 앞의 코드에서 전달된 폭과 높이는 매개변수에 따라 크기를 맞추라고 캔버스에에 말해준다.
-
-tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
-
-paddle = Paddle(canvas, 'blue')
-
-ball = Ball(canvas, paddle, 'red', save=False)
-
-while True:
-
-    if ball.hit_bottom == False:
-
-        ball.draw()
-        try :
-            convertloc = int(prediction(ball.ball_start[-1], weight)[0])
-            # paddle.predict_move(paddle.convertendloc(prediction(ball.ball_start[-1],weight)))
-            print('prediction',paddle.predict_move(convertloc))
-            print(ball.ball_start[-1])
-            paddle.move(paddle.x,0)
-        except IndexError:
-            paddle.move(random.choice([-3,3]),0)
-            print('nono')
-        paddle.draw()
-        # print('start', len(ball.ball_start))
-        # print(ball.ball_start)
-        # print('end', len(ball.ball_end))
-        # print(ball.ball_end)
-    tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
-
+    canvas.pack()  # 앞의 코드에서 전달된 폭과 높이는 매개변수에 따라 크기를 맞추라고 캔버스에에 말해준다.
     tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
+    paddle = Paddle(canvas, 'blue')
+    ball = Ball(canvas, paddle, 'red', save=True)
 
-    time.sleep(0.01)  # 무한 루프중에 100분의 1초마다 잠들어라 !
+    for i in range(10000):
+        if ball.hit_bottom == False:
+            ball.draw()
+            paddle.move(paddle.x,0)
+            paddle.draw()
+    tk.destroy()
+    ball_loc_save = []
+
+    for idx_start in range(0,len(ball.ball_start)-1):
+        try:
+            ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
+        except IndexError:
+            continue
+
+    ################ 파일 세이브 ################
+    SaveLoad.saveCSV(save_ballloc,save_weightloc)
+
+    ################ 파일 로드 ################
+    weight = SaveLoad.loadCSV(load_ballloc, load_weightloc)
+
+
+    ################# 머신러닝 배운 후 플레이 ##################
+
+    tk = Tk()  # tk 를 인스턴스화 한다.
+    tk.title("Game")  # tk 객체의 title 메소드(함수)로 게임창에 제목을 부여한다.
+    tk.resizable(0, 0)  # 게임창의 크기는 가로나 세로로 변경될수 없다라고 말하는것이다.
+    tk.wm_attributes("-topmost", 1)  # 다른 모든 창들 앞에 캔버스를 가진 창이 위치할것을 tkinter 에게 알려준다.
+    canvas = Canvas(tk, width=500, height=400, bd=0, highlightthickness=0)
+
+    canvas.pack()  # 앞의 코드에서 전달된 폭과 높이는 매개변수에 따라 크기를 맞추라고 캔버스에에 말해준다.
+    tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
+    paddle = Paddle(canvas, 'blue')
+    ball = Ball(canvas, paddle, 'red', save=False)
+
+    while True:
+        if ball.hit_bottom == False:
+            ball.draw()
+            try:
+                convertloc = int(paddle.prediction(ball.ball_start[-1], weight)[0])
+                print('prediction', paddle.predict_move(convertloc))
+                paddle.move(paddle.x, 0)
+            except IndexError:
+                #paddle.move(random.choice([-3, 3]), 0) # 맨처음에 랜덤으로 두게 하려면 활성화
+                paddle.move(ball.x,0) # 맨처음에 공을 따라가게 하려면 활성화
+            paddle.draw()
+
+        tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
+        tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
+        time.sleep(0.01)  # 무한 루프중에 100분의 1초마다 잠들어라 !
