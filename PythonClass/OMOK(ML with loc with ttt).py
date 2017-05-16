@@ -485,7 +485,7 @@ if __name__ == '__main__':
     win_1 = 0
     win_2 = 0
     win_3 = 0
-    for i in range(100000):
+    for i in range(1):
         if i % 1000 == 0:
             print('Game: {0}'.format(i))
 

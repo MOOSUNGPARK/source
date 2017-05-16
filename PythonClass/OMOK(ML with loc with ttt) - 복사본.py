@@ -95,11 +95,14 @@ class Agent(object):
 
     def saveCSV(self, loc, values):
         if not loc is None:
+            f = open((loc), 'a')
+            w = csv.writer(f, delimiter=',', lineterminator='\n')
+
             for key in values:
                 if self.values[key] != 0.5:
-                    Fn = (loc)
-                    w = csv.writer(open(Fn, 'a'), delimiter=',', lineterminator='\n')
-                    w.writerow([self.player, key, self.values[key]])
+                    w.writerow([self.player, key, self.values[key]])\
+
+            f.close()
 
     def Action(self, state, ttt_state=None):    # 인공지능 플레이어의 행동 기준을 설정한 메소드
         r = random.random()     # 0~1 사이의 값 랜덤 출력
@@ -166,8 +169,12 @@ class Agent(object):
         stateidx = []
         statelist = []
         dangerlist = []
+        dangerlistcnt = []
+        maxdanger= 0
+        bestdangerlist = []
         gameoverlist = []
         finallist = []
+
 
         for i in range(6):
             for j in range(6):
@@ -209,18 +216,31 @@ class Agent(object):
                     dangerlist.append(self.convertmove((idx, key)))
                     # print(idx, key, self.convertmove((idx, key)))
                 statecheck2[key[0]][key[1]] = 0
-
-
                 if maxdic[key] == max(maxdic.values()):  # 해당 키의 가중치 값이 최대 가중치 값인 경우
                     maxlist.append(self.convertmove((idx, key)))  # 해당 키(최대 가중치를 얻게 해주는 최적의 수의 좌표)를 maxlist에 저장
+        for move in dangerlist:
+            p=[1,2]
+            statecheck = deepcopy(state)
+            statecheck[move[0]][move[1]] = self.player
+            count1 = game.gameovercount(statecheck)
+            p.remove(self.player)
+            statecheck[move[0]][move[1]] = p[0]
+            count2 = 1.1 * game.gameovercount(statecheck)
+            dangerlistcnt.append([move, count1 + count2])
+            if count1+count2 >= maxdanger:
+                maxdanger = count1 + count2
+            print('maxdanger',maxdanger,'move',move,'count1+count2', count1+count2)
 
+        for move in dangerlistcnt:
+            if move[1] == maxdanger:
+                bestdangerlist.append(move[0])
 
         if gameoverlist != []:
             # print('gameover',gameoverlist)
             return random.choice(gameoverlist)
-        if dangerlist != []:
+        if bestdangerlist != []:
             # print('danger',dangerlist)
-            return random.choice(dangerlist)
+            return random.choice(bestdangerlist)
 
         maxcount = dict((i, maxlist.count(i)) for i in set(maxlist))
 
@@ -356,24 +376,14 @@ class human():
 # 게임 진행 및 종료 관련 클래스
 class game():
     @staticmethod
-    def ttt_play(p1, p2, randomchoice=False):
+    def ttt_play(p1, p2, random=False):
         ttt_state = board.ttt_emptyboard()
-        print(randomchoice)
         for i in range(16):
-            if randomchoice==True:
-                r=random.random()
-                if r<=0.5 :
-                    move = p1.Action(ttt_state)
-                    ttt_state[move[0]][move[1]] = 1
-                elif r>0.5 :
-                    move = p2.Action(ttt_state)
-                    ttt_state[move[0]][move[1]] = 2
-            elif randomchoice==False:
-                if i%2 == 0:
-                    move = p1.Action(ttt_state)
-                else :
-                    move = p2.Action(ttt_state)
-                ttt_state[move[0]][move[1]] = i%2 +1
+            if i%2 == 0:
+                move = p1.Action(ttt_state)
+            else :
+                move = p2.Action(ttt_state)
+            ttt_state[move[0]][move[1]] = i%2 +1
             winner = game.ttt_gameover(ttt_state)
             if winner != EMPTY:
                 return winner
@@ -475,6 +485,42 @@ class game():
                     # 한쪽이 이겨서 게임이 종료된 경우가 아니며, 빈칸도 없는 경우 비김
         return DRAW
 
+    @staticmethod
+    def gameovercount(state):  # 게임이 종료되는 조건 함수 생성
+        cnt = 0
+        for i in range(9):
+            for j in range(9):
+                try:
+                    # 한쪽이 이겨서 게임 종료되는 경우
+
+                    # 가로로 다섯칸 모두 1인 경우(player1의 흑돌이 가로로 연속 다섯칸에 놓인 경우)
+                    if state[i][j]* state[i][j + 4] == 0 and state[i][j + 1] * state[i][j + 2] * state[i][j + 3] == 1:
+                        cnt += 1
+                        # 가로로 다섯칸 모두 2인 경우(player2의 백돌이 가로로 연속 다섯칸에 놓인 경우)
+                    if state[i][j] * state[i][j + 4] == 0 and state[i][j + 1] * state[i][j + 2] * state[i][j + 3] == 8:
+                        cnt += 1
+                        # 세로로 다섯칸 모두 1인 경우(player1의 흑돌이 세로로 연속 다섯칸에 놓인 경우)
+                    if state[j][i] * state[j + 4][i] == 0 and state[j + 1][i] * state[j + 2][i] * state[j + 3][i] == 1:
+                        cnt += 1
+                        # 세로로 다섯칸 모두 2인 경우(player2의 백돌이 가로로 연속 다섯칸에 놓인 경우)
+                    if state[j][i] * state[j + 4][i] == 0 and state[j + 1][i] * state[j + 2][i] * state[j + 3][i] == 8:
+                        cnt += 1
+                        # 대각선으로 다섯칸 모두 1인 경우(player1의 흑돌이 대각선으로 연속 다섯칸에 놓인 경우)
+                    if state[i][j] *state[i + 4][j + 4] == 0 and state[i + 1][j + 1] * state[i + 2][j + 2] * state[i + 3][j + 3] == 1:
+                        cnt += 1
+                    if state[i][j + 4] * state[i + 4][j] == 0 and state[i + 1][j + 3] * state[i + 2][j + 2] * state[i + 3][j + 1] == 1:
+                        cnt += 1
+                        # 대각선으로 다섯칸 모두 2인 경우(player2의 백돌이 대각선으로 연속 다섯칸에 놓인 경우)
+                    if state[i][j] * state[i + 4][j + 4] == 0 and state[i + 1][j + 1] * state[i + 2][j + 2] * state[i + 3][j + 3]  == 8:
+                        cnt += 1
+                    if state[i][j + 4] * state[i + 4][j] == 0 and state[i + 1][j + 3] * state[i + 2][j + 2] * state[i + 3][j + 1] == 8:
+                        cnt += 1
+
+                except IndexError:  # range(9)로 인덱스 범위 넘어가는 경우 continue 로 예외처리하여 에러 안 뜨게 함
+                    continue
+        return cnt
+
+
 if __name__ == '__main__':
 
     # 파일 저장, 불러오기 input 실행절
@@ -492,12 +538,11 @@ if __name__ == '__main__':
     win_1 = 0
     win_2 = 0
     win_3 = 0
-    for i in range(10):
+    for i in range(1):
         if i % 1000 == 0:
             print('Game: {0}'.format(i))
 
-        winner = game.ttt_play(p1, p2,randomchoice=True)
-        print('winner',winner)
+        winner = game.ttt_play(p1, p2,random=True)
         if winner == 1 :
             win_1 +=1
         elif winner == 2 :
@@ -506,9 +551,6 @@ if __name__ == '__main__':
             win_3 +=1
         p1.episode_over(winner)
         p2.episode_over(winner)
-    print('win1',win_1)
-    print('win2',win_2)
-    print('win3',win_3)
 
     print('p1의 승률 : ', (win_1/(win_1+win_2+win_3)) * 100)
     print('p2의 승률 : ', (win_2/(win_1+win_2+win_3)) * 100)
@@ -557,3 +599,16 @@ if __name__ == '__main__':
         winner = game.play(p1, p2)
         p1.episode_over(winner)
         p2.episode_over(winner)
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -223,6 +223,7 @@ if __name__ == '__main__':
             ball.draw()
             paddle.move(paddle.x,0)
             paddle.draw()
+
     tk.update_idletasks()  # 우리가 창을 닫으라고 할때까지 계속해서 tkinter 에게 화면을 그려라 !
     tk.update()  # tkinter 에게 게임에서의 애니메이션을 위해 자신을 초기화하라고 알려주는것이다.
 
