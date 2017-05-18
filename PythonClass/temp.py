@@ -1,22 +1,22 @@
-# Beat tracking example
-from __future__ import print_function
-import librosa
+# import librosa
+from librosa import load, stft, feature, display
+import numpy as np
+import matplotlib.pyplot as plt
 
-# 1. Get the file path to the included audio example
-filename = librosa.util.example_audio_file()
-print(filename)
+# print(chroma)
+#
+# D = librosa.stft(y)
+# print(D)
 
-# 2. Load the audio as a waveform `y`
-#    Store the sampling rate as `sr`
-y, sr = librosa.load(filename)
+y, sr = load('d:\python\data\with coffee.wma')
+s = np.abs(stft(y)**2)
+chroma = np.around(feature.chroma_stft(S=s, sr=sr, norm=None )*10**7,decimals=2, out=None)
+D = np.around(stft(y),decimals=2,out=None)
+print('chroma',chroma)
 
-# 3. Run the default beat tracker
-tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
-
-print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
-
-# 4. Convert the frame indices of beat events into timestamps
-beat_times = librosa.frames_to_time(beat_frames, sr=sr)
-
-print('Saving output to beat_times.csv')
-librosa.output.times_csv('beat_times.csv', beat_times)
+plt.figure(figsize=(10, 4))
+display.specshow(chroma, y_axis ='chroma', x_axis='time')
+plt.colorbar()
+plt.title('Chromagram')
+plt.tight_layout()
+plt.show()
