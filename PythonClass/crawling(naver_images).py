@@ -13,8 +13,8 @@ binary = 'c:\chromedriver/chromedriver.exe'
 # 브라우져를 인스턴스화
 browser = webdriver.Chrome(binary)
 
-# 네이버의 이미지 검색 url 받아옴
-browser.get("https://search.naver.com/search.naver?where=image&amp;sm=stb_nmr&amp;")
+# 네이버의 이미지 검색 url 받아옴(아무것도 안 쳤을때의 url)
+browser.get("https://search.naver.com/search.naver?sm=tab_hty.top&where=image&oquery=&ie=utf8&query=")
 
 # 네이버의 이미지 검색에 해당하는 input 창의 id 가 'nx_query' 임(검색창에 해당하는 html코드를 찾아서 elem 사용하도록 설정)
 # input창 찾는 방법은 원노트에 있음
@@ -34,9 +34,9 @@ elem.submit()
 # 스크롤을 내리려면 브라우져 이미지 검색결과 부분(바디부분)에 마우스 클릭 한번 하고 End키를 눌러야함
 for i in range(1, 5):
     browser.find_element_by_xpath("//body").send_keys(Keys.END)
-    time.sleep(5)                  # END 키 누르고 내려가는데 시간이 걸려서 sleep 해줌
+    time.sleep(10)                  # END 키 누르고 내려가는데 시간이 걸려서 sleep 해줌
 
-time.sleep(5)                      # 네트워크 느릴까봐 안정성 위해 sleep 해줌
+time.sleep(10)                      # 네트워크 느릴까봐 안정성 위해 sleep 해줌
 html = browser.page_source         # 크롬브라우져에서 현재 불러온 소스 가져옴
 soup = BeautifulSoup(html, "lxml") # html 코드를 검색할 수 있도록 설정
 

@@ -13,19 +13,19 @@ binary = 'c:\chromedriver/chromedriver.exe'
 # 브라우져를 인스턴스화
 browser = webdriver.Chrome(binary)
 
-# 네이버의 이미지 검색 url 받아옴
-browser.get("https://search.naver.com/search.naver?where=image&amp;sm=stb_nmr&amp;")
+# 네이버의 이미지 검색 url 받아옴(아무것도 안 쳤을때의 url)
+browser.get("http://search.daum.net/search?nil_suggest=btn&w=img&DA=SBC&q=")
 
 # 네이버의 이미지 검색에 해당하는 input 창의 id 가 'nx_query' 임(검색창에 해당하는 html코드를 찾아서 elem 사용하도록 설정)
 # input창 찾는 방법은 원노트에 있음
 # find_elements_by_class_name("") --> 클래스 이름으로 찾을때는 이렇게
-elem = browser.find_element_by_id("nx_query")
+elem = browser.find_element_by_id("q")
 
 
 ########################### 검색어 입력 ###########################
 
 # elem 이 input 창과 연결되어 스스로 아이언맨을 검색
-elem.send_keys("아이언맨")
+elem.send_keys("꼬부기")
 # 웹에서의 submit 은 엔터의 역할을 함
 elem.submit()
 
@@ -34,9 +34,9 @@ elem.submit()
 # 스크롤을 내리려면 브라우져 이미지 검색결과 부분(바디부분)에 마우스 클릭 한번 하고 End키를 눌러야함
 for i in range(1, 5):
     browser.find_element_by_xpath("//body").send_keys(Keys.END)
-    time.sleep(5)                  # END 키 누르고 내려가는데 시간이 걸려서 sleep 해줌
+    time.sleep(10)                  # END 키 누르고 내려가는데 시간이 걸려서 sleep 해줌
 
-time.sleep(5)                      # 네트워크 느릴까봐 안정성 위해 sleep 해줌
+time.sleep(10)                      # 네트워크 느릴까봐 안정성 위해 sleep 해줌
 html = browser.page_source         # 크롬브라우져에서 현재 불러온 소스 가져옴
 soup = BeautifulSoup(html, "lxml") # html 코드를 검색할 수 있도록 설정
 
@@ -48,7 +48,7 @@ soup = BeautifulSoup(html, "lxml") # html 코드를 검색할 수 있도록 설�
 
 def fetch_list_url():
     params = []
-    imgList = soup.find_all("img", class_="_img")  # 네이버 이미지 url 이 있는 img 태그의 _img 클래스에 가서
+    imgList = soup.find_all("img", class_="thumb_img")  # 네이버 이미지 url 이 있는 img 태그의 _img 클래스에 가서
     for im in imgList:
         params.append(im["src"])                   # params 리스트에 image url 을 담음
     return params
@@ -59,7 +59,7 @@ def fetch_detail_url():
     # print(params)
     for idx,p in enumerate(params,1):
         # 다운받을 폴더경로 입력
-        urllib.request.urlretrieve(p, "c:/naverImages/" + str(idx) + ".jpg")
+        urllib.request.urlretrieve(p, "c:/daumImages/" + str(idx) + ".jpg")
 
 if __name__ == '__main__':
     # 메인 실행 함수
