@@ -27,5 +27,8 @@
 #     print(i, round((240/11)*i))
 from librosa import time_to_samples
 import numpy as np
-time_to_samples(np.arrange(0.1), sr=22050)
-librosa.time_to_samples(np.arange(0, 1, 0.1), sr=22050)
+# time_to_samples(np.arrange(0.1), sr=22050)
+# librosa.time_to_samples(np.arange(0, 1, 0.1), sr=22050)
+
+print(240/2069)
+print(10/2069)

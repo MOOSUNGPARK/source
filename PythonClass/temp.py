@@ -2,6 +2,8 @@
 from librosa import load, stft, feature, display
 import numpy as np
 import matplotlib.pyplot as plt
+import sklearn.metrics.pairwise as sklearn
+
 #
 # print(chroma)
 #
@@ -19,7 +21,7 @@ import matplotlib.pyplot as plt
 #     return sumxy/math.sqrt(sumxx*sumyy)
 from sklearn.metrics.pairwise import cosine_similarity
 
-y, sr = load('c:\python\data\knock.mp3', sr=4410)
+y, sr = load('d:\python\data\knock.mp3', sr=4410)
 s = np.abs(stft(y)**2)
 # chroma1 = np.around(feature.chroma_stft(S=s, sr=sr, norm=None )*10**7,decimals=2, out=None)
 # chroma = np.around(feature.chroma_stft(S=s, sr=sr) * 10, decimals=2, out=None
@@ -44,11 +46,42 @@ D = stft(y)
 chromaT=np.transpose(chroma,axes=(1,0))
 # print(chromaT)
 
-for i in range(len(chroma[0])):
-    print(cosine_similarity(chroma[:,i], chromaT))
+# for i in range(len(chroma[0])):
+    # print(cosine_similarity(chroma[:,i], chromaT))
+
+# print(cosine_similarity((chromaT[0], chromaT)))
+# print(chromaT[0])
+# print(chromaT)
+# print(cosine_similarity(chromaT[0],chroma[:,0]))
+cs= sklearn.cosine_similarity(chromaT)
+print(len(cs))
+print(len(cs[0]))
+print(cs)
+# print(cs[0][0])
+# print(cs[100][0])
+# print(cs[100][100])
+
+result = []
+
+temp = []
+for i in range(100):
+    temp.append('cs[m+{}][n+{}]'.format(i,i))
+ifcondition = ' >=0.9 and '.join(temp)
+
+for m in range(len(cs)):
+    for n in range(len(cs)):
+        try:
+            if m>n and eval(ifcondition) >= 0.9:
+                result.append(((m,n),(m+99,n+99)))
+        except IndexError:
+            continue
+print(len(result))
+
+
+
 # print(chroma[:,:])
-print(len(chroma))
-print(len(chroma[0]))
+# print(len(chroma))
+# print(len(chroma[0]))
 # final_list = []
 # for i in range(len(chroma[0])):
 #     chroma_list = []
@@ -57,13 +90,24 @@ print(len(chroma[0]))
 #     final_list.append(chroma_list)
 # print(final_list)
 
-
+'''
 plt.figure(figsize=(10, 4))
 display.specshow(chroma, y_axis ='chroma', x_axis='time')
 plt.colorbar()
 plt.title('Chromagram')
 plt.tight_layout()
 plt.show()
+'''
+plt.figure(figsize=(10, 4))
+display.specshow(cs, y_axis ='time', x_axis='time')
+plt.colorbar()
+plt.title('Chromagram_two')
+plt.tight_layout()
+plt.show()
+
+
+
+
 '''
 superfantastic
         0             24        48           71          95          119         143         167        191          214        238          262
