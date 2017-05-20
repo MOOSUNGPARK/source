@@ -21,7 +21,7 @@ import heapq
 #     return sumxy/math.sqrt(sumxx*sumyy)
 from sklearn.metrics.pairwise import cosine_similarity
 
-y, sr = load(r'c:\python\data\iluvit.mp3', sr=882)
+y, sr = load(r'd:\python\data\soso.mp3', sr=882)
 s = np.abs(stft(y)**2)
 time = get_duration(y=y, sr=sr)
 # chroma1 = np.around(feature.chroma_stft(S=s, sr=sr, norm=None )*10**7,decimals=2, out=None)
@@ -69,14 +69,14 @@ for m in range(len(cs)):
                     resultdic[int((time / len(cs)) * m)] += 1
                 else:
                     resultdic[int((time / len(cs)) * m)] = 1
-                # resultdic[int((time/len(cs))*n)] = 1 if resultdic[int((time/len(cs))*n)] == None else resultdic[int((time/len(cs))*n)] + 1
-                # resultdic[int((time/len(cs))*m)] = 1 if resultdic[int((time/len(cs))*m)] == None else resultdic[int((time / len(cs)) * m)] + 1
+                resultdic[int((time/len(cs))*n)] = 1 if resultdic[int((time/len(cs))*n)] == None else resultdic[int((time/len(cs))*n)] + 1
+                resultdic[int((time/len(cs))*m)] = 1 if resultdic[int((time/len(cs))*m)] == None else resultdic[int((time / len(cs)) * m)] + 1
                 [short.append([m + i, n + i]) for i in range(20)]
     except IndexError:
         continue
 
 result.sort(key= lambda r : r[0])
-
+print(result)
 print(resultdic)
 
 
