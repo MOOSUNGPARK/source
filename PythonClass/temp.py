@@ -3,7 +3,7 @@ from librosa import load, stft, feature, display, get_duration
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.metrics.pairwise as sklearn
-
+import heapq
 #
 # print(chroma)
 #
@@ -21,7 +21,7 @@ import sklearn.metrics.pairwise as sklearn
 #     return sumxy/math.sqrt(sumxx*sumyy)
 from sklearn.metrics.pairwise import cosine_similarity
 
-y, sr = load(r'c:\python\data\knock.mp3', sr=882)
+y, sr = load(r'c:\python\data\iluvit.mp3', sr=882)
 s = np.abs(stft(y)**2)
 time = get_duration(y=y, sr=sr)
 # chroma1 = np.around(feature.chroma_stft(S=s, sr=sr, norm=None )*10**7,decimals=2, out=None)
@@ -49,25 +49,35 @@ cs= sklearn.cosine_similarity(chromaT)
 # print(cs[100][100])
 
 result = []
+resultdic = {}
 short = []
 temp = []
 for i in range(20):
     temp.append('cs[m+{}][n+{}]'.format(i,i))
-ifcondition = ' >=0.85 and '.join(temp)
+ifcondition = ' >=0.9 and '.join(temp)
 
 for m in range(len(cs)):
     try:
         for n in range(m-1):
             if [m,n] not in short and [m+1,n] not in short and [m,n+1] not in short and eval(ifcondition) >= 0.9:
-                result.append((int((time/len(cs))*n),int(time/len(cs)*m)))
+                # result.append((int((time/len(cs))*n),int(time/len(cs)*m)))
+                if int((time / len(cs)) * n) in resultdic:
+                    resultdic[int((time / len(cs)) * n)] += 1
+                else:
+                    resultdic[int((time / len(cs)) * n)] = 1
+                if int((time / len(cs)) * m) in resultdic:
+                    resultdic[int((time / len(cs)) * m)] += 1
+                else:
+                    resultdic[int((time / len(cs)) * m)] = 1
+                # resultdic[int((time/len(cs))*n)] = 1 if resultdic[int((time/len(cs))*n)] == None else resultdic[int((time/len(cs))*n)] + 1
+                # resultdic[int((time/len(cs))*m)] = 1 if resultdic[int((time/len(cs))*m)] == None else resultdic[int((time / len(cs)) * m)] + 1
                 [short.append([m + i, n + i]) for i in range(20)]
     except IndexError:
         continue
 
 result.sort(key= lambda r : r[0])
 
-print(len(result))
-print(result)
+print(resultdic)
 
 
 # print(chroma[:,:])

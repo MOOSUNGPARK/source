@@ -195,14 +195,21 @@ import numpy as np
 # print(round(( 211/365) * 322))
 
 
-import numpy as np
-c=[]
-a = [[1+i,2+i] for i in range(10)]
-[c.append([1+i, 5+i]) for i in range(10)]
-print('c',c)
-b = [[11+i,12+i] for i in range(10)]
-print(a.append(b))
-print('a+b',a + b)
-print(a)
-print(b)
-print([1,2] in a)
+# import numpy as np
+# c=[]
+# a = [[1+i,2+i] for i in range(10)]
+# [c.append([1+i, 5+i]) for i in range(10)]
+# print('c',c)
+# b = [[11+i,12+i] for i in range(10)]
+# print(a.append(b))
+# print('a+b',a + b)
+# print(a)
+# print(b)
+# print([1,2] in a)
+#
+
+
+'''[(23, 26), (23, 28), (23, 31), (23, 92), (23, 96), (23, 102), (24, 91), (25, 31), (25, 102), (26, 91), (30, 91), (32, 91), (37, 107), (43, 125), (57, 128), (67, 179), (67, 184), (91, 94), (91, 97), (91, 100), (91, 102), (111, 122), (113, 119), (138, 179), (138, 184), (179, 185)]'''
+
+a = {'a':1, 'b':2, 'd':3, 'c':3}
+print(max(a, key= lambda r : r[0]))
