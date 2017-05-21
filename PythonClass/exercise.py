@@ -211,5 +211,19 @@ import numpy as np
 
 '''[(23, 26), (23, 28), (23, 31), (23, 92), (23, 96), (23, 102), (24, 91), (25, 31), (25, 102), (26, 91), (30, 91), (32, 91), (37, 107), (43, 125), (57, 128), (67, 179), (67, 184), (91, 94), (91, 97), (91, 100), (91, 102), (111, 122), (113, 119), (138, 179), (138, 184), (179, 185)]'''
 
-a = {'a':1, 'b':2, 'd':3, 'c':3}
-print(max(a, key= lambda r : r[0]))
+# a = {'a':1, 'b':2, 'd':3, 'c':3}
+# print(max(a, key= lambda r : r[0]))
+
+
+
+import networkx as nx
+
+
+G = nx.MultiGraph()
+G.add_nodes_from([47, 122])
+G.add_edges_from([(47, 122)])
+# nx.draw(G)
+# plt.show()
+
+print(max(nx.betweenness_centrality(G),key=nx.betweenness_centrality(G).get))
+print(nx.betweenness_centrality(G))
