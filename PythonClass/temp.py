@@ -5,8 +5,8 @@ import sklearn.metrics.pairwise as sklearn
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-music = 'palette'
-y, sr = load(r'c:\python\data\music\{}.mp3'.format(music), sr=882)
+music = 'soran'
+y, sr = load(r'd:\python\data\music\{}.mp3'.format(music), sr=882)
 s = np.abs(stft(y)**2)
 time = get_duration(y=y, sr=sr)
 
@@ -101,7 +101,7 @@ SetWindowPos(pygame.display.get_wm_info()['window'], -1, 0, 0, 0, 0, 0x0003)
 
 
 mixer.init()
-mixer.music.load(r'c:\python\data\music\{}.mp3'.format(music))
+mixer.music.load(r'd:\python\data\music\{}.mp3'.format(music))
 mixer.music.play(start=highlight)
 
 pygame.time.wait(10000)

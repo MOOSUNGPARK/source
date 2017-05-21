@@ -235,12 +235,12 @@ import numpy as np
 # pygame.mixer.music.play()
 # import pysic
 
+print(round(5/2))
 
-
-import timeit
-import pygame
-pygame.time.wait(10000)
-print(2)
+# import timeit
+# import pygame
+# pygame.time.wait(10000)
+# print(2)
 # start = timeit.default_timer()
 #
 # while timeit.default_timer() - start <= 10:
