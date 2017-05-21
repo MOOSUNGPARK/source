@@ -12,9 +12,10 @@ from ctypes import windll
 # withcoffee / imissyou / ahyeah / newface /
 # skyrim / noreply / soran / friday / wouldu /
 # whistle / beautiful / loser / soso /
+# superfantastic /
 
 ############### 플레이 정보 ###############
-music_name = 'newface'           # 노래 제목
+music_name = 'russian'           # 노래 제목
 play_duration = 20              # 재생 시간
 
 #########################################
@@ -123,7 +124,7 @@ class Song(object):
         ########## eigenvector_centrality ##########
         centrality = nx.eigenvector_centrality_numpy(G)
         print('Analyzing Finished(3/3)')
-        return max(centrality, key=centrality.get) - 0.5
+        return max(centrality, key=centrality.get) - 0.2
 
         ########## betweenness_centrality ##########
         # centrality = nx.betweenness_centrality(G)
