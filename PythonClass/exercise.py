@@ -214,16 +214,38 @@ import numpy as np
 # a = {'a':1, 'b':2, 'd':3, 'c':3}
 # print(max(a, key= lambda r : r[0]))
 
+#
+# import networkx as nx
+#
+#
+# G = nx.MultiGraph()
+# G.add_nodes_from([47, 122])
+# G.add_edges_from([(47, 122)])
 
 
-import networkx as nx
+
+# pygame.mixer.init()
+# pygame.mixer.pre_init(44100, -16, 2, 2048)
+# pygame.init()
+# print "hey I finaly got this working!"
+# pygame.mixer.music.load('D:/Users/John/Music/Music/FUN.OGG')
+# pygame.mixer.music.load('D:/Users/John/Music/Music/Still Alive.OGG')
+# pygame.mixer.music.load('D:/Users/John/Music/Music/turret.OGG')
+# pygame.mixer.music.load('D:/Users/John/Music/Music/portalend.OGG')
+# pygame.mixer.music.play()
+# import pysic
 
 
-G = nx.MultiGraph()
-G.add_nodes_from([47, 122])
-G.add_edges_from([(47, 122)])
-# nx.draw(G)
-# plt.show()
 
-print(max(nx.betweenness_centrality(G),key=nx.betweenness_centrality(G).get))
-print(nx.betweenness_centrality(G))
+import timeit
+import pygame
+pygame.time.wait(10000)
+print(2)
+# start = timeit.default_timer()
+#
+# while timeit.default_timer() - start <= 10:
+#     print('start',start)
+#     print('now',timeit.default_timer())
+# stop = timeit.default_timer()
+#
+# print(stop - start)
