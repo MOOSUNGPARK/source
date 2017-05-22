@@ -12,10 +12,10 @@ from ctypes import windll
 # withcoffee / imissyou / ahyeah / newface /
 # skyrim / noreply / soran / friday / wouldu /
 # whistle / beautiful / loser / soso /
-# superfantastic /
+# superfantastic / aoa /
 
 ############### 플레이 정보 ###############
-music_name = 'russian'           # 노래 제목
+music_name = 'withcoffee'           # 노래 제목
 play_duration = 20              # 재생 시간
 
 #########################################
@@ -27,12 +27,9 @@ class Song(object):
         self.result = []
         self.nodes = []
         self.alreadyexists = []
-        ###################
-        # self.maxnode = 0
-        ###################
 
     def LoadSong(self):
-        y, sr = load(r'd:\python\data\music\{}.mp3'.format(self.music), sr=882)
+        y, sr = load(r'c:\python\data\music\{}.mp3'.format(self.music), sr=882)
         s = np.abs(stft(y)**2)
         self.time = get_duration(y=y, sr=sr)
         chroma = feature.chroma_stft(S=s, sr=sr)
@@ -45,13 +42,7 @@ class Song(object):
         for i in range(10):
             temp.append('cs[m+{}][n+{}]'.format(2*i,2*i))
         return ' + '.join(temp)
-##############################################################
-    # def IfCondition2(self):
-    #     temp = []
-    #     for i in range(6):
-    #         temp.append('cs[m+{}][n+{}]'.format(5*i,5*i))
-    #     return ' + '.join(temp)
-##############################################################
+
     def FindNodes(self, cs, converttime, ifcondition, accuracy):
         for m in range(len(cs)):
             try:
@@ -70,25 +61,6 @@ class Song(object):
         elif num == 1 :
             return 1
         return self.fibo(num - 1) + self.fibo(num - 2)
-
-#############################################################
-    # def MaxNodes(self):
-    #     cs = self.LoadSong()
-    #     converttime = (self.time / len(cs))
-    #     ifcondition = self.IfCondition2()
-    #     maxvalue = 0
-    #     for m in range(len(cs)):
-    #         try:
-    #             for n in range(m - 1):
-    #                 if [m, n] not in self.alreadyexists and eval(ifcondition) >= maxvalue:
-    #                     maxvalue = eval(ifcondition)
-    #                     self.maxnode = [(int(converttime * m)),(int(converttime * n))]
-    #                     [self.alreadyexists.append([m + i, n + i]) for i in range(10)]
-    #         except IndexError:
-    #             continue
-    #     print('Making Nodes Finished(2/3)')
-    #     return self.maxnode[1] - 0.5
-#############################################################
 
     def MakeNodes(self):
         cs = self.LoadSong()
@@ -126,25 +98,19 @@ class Song(object):
         print('Analyzing Finished(3/3)')
         return max(centrality, key=centrality.get) - 0.2
 
-        ########## betweenness_centrality ##########
-        # centrality = nx.betweenness_centrality(G)
-        # highlight = max(centrality,key=centrality.get) - 0.8
-
 
 class Play(object):
     @staticmethod
     def PlaySong():
         song = Song(music_name)
         highlight = song.Analysis()
-        ################################
-        # highlight = song.MaxNodes()
-        ################################
+
         init()
         mixer.init()
         display.set_mode((100,100))
         SetWindowPos = windll.user32.SetWindowPos
         SetWindowPos(display.get_wm_info()['window'], -1, 0, 0, 0, 0, 0x0003)
-        mixer.music.load(r'd:\python\data\music\{}.mp3'.format(music_name))
+        mixer.music.load(r'c:\python\data\music\{}.mp3'.format(music_name))
         print('Music Start!')
         mixer.music.play(start=highlight)
         time.wait(play_duration * 1000)

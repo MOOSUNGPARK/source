@@ -45,12 +45,11 @@ class Song(object):
             temp.append('cs[m+{}][n+{}]'.format(2*i,2*i))
         return ' + '.join(temp)
 ##############################################################
-    def IfCondition2(self):
-        temp = []
-        for i in range(6):
-            temp.append('cs[m+{}][n+{}]'.format(5*i,5*i))
-        return ' + '.join(temp)
-
+    # def IfCondition2(self):
+    #     temp = []
+    #     for i in range(6):
+    #         temp.append('cs[m+{}][n+{}]'.format(5*i,5*i))
+    #     return ' + '.join(temp)
 ##############################################################
     def FindNodes(self, cs, converttime, ifcondition, accuracy):
         for m in range(len(cs)):
@@ -72,22 +71,22 @@ class Song(object):
         return self.fibo(num - 1) + self.fibo(num - 2)
 
 #############################################################
-    def MaxNodes(self):
-        cs = self.LoadSong()
-        converttime = (self.time / len(cs))
-        ifcondition = self.IfCondition2()
-        maxvalue = 0
-        for m in range(len(cs)):
-            try:
-                for n in range(m - 1):
-                    if [m, n] not in self.alreadyexists and eval(ifcondition) >= maxvalue:
-                        maxvalue = eval(ifcondition)
-                        self.maxnode = [(int(converttime * m)),(int(converttime * n))]
-                        [self.alreadyexists.append([m + i, n + i]) for i in range(10)]
-            except IndexError:
-                continue
-        print('Making Nodes Finished(2/3)')
-        return self.maxnode[1] - 0.5
+    # def MaxNodes(self):
+    #     cs = self.LoadSong()
+    #     converttime = (self.time / len(cs))
+    #     ifcondition = self.IfCondition2()
+    #     maxvalue = 0
+    #     for m in range(len(cs)):
+    #         try:
+    #             for n in range(m - 1):
+    #                 if [m, n] not in self.alreadyexists and eval(ifcondition) >= maxvalue:
+    #                     maxvalue = eval(ifcondition)
+    #                     self.maxnode = [(int(converttime * m)),(int(converttime * n))]
+    #                     [self.alreadyexists.append([m + i, n + i]) for i in range(10)]
+    #         except IndexError:
+    #             continue
+    #     print('Making Nodes Finished(2/3)')
+    #     return self.maxnode[1] - 0.5
 #############################################################
 
     def MakeNodes(self):
