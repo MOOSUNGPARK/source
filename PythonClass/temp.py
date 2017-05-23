@@ -1,153 +1,56 @@
-from librosa import load, stft, feature, display, get_duration
+import collections
 import numpy as np
-import matplotlib.pyplot as plt
-import sklearn.metrics.pairwise as sklearn
-from sklearn.metrics.pairwise import cosine_similarity
+from collections import defaultdict
 
+def class_probabilities(labels):
+    values = collections.Counter(labels).values()
+    return [value/sum(values) for value in values]
 
-music = 'soran'
-y, sr = load(r'd:\python\data\music\{}.mp3'.format(music), sr=882)
-s = np.abs(stft(y)**2)
-time = get_duration(y=y, sr=sr)
+def entropy(labels):
+    prob_list = class_probabilities(labels)
+    return float(sum(-prob * np.log2(prob) for prob in prob_list if prob != 0))
 
-chroma = feature.chroma_stft(S=s, sr=sr)
-chromaT=np.transpose(chroma,axes=(1,0))
-cs= cosine_similarity(chromaT)
+def entropy_group(inputs):
+    keys = inputs[0][0].keys()
 
-result = []
-resultdic = {}
-nodes = []
-short = []
-temp = []
-for i in range(10):
-    temp.append('cs[m+{}][n+{}]'.format(2*i,2*i))
-ifcondition = ' >=0.9 and '.join(temp)
+    for key in keys :
+        if key != 'cust_name':
+            group = []
+            for input in inputs:
+                group.append(input[0][key])
+            print(key, entropy(group))
 
-for m in range(len(cs)):
-    try:
-        for n in range(m-1):
-            # if cs[m][n]>=0.98:
-            if [m,n] not in short and eval(ifcondition) >= 0.9:
-                result.append( (int((time / len(cs)) * m),int((time / len(cs)) * n)))
-                nodes.append((int((time / len(cs)) * m)))
-                nodes.append((int((time / len(cs)) * n)))
-                [short.append([m + i, n + i]) for i in range(20)]
-                # result.append((int((time/len(cs))*n),int(time/len(cs)*m)))
-                # # if int((time / len(cs)) * n) in resultdic:
-                # #     resultdic[int((time / len(cs)) * n)] += 1
-                # # else:
-                # #     resultdic[int((time / len(cs)) * n)] = 1
-                # # if int((time / len(cs)) * m) in resultdic:
-                # #     resultdic[int((time / len(cs)) * m)] += 1
-                # # else:
-                # #     resultdic[int((time / len(cs)) * m)] = 1
-                # resultdic[int((time/len(cs))*n)] = 1 if int((time/len(cs)) *n) not in resultdic else resultdic[int((time/len(cs))*n)] + 1
-                # resultdic[int((time/len(cs))*m)] = 1 if int((time/len(cs)) *m) not in resultdic else resultdic[int((time / len(cs)) * m)] + 1
-                # [short.append([m + i, n + i]) for i in range(20)]
-    except IndexError:
-        continue
+def column_data(inputs, column):
+    groups = defaultdict(list)
+    for input in inputs:
+        key = input[0][column]
+        groups[key].append(input[1])
+    return groups
 
-# result.sort(key= lambda r : r[0])
-# print(result)
-# print(resultdic.keys())
+def column_data_to_list(groups):
+    result = []
+    keys = groups.keys()
+    for key in keys:
+        result.append(groups[key])
+    return result
 
-#############################################
+def partition_entropy(groups):
+    subsets = column_data_to_list(groups)
+    total_count = sum(len(subset) for subset in subsets)
+    return sum(entropy(subset) * len(subset)/total_count for subset in subsets)
 
-import networkx as nx
+if __name__ == '__main__':
+    inputs = [
+        ({'cust_name': 'SCOTT', 'card_yn': 'Y', 'review_yn': 'Y', 'before_buy_yn': 'Y'}, True),
+        ({'cust_name': 'SMITH', 'card_yn': 'Y', 'review_yn': 'Y', 'before_buy_yn': 'Y'}, True),
+        ({'cust_name': 'ALLEN', 'card_yn': 'N', 'review_yn': 'N', 'before_buy_yn': 'Y'}, False),
+        ({'cust_name': 'JONES', 'card_yn': 'Y', 'review_yn': 'N', 'before_buy_yn': 'N'}, True),
+        ({'cust_name': 'WARD', 'card_yn': 'Y', 'review_yn': 'Y', 'before_buy_yn': 'Y'}, True)]
 
+    entropy_group(inputs)
 
-G = nx.MultiGraph()
-G.add_nodes_from(list(set(nodes)))
-G.add_edges_from(result)
-# plt.show()
+    for column in inputs[0][0].keys():
+        if column != 'cust_name':
+            print(column ,partition_entropy(column_data(inputs, column)))
 
-############ betweenness_centrality ###################
-# centrality = nx.betweenness_centrality(G)
-# highlight = max(centrality,key=centrality.get) - 0.8
-# print(centrality)
-# print(highlight)
-
-############ eigenvector_centrality ###################
-centrality = nx.eigenvector_centrality_numpy(G)
-highlight = max(centrality,key=centrality.get) - 0.8
-print(centrality)
-print(highlight)
-
-
-#############################################
-from pygame import mixer
-import pygame
-########################
-from ctypes import windll
-SetWindowPos = windll.user32.SetWindowPos
-#
-# NOSIZE = 1
-# NOMOVE = 2
-# TOPMOST = -1
-# NOT_TOPMOST = -2
-#
-# def alwaysOnTop(yesOrNo):
-#     zorder = (NOT_TOPMOST, TOPMOST)[yesOrNo] # choose a flag according to bool
-#     hwnd = pygame.display.get_wm_info()['window'] # handle to the window
-#     SetWindowPos(hwnd, zorder, 0, 0, 0, 0, NOMOVE|NOSIZE)
-
-#########################
-
-pygame.init()
-window = pygame.display.set_mode((100,100))
-
-
-SetWindowPos(pygame.display.get_wm_info()['window'], -1, 0, 0, 0, 0, 0x0003)
-
-
-mixer.init()
-mixer.music.load(r'd:\python\data\music\{}.mp3'.format(music))
-mixer.music.play(start=highlight)
-
-pygame.time.wait(10000)
-pygame.quit()
-
-
-while True :
-    mixer.music.fadeout( (highlight + 20) *1000)
-    # mixer.music.stop()
-    for event in pygame.event.get():
-
-        if event.type == pygame.QUIT:
-            pygame.quit()
-
-# circle = pygame.draw.circle(window, (50,30,90), (90,30),16,5)
-
-
-# import timeit
-# start = timeit.default_timer()
-# while timeit.default_timer() - start <= 10:
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             pygame.quit()
-#     pygame.display.update()
-
-#
-# plt.figure(figsize=(10, 10))
-# display.specshow(cs, y_axis ='time', x_axis='time')
-# plt.colorbar()
-# plt.title('{}'.format(music))
-# plt.tight_layout()
-# plt.show()
-
-
-
-'''
-import networkx as nx
-
-
-G = nx.MultiGraph()
-G.add_nodes_from([47, 122])
-G.add_edges_from([(47, 122)])
-# nx.draw(G)
-# plt.show()
-
-print(max(nx.betweenness_centrality(G),key=nx.betweenness_centrality(G).get))
-print(nx.betweenness_centrality(G))
-'''
 
