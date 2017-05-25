@@ -16,8 +16,8 @@ from ctypes import windll
 # butterfly / oohahh / seethrough / primary /
 
 ############### 플레이 정보 ###############
-music_name = 'russian'           # 노래 제목
-play_duration = 20              # 재생 시간
+music_name = 'soso'           # 노래 제목
+play_duration = 10              # 재생 시간
 
 #########################################
 class Song(object):
@@ -69,11 +69,11 @@ class Song(object):
         ifcondition = self.IfCondition()
         trycnt = 0
 
-        self.FindNodes(cs, converttime, ifcondition, accuracy=0.995)
+        self.FindNodes(cs, converttime, ifcondition, accuracy=0.99)
 
         while len(self.result) <= 1 :
             trycnt += 1
-            self.FindNodes(cs, converttime, ifcondition, accuracy=0.997 - 0.006 * self.fibo(trycnt))
+            self.FindNodes(cs, converttime, ifcondition, accuracy=1 - 0.006 * self.fibo(trycnt))
             print('Changing Accuracy...')
 
         print('Making Nodes Finished(2/3)')

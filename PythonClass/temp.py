@@ -1,102 +1,156 @@
-import collections
+from librosa import load, stft, feature, get_duration
 import numpy as np
-from collections import defaultdict
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import normalize
+import scipy.stats as ss
+import matplotlib.pyplot as plt
+import networkx as nx
+from pygame import mixer,init, display, time, quit
+from ctypes import windll
 
-def class_probabilities(labels):
-    values = collections.Counter(labels).values()
-    return [value/sum(values) for value in values]
+############### 플레이리스트 ###############
+# bigbang / iluvit / inception / knock /
+# palette / raindrop / rookie / russian /
+# withcoffee / imissyou / ahyeah / newface /
+# skyrim / noreply / soran / friday / wouldu /
+# whistle / beautiful / loser / soso /
+# superfantastic / aoa / liz / ending /
+# butterfly / oohahh / seethrough / primary /
 
-def entropy(labels):
-    prob_list = class_probabilities(labels)
-    return float(sum(-prob * np.log2(prob) for prob in prob_list if prob != 0))
+############### 플레이 정보 ###############
+music_name = 'soso'           # 노래 제목
+play_duration = 5              # 재생 시간
 
-def entropy_group(inputs):
-    keys = inputs[0][0].keys()
+#########################################
+class Song(object):
+    def __init__(self,music_name,show=False):
+        self.music = music_name
+        self.time = 0
+        self.show = show
+        self.result = []
+        self.nodes = []
+        self.alreadyexists = []
 
-    for key in keys :
-        if key != 'cust_name':
-            group = []
-            for input in inputs:
-                group.append(input[1])
-            print(key, entropy(group))
+    def LoadSong(self):
+        y, sr = load(r'c:\python\data\music\{}.mp3'.format(self.music), sr=882)
+        s = np.abs(stft(y)**2)
+        self.time = get_duration(y=y, sr=sr)
+        chroma = feature.chroma_stft(S=s, sr=sr)
+        chromaT=np.transpose(chroma,axes=(1,0))
+        print('Loading Finished(1/3)')
+        return cosine_similarity(chromaT)
 
-def column_data(inputs, column):
-    groups = defaultdict(list)
-    for input in inputs:
-        key = input[0][column]
-        groups[key].append(input[1])
-    return groups
+    def IfCondition(self):
+        temp = []
+        for i in range(10):
+            temp.append('cs[m+{}][n+{}]'.format(2*i,2*i))
+        return ' + '.join(temp)
 
-def column_data_to_list(groups):
-    result = []
-    keys = groups.keys()
-    for key in keys:
-        result.append(groups[key])
-    return result
+    def FindNodes(self, cs, converttime, ifcondition, accuracy):
+        for m in range(len(cs)):
+            try:
+                for n in range(m-1):
+                    if [m,n] not in self.alreadyexists and eval(ifcondition)/10 >= accuracy:
+                        self.result.append((int(converttime * m),int(converttime * n)))
+                        self.nodes.append((int(converttime * m)))
+                        self.nodes.append((int(converttime * n)))
+                        [self.alreadyexists.append([m + i, n + i]) for i in range(20)]
+            except IndexError:
+                continue
 
-def partition_entropy(groups):
-    subsets = column_data_to_list(groups)
-    total_count = sum(len(subset) for subset in subsets)
-    return sum(entropy(subset) * len(subset)/total_count for subset in subsets)
+    def fibo(self, num):
+        if num == 2:
+            return 2
+        elif num == 1 :
+            return 1
+        return self.fibo(num - 1) + self.fibo(num - 2)
+
+    def MakeNodes(self):
+        css = self.LoadSong()
+        print('mean',np.mean(css))
+        # print('norm',np.linalg.norm(cs))
+        # cs = (cs- np.mean(cs))/np.linalg.norm(cs)
+        print('std',np.std(css))
+        cs = (css- np.mean(css))/np.std(css)
+
+
+        # cs = ss.zscore(cs, axis = 1)
+        # A = np.array(ss.zscore(A))
+
+        print(cs)
+        converttime = (self.time / len(cs))
+        ifcondition = self.IfCondition()
+        trycnt = 0
+
+        self.FindNodes(cs, converttime, ifcondition, accuracy=0.998)
+
+        while len(self.result) <= 1 :
+            trycnt += 1
+            self.FindNodes(cs, converttime, ifcondition, accuracy=0.997 - 0.005 * self.fibo(trycnt))
+            print('Changing Accuracy...')
+
+        print('Making Nodes Finished(2/3)')
+        return cs
+
+    def Analysis(self):
+        cs = self.MakeNodes()
+
+        if self.show == True:
+            plt.figure(figsize=(10, 10))
+            display.specshow(cs, y_axis ='time', x_axis='time')
+            plt.colorbar()
+            plt.title('{}'.format(music_name))
+            plt.tight_layout()
+            plt.show()
+
+        G = nx.MultiGraph()
+        G.add_nodes_from(list(set(self.nodes)))
+        G.add_edges_from(self.result)
+
+        ########## eigenvector_centrality ##########
+        centrality = nx.eigenvector_centrality_numpy(G)
+        print('Analyzing Finished(3/3)')
+        return max(centrality, key=centrality.get) - 0.2
+
+
+class Play(object):
+    @staticmethod
+    def PlaySong():
+        song = Song(music_name)
+        highlight = song.Analysis()
+
+        init()
+        mixer.init()
+        display.set_mode((100,100))
+        SetWindowPos = windll.user32.SetWindowPos
+        SetWindowPos(display.get_wm_info()['window'], -1, 0, 0, 0, 0, 0x0003)
+        mixer.music.load(r'c:\python\data\music\{}.mp3'.format(music_name))
+        print('Music Start!')
+        mixer.music.play(start=highlight)
+        time.wait(play_duration * 1000)
+        quit()
 
 if __name__ == '__main__':
-    inputs = [
-        ({'cust_name': 'SCOTT', 'card_yn': 'Y', 'review_yn': 'Y', 'before_buy_yn': 'Y'}, True),
-        ({'cust_name': 'SMITH', 'card_yn': 'Y', 'review_yn': 'Y', 'before_buy_yn': 'Y'}, True),
-        ({'cust_name': 'ALLEN', 'card_yn': 'N', 'review_yn': 'N', 'before_buy_yn': 'Y'}, False),
-        ({'cust_name': 'JONES', 'card_yn': 'Y', 'review_yn': 'N', 'before_buy_yn': 'N'}, True),
-        ({'cust_name': 'WARD', 'card_yn': 'Y', 'review_yn': 'Y', 'before_buy_yn': 'Y'}, True)]
+    Play.PlaySong()
 
-    entropy_group(inputs)
 
-    for column in inputs[0][0].keys():
-        if column != 'cust_name':
-            print(column ,partition_entropy(column_data(inputs, column)))
+'''
+0.798354929193
+335.126559737
+
+0.734824992248
+278.682967278
+
+0.585500022673
+260.938736095
+
+-------------------------------
+0.585500022673
+0.203347998736
+
+
 
 
 
 
 '''
-
-groups defaultdict(<class 'list'>, {'Y': [True, True, True, True], 'N': [False]})
-result [[True, True, True, True], [False]]
-5
-dict_values([4])
-dict_values([1])
-card_yn 0.0
-groups defaultdict(<class 'list'>, {'Y': [True, True, True], 'N': [False, True]})
-result [[True, True, True], [False, True]]
-5
-dict_values([3])
-dict_values([1, 1])
-review_yn 0.4
-groups defaultdict(<class 'list'>, {'Y': [True, True, False, True], 'N': [True]})
-result [[True, True, False, True], [True]]
-5
-dict_values([3, 1])
-dict_values([1])
-before_buy_yn 0.6490224995673063
-
-'''
-
-
-
-inputs = []  # 최종적으로 사용할 데이터셋의 형태가 리스트여야 하기 때문에 빈 리스트를 생성합니다.
-
-import csv
-
-file = open(r"c:\python\data\skin2.csv", "r")  # csv 파일로 데이터셋을 불러옴
-fatliver = csv.reader(file)
-inputss = []
-for i in fatliver:
-    inputss.append(i)  # 데이터 값
-
-labelss = ['gender', 'age', 'job', 'marry', 'car', 'coupon_react']  # 데이터의 라벨(컬럼명)
-
-for data in inputss:  # 위처럼 리스트로 된 데이터값과 리스트로된 라벨(컬럼명)을 분석에 맞는 데이터형태로 바꾸는 과정.
-    temp_dict = {}  # 데이터셋 = [ ( {데이터가 되는 컬럼의 키와 값으로 구성된 딕셔너리}, 분석타겟컬럼의 값  ) , ..... ] 의 형태로 되어있어야 분석할 수 있다.
-    c = len(labelss) - 1  # 데이터셋의 최종값을 타겟변수로 두었기 때문에 타겟변수는 데이터값 딕셔너리에 넣지 않습니다. 분석타겟변수의 위치를 잡아주는 값
-    for i in range(c):  # 타겟변수를 제외한 나머지 변수들로 딕셔너리에 데이터를 입력
-        if i != c:  # 생성한 딕셔너리와 넣지 않은 타겟변수를 분석을 위한 큰 튜플안에 입력
-            temp_dict[labelss[i]] = data[i]
-    inputs.append(tuple((temp_dict, True if data[c] == 'YES' else False)))  #
