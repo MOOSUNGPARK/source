@@ -35,7 +35,7 @@ class Song(object):
         s = np.abs(stft(y)**4)
         self.time = get_duration(y=y, sr=sr)
         chroma = feature.chroma_stft(S=s, sr=sr)
-        # chromaT = np.transpose(chroma, axes=(1, 0))
+        chromaT = np.transpose(chroma, axes=(1, 0))
 
         # volume =[]
         # for idx in range(len(s)):
@@ -45,7 +45,7 @@ class Song(object):
         #         volume.append(0)
         # volume = sum(s[:,idx] for idx in range(len(s[0])))
 
-        return chroma
+        return cosine_similarity(chromaT)
 
     # def IfCondition(self):
     #     temp = []
@@ -82,8 +82,8 @@ class Song(object):
         # cs = scale(cs, axis=0, copy=False)
         # volume = scale(volume, axis=0, copy=False, with_mean=False)
         print('cs No', cs)
-        cs = cs / np.linalg.norm(cs)
-        # cs = normalize(cs, axis=0)
+        # cs = cs / np.linalg.norm(cs)
+        cs = normalize(cs, axis=0)
         # norm2 = normalize(x[:, np.newaxis], axis=0).ravel()
 
         # self.FindNodes(cs, converttime, ifcondition, accuracy=0.9)

@@ -1,4 +1,5 @@
 from librosa import load, stft, feature, get_duration
+import librosa.display as ld
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
@@ -84,7 +85,7 @@ class Song(object):
 
         if self.show == True:
             plt.figure(figsize=(10, 10))
-            display.specshow(cs, y_axis ='time', x_axis='time')
+            ld.specshow(cs, y_axis ='time', x_axis='time')
             plt.colorbar()
             plt.title('{}'.format(music_name))
             plt.tight_layout()

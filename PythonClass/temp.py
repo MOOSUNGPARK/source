@@ -18,19 +18,20 @@ from ctypes import windll
 # butterfly / oohahh / seethrough / primary /
 
 ############### 플레이 정보 ###############
-music_name = 'soso'           # 노래 제목
+music_name = 'palette'           # 노래 제목
 play_duration = 5              # 재생 시간
 
 #########################################
 class Song(object):
-    def __init__(self,music_name,show=False):
+    def __init__(self,music_name,show=True):
         self.music = music_name
         self.time = 0
         self.show = show
         self.result = []
         self.nodes = []
         self.alreadyexists = []
-
+        self.mean = 0
+        self.std = 0
     def LoadSong(self):
         y, sr = load(r'c:\python\data\music\{}.mp3'.format(self.music), sr=882)
         s = np.abs(stft(y)**2)
@@ -38,6 +39,7 @@ class Song(object):
         chroma = feature.chroma_stft(S=s, sr=sr)
         chromaT=np.transpose(chroma,axes=(1,0))
         print('Loading Finished(1/3)')
+
         return cosine_similarity(chromaT)
 
     def IfCondition(self):
@@ -57,6 +59,7 @@ class Song(object):
                         [self.alreadyexists.append([m + i, n + i]) for i in range(20)]
             except IndexError:
                 continue
+        print(self.result)
 
     def fibo(self, num):
         if num == 2:
@@ -67,27 +70,29 @@ class Song(object):
 
     def MakeNodes(self):
         css = self.LoadSong()
-        print('mean',np.mean(css))
+        # print('mean',np.mean(css))
         # print('norm',np.linalg.norm(cs))
         # cs = (cs- np.mean(cs))/np.linalg.norm(cs)
-        print('std',np.std(css))
-        cs = (css- np.mean(css))/np.std(css)
-
-
+        self.mean =  np.mean(css)
+        self.std = np.std(css)
+        cs = (css- self.mean)/self.std
+        # print('std',self.std)
+        # print('cs',cs[:,100])
         # cs = ss.zscore(cs, axis = 1)
         # A = np.array(ss.zscore(A))
 
-        print(cs)
+        # print(cs)
         converttime = (self.time / len(cs))
         ifcondition = self.IfCondition()
         trycnt = 0
 
-        self.FindNodes(cs, converttime, ifcondition, accuracy=0.998)
+        self.FindNodes(cs, converttime, ifcondition, accuracy=self.mean + self.std * 1.96) # 1.96)
 
-        while len(self.result) <= 1 :
-            trycnt += 1
-            self.FindNodes(cs, converttime, ifcondition, accuracy=0.997 - 0.005 * self.fibo(trycnt))
-            print('Changing Accuracy...')
+        #
+        # while len(self.result) <= 1 :
+        #     trycnt += 1
+        #     self.FindNodes(cs, converttime, ifcondition, accuracy=0.997 - 0.005 * self.fibo(trycnt))
+        #     print('Changing Accuracy...')
 
         print('Making Nodes Finished(2/3)')
         return cs
