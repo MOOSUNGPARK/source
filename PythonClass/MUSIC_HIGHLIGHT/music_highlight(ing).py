@@ -31,7 +31,7 @@ class Song(object):
         self.alreadyexists = []
 
     def LoadSong(self):
-        y, sr = load(r'd:\python\data\music\{}.mp3'.format(self.music), sr=882)
+        y, sr = load(r'c:\python\data\music\{}.mp3'.format(self.music), sr=882)
         s = np.abs(stft(y)**4)
         self.time = get_duration(y=y, sr=sr)
         chroma = feature.chroma_stft(S=s, sr=sr)
@@ -170,7 +170,7 @@ class Play(object):
         display.set_mode((100,100))
         SetWindowPos = windll.user32.SetWindowPos
         SetWindowPos(display.get_wm_info()['window'], -1, 0, 0, 0, 0, 0x0003)
-        mixer.music.load(r'd:\python\data\music\{}.mp3'.format(music_name))
+        mixer.music.load(r'c:\python\data\music\{}.mp3'.format(music_name))
         print('Music Start!')
         mixer.music.play(start=highlight)
         time.wait(play_duration * 1000)

@@ -8,7 +8,7 @@ import networkx as nx
 from pygame import mixer,init, display, time, quit
 from ctypes import windll
 
-############### 플레이리스트 ###############
+############### 플레이리스트 ################
 # bigbang / iluvit / inception / knock /
 # palette / raindrop / rookie / russian /
 # withcoffee / imissyou / ahyeah / newface /

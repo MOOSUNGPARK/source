@@ -16,7 +16,7 @@ from ctypes import windll
 # butterfly / oohahh / seethrough / primary /
 
 ############### 플레이 정보 ###############
-music_name = 'soso'           # 노래 제목
+music_name = 'russian'           # 노래 제목
 play_duration = 10              # 재생 시간
 
 #########################################
