@@ -128,5 +128,21 @@ print(0.564089681928+ 0.261453818058* 1.96)
 
 
 
+from sklearn.cluster import KMeans
+import numpy as np
+X = np.array([[1, 2], [1, 4], [1, 0],
+              [4, 2], [4, 4], [4, 0]])
+kmeans = KMeans(n_clusters=2, random_state=0).fit(X)
+kmeans.labels_
+
+kmeans.predict([[0, 0], [4, 4]])
+
+kmeans.cluster_centers_
+
+
+from sklearn.cluster import KMeans
+Ks = range(1, 10)
+km = [KMeans(n_clusters=i) for i in Ks]
+score = [km[i].fit(my_matrix).score(my_matrix) for i in range(len(km))]
 
 

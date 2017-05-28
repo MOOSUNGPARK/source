@@ -1,14 +1,16 @@
 from librosa import load, stft, feature, get_duration
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import normalize
-import scipy.stats as ss
+from sklearn.preprocessing import scale, MinMaxScaler, normalize
 import matplotlib.pyplot as plt
 import networkx as nx
 from pygame import mixer,init, display, time, quit
 from ctypes import windll
+from sklearn.cluster import KMeans
 
-############### 플레이리스트 ################
+
+
+############### 플레이리스트 ###############
 # bigbang / iluvit / inception / knock /
 # palette / raindrop / rookie / russian /
 # withcoffee / imissyou / ahyeah / newface /
@@ -18,87 +20,73 @@ from ctypes import windll
 # butterfly / oohahh / seethrough / primary /
 
 ############### 플레이 정보 ###############
-music_name = 'palette'           # 노래 제목
-play_duration = 5              # 재생 시간
+music_name = 'knock'           # 노래 제목
+play_duration = 20              # 재생 시간
 
 #########################################
 class Song(object):
-    def __init__(self,music_name,show=True):
+    def __init__(self,music_name,show=False):
         self.music = music_name
         self.time = 0
         self.show = show
         self.result = []
         self.nodes = []
         self.alreadyexists = []
-        self.mean = 0
-        self.std = 0
+
     def LoadSong(self):
         y, sr = load(r'c:\python\data\music\{}.mp3'.format(self.music), sr=882)
-        s = np.abs(stft(y)**2)
+        s = np.abs(stft(y)**4)
         self.time = get_duration(y=y, sr=sr)
         chroma = feature.chroma_stft(S=s, sr=sr)
-        chromaT=np.transpose(chroma,axes=(1,0))
-        print('Loading Finished(1/3)')
-
-        return cosine_similarity(chromaT)
-
-    def IfCondition(self):
-        temp = []
-        for i in range(10):
-            temp.append('cs[m+{}][n+{}]'.format(2*i,2*i))
-        return ' + '.join(temp)
-
-    def FindNodes(self, cs, converttime, ifcondition, accuracy):
-        for m in range(len(cs)):
-            try:
-                for n in range(m-1):
-                    if [m,n] not in self.alreadyexists and eval(ifcondition)/10 >= accuracy:
-                        self.result.append((int(converttime * m),int(converttime * n)))
-                        self.nodes.append((int(converttime * m)))
-                        self.nodes.append((int(converttime * n)))
-                        [self.alreadyexists.append([m + i, n + i]) for i in range(20)]
-            except IndexError:
-                continue
-        print(self.result)
-
-    def fibo(self, num):
-        if num == 2:
-            return 2
-        elif num == 1 :
-            return 1
-        return self.fibo(num - 1) + self.fibo(num - 2)
+        chromaT= np.transpose(chroma)
+        song_dic=dict(enumerate(chromaT))
+        return chromaT
 
     def MakeNodes(self):
-        css = self.LoadSong()
-        # print('mean',np.mean(css))
-        # print('norm',np.linalg.norm(cs))
-        # cs = (cs- np.mean(cs))/np.linalg.norm(cs)
-        self.mean =  np.mean(css)
-        self.std = np.std(css)
-        cs = (css- self.mean)/self.std
-        # print('std',self.std)
-        # print('cs',cs[:,100])
-        # cs = ss.zscore(cs, axis = 1)
-        # A = np.array(ss.zscore(A))
+        chroma = self.LoadSong()
 
-        # print(cs)
-        converttime = (self.time / len(cs))
-        ifcondition = self.IfCondition()
-        trycnt = 0
+        # converttime = (self.time / len(cs))
+        # kmeans = KMeans(n_clusters=3, random_state=0).fit(chroma)
+        Ks = range(1, 414)
+        km = [KMeans(n_clusters=i) for i in Ks]
+        score = [km[i].fit(chroma).score(chroma) for i in range(len(km))]
 
-        self.FindNodes(cs, converttime, ifcondition, accuracy=self.mean + self.std * 1.96) # 1.96)
+        print(score)
 
-        #
-        # while len(self.result) <= 1 :
-        #     trycnt += 1
-        #     self.FindNodes(cs, converttime, ifcondition, accuracy=0.997 - 0.005 * self.fibo(trycnt))
-        #     print('Changing Accuracy...')
+
+        print('chroma', chroma)
+
+        # min_max_scaler = MinMaxScaler()
+
+        # cs = min_max_scaler.fit_transform(cs)
 
         print('Making Nodes Finished(2/3)')
-        return cs
+
+
+    # def Analysis2(self):
+    #     cs = self.LoadSong()
+    #     print(cs)
+    #     print(len(cs))
+    #     print(len(cs[0]))
+        #converttime = (self.time / len(cs))
+        # record = []
+        #
+        # for idx in range(len(cs)):
+        #     try :
+        #         record.append([int(converttime * idx), sum(sum([cs[:,idx],cs[:,idx+1],cs[:,idx+2],cs[:,idx+3],
+        #                                                     cs[:,idx+4],cs[:,idx+5],cs[:,idx+6],cs[:,idx+7],
+        #                                                     cs[:,idx+8],cs[:,idx+9]]))])
+        #     except IndexError:
+        #         record.append([int(converttime * idx),1])
+        # return cs
+        # print(cs)
+        # print(len(cs))
+        # print(len(cs[0]))
+        # print(cs[:,0])
 
     def Analysis(self):
-        cs = self.MakeNodes()
+        cs,volume = self.MakeNodes()
+        print(cs)
 
         if self.show == True:
             plt.figure(figsize=(10, 10))
@@ -114,6 +102,7 @@ class Song(object):
 
         ########## eigenvector_centrality ##########
         centrality = nx.eigenvector_centrality_numpy(G)
+        print(centrality)
         print('Analyzing Finished(3/3)')
         return max(centrality, key=centrality.get) - 0.2
 
@@ -136,26 +125,20 @@ class Play(object):
         quit()
 
 if __name__ == '__main__':
-    Play.PlaySong()
 
 
-'''
-0.798354929193
-335.126559737
+    # Play.PlaySong()
 
-0.734824992248
-278.682967278
 
-0.585500022673
-260.938736095
-
--------------------------------
-0.585500022673
-0.203347998736
+    song = Song(music_name)
+    song.MakeNodes()
+    # print(song.Analysis2())
+    # song.Analysis2()
+    # print(max(song.Analysis2(),key= lambda s:s[1]))
 
 
 
 
 
 
-'''
+
