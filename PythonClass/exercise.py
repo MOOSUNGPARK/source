@@ -1,5 +1,5 @@
-'''
 from librosa import load, stft, feature, get_duration
+import librosa.display as ld
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
@@ -17,8 +17,8 @@ from ctypes import windll
 # butterfly / oohahh / seethrough / primary /
 
 ############### 플레이 정보 ###############
-music_name = 'russian'           # 노래 제목
-play_duration = 10              # 재생 시간
+music_name = 'loser'           # 노래 제목
+play_duration = 20              # 재생 시간
 
 #########################################
 class Song(object):
@@ -85,7 +85,7 @@ class Song(object):
 
         if self.show == True:
             plt.figure(figsize=(10, 10))
-            display.specshow(cs, y_axis ='time', x_axis='time')
+            ld.specshow(cs, y_axis ='time', x_axis='time')
             plt.colorbar()
             plt.title('{}'.format(music_name))
             plt.tight_layout()
@@ -119,30 +119,105 @@ class Play(object):
         quit()
 
 if __name__ == '__main__':
-    Play.PlaySong()
-'''
+    # Play.PlaySong()
+    song = Song(music_name)
+    # for idx in range(100):
 
-print(0.564089681928+ 0.261453818058* 1.96)
+    chroma = song.LoadSong()
+    from copy import deepcopy
+    # chroma_copy = deepcopy(chroma)
+    # tensor = np.array([[3,-1,-1],[-1,3,-1],[-1,-1,3]])
+    # print('chroma',chroma[0:0+3,0:0+3])
+    # print('tensor',chroma_copy[0:0+3,0:0+3] * tensor)
+    # chroma[0:0 + 3, 0:0 + 3] += chroma_copy[0:0 + 3, 0:0 + 3] * tensor
+    # print('tensored chroma', chroma)
+
+    # print('행',len(chroma) -2 ,'열',len(chroma[0]) -2)
+    # for rownum in range(len(chroma)-2):
+    #     for colnum in range(len(chroma)-2):
+    #             chroma[rownum:rownum+3, colnum:colnum+3] += chroma_copy[rownum:rownum+3, colnum:colnum+3] * tensor
+    # for rownum in range(len(chroma)):
+    #     for colnum in range(len(chroma)):
+    #         int(chroma[rownum,colnum])
+            # chroma[rownum,colnum] = 1 if chroma[rownum,colnum]>=1 else 0
+    def Tensor(chroma):
+        tensor = np.zeros((3,3))
+        plus = (chroma[0][0] + chroma[1][1] + chroma[2][2])
+        minus = (chroma[0][1] + chroma[0][2] + chroma[1][0]+chroma[1][2] + chroma[2][0] + chroma[2][1])
+        tensor[1][1] = (plus -0.5*minus)/3
+        return tensor
+
+    def Tensor_10(chroma):
+        tensor = np.zeros((9,9))
+        plus = (chroma[0][0] + chroma[1][1] + chroma[2][2] + chroma[3][3]+ chroma[4][4]+ chroma[5][5]+ chroma[6][6]+ chroma[7][7]+ chroma[8][8])
+        tensor[4][4]=((10/9) * plus - (1/9) * np.sum(chroma))/9
+        return tensor
+
+    def Filtering(chroma,cnt=20):
+        recursive_cnt = cnt
+        # tensor = np.array([[3,-1,-1],[-1,3,-1],[-1,-1,3]])
+        chroma_copy = deepcopy(chroma)
+        chroma = np.zeros((len(chroma),(len(chroma))))
+
+        for rownum in range(len(chroma) - 2):
+            for colnum in range(len(chroma) - 2):
+                chroma[rownum:rownum + 3, colnum:colnum + 3] += Tensor(chroma_copy[rownum:rownum + 3, colnum:colnum + 3])
+        for rownum in range(len(chroma)):
+            for colnum in range(len(chroma)):
+                chroma[rownum, colnum] = 0 if chroma[rownum, colnum] <= 0 else chroma[rownum, colnum]
+        if cnt == 0 :
+            return chroma
+        print('cnt=',recursive_cnt,'chroma',chroma)
+        return Filtering(chroma, cnt= recursive_cnt-1)
+    def Filtering_10(chroma,cnt=10):
+        recursive_cnt = cnt
+        # tensor = np.array([[3,-1,-1],[-1,3,-1],[-1,-1,3]])
+        chroma_copy = deepcopy(chroma)
+        chroma = np.zeros((len(chroma),(len(chroma))))
+
+        for rownum in range(len(chroma) - 8):
+            for colnum in range(len(chroma) - 8):
+                chroma[rownum:rownum + 9, colnum:colnum + 9] += Tensor_10(chroma_copy[rownum:rownum + 9, colnum:colnum + 9])
+        for rownum in range(len(chroma)):
+            for colnum in range(len(chroma)):
+                chroma[rownum, colnum] = 0 if chroma[rownum, colnum] <= 0 else chroma[rownum, colnum]
+        if cnt == 0 :
+            return chroma
+        print('cnt=',recursive_cnt,'chroma',chroma)
+        return Filtering(chroma, cnt= recursive_cnt-1)
 
 
+    chroma = Filtering_10(chroma)
+    for idx in range(len(chroma)):
+        chroma[idx][idx] = 0
+    print(chroma)
+    ######################################
+    plt.figure(figsize=(10, 10))
+    ld.specshow(chroma, y_axis='time', x_axis='time')
+    plt.colorbar()
+    plt.title('{}'.format(music_name))
+    plt.tight_layout()
+    plt.show()
+
+    highlight = []
+#########################################
+    chroma_normal = (chroma-np.mean(chroma))/ np.max(chroma)
 
 
+    plt.figure(figsize=(10, 10))
+    ld.specshow(chroma_normal, y_axis='time', x_axis='time')
+    plt.colorbar()
+    plt.title('{}'.format(music_name))
+    plt.tight_layout()
+    plt.show()
+    #################################################
+    print(chroma_normal)
+    print((np.mean(chroma)/np.max(chroma)))
+    print(len(chroma))
+    converttime = 0.58
+    for rownum in range(len(chroma)):
+        for colnum in range(rownum):
+            if chroma_normal[rownum][colnum] != 0 and rownum != colnum and chroma_normal[rownum][colnum] >= 0.8*np.max(chroma_normal):
+                highlight.append([rownum* converttime,colnum * converttime])
 
-from sklearn.cluster import KMeans
-import numpy as np
-X = np.array([[1, 2], [1, 4], [1, 0],
-              [4, 2], [4, 4], [4, 0]])
-kmeans = KMeans(n_clusters=2, random_state=0).fit(X)
-kmeans.labels_
-
-kmeans.predict([[0, 0], [4, 4]])
-
-kmeans.cluster_centers_
-
-
-from sklearn.cluster import KMeans
-Ks = range(1, 10)
-km = [KMeans(n_clusters=i) for i in Ks]
-score = [km[i].fit(my_matrix).score(my_matrix) for i in range(len(km))]
-
-
+    print(highlight)

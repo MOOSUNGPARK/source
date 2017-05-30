@@ -22,7 +22,7 @@ play_duration = 20              # 재생 시간
 
 #########################################
 class Song(object):
-    def __init__(self,music_name,show=False):
+    def __init__(self,music_name,show=True):
         self.music = music_name
         self.time = 0
         self.show = show
@@ -66,7 +66,9 @@ class Song(object):
 
     def MakeNodes(self):
         cs = self.LoadSong()
+        print(len(cs))
         converttime = (self.time / len(cs))
+        print(converttime)
         ifcondition = self.IfCondition()
         trycnt = 0
 
