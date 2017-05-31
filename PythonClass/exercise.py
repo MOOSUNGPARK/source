@@ -7,38 +7,59 @@ import networkx as nx
 from pygame import mixer,init, display, time, quit
 from ctypes import windll
 from copy import deepcopy
-from random import random
-
-############### 플레이리스트 ###############
-# bigbang / iluvit / inception / knock /
-# palette / raindrop / rookie / russian /
-# withcoffee / imissyou / ahyeah / newface /
-# skyrim / noreply / soran / friday / wouldu /
-# whistle / beautiful / loser / soso /
-# superfantastic / liz / ending /
-# butterfly / oohahh / seethrough /
+from random import choice
+import os
 
 ############### 플레이 정보 ###############
-music_name = 'bigbang'           # 노래 제목
+
 play_duration = 10              # 재생 시간
 
 #########################################
 class Song(object):
-    def __init__(self,music_name,show=False):
-        self.music = music_name
+    def __init__(self,show=False):
+        self.music_dict = {}
+        self.music = ''
         self.time = 0
         self.show = show
         self.result = []
         self.nodes = []
         self.alreadyexists = []
 
+    def SearchSong(self, dirname):
+        filenames = os.listdir(dirname)
+        music_dict = {}
+        for filename in filenames:
+            full_filename = os.path.join(dirname, filename)
+            ext = os.path.splitext(full_filename)[-1]
+            file = os.path.splitext(filename)[0]
+            if ext == '.mp3':
+                music_dict[file] = full_filename
+        return music_dict
+
+    def Input(self):
+        music_list = []
+        print('---------------------------------------------Music List---------------------------------------------')
+        for idx, music in enumerate(list(self.music_dict.keys()),1):
+            music_list.append(music.ljust(22))
+
+            if (idx % 5 == 0 or idx == len(list(self.music_dict.keys()))):
+                print(' '.join(music_list))
+                music_list = []
+        return input('\n원하는 노래 제목을 입력하세요.(랜덤 원할 경우 random 입력) ')
+
     def LoadSong(self):
-        y, sr = load(r'c:\python\data\music\{}.mp3'.format(self.music), sr=882)
+        self.music_dict = self.SearchSong('d:/python/data/music')
+        self.music = self.Input()
+
+        if self.music.upper() == 'RANDOM':
+            self.music = choice(list(self.music_dict.keys()))
+
+        y, sr = load(self.music_dict[self.music], sr=882)
         s = np.abs(stft(y)**2)
         self.time = get_duration(y=y, sr=sr)
         chroma = feature.chroma_stft(S=s, sr=sr)
         chromaT=np.transpose(chroma,axes=(1,0))
-        print('Loading Finished(1/3)')
+        print('\nLoading Finished!')
         return cosine_similarity(chromaT)
 
     def FindNodes2(self,chroma, converttime):
@@ -48,6 +69,7 @@ class Song(object):
         chroma[chroma <= 0] = 0
         frequency = self.LineFilter(chroma)
         best_frequency = round(converttime * max(frequency, key = lambda item: item[1])[0],1)
+        print('\nMusic Name : {}'.format(self.music))
         print('Highlight : {}m {}s'.format(int(best_frequency//60), int(best_frequency%60)))
         self.result.append(best_frequency)
 
@@ -93,7 +115,6 @@ class Song(object):
             # print(frequency)
             return frequency
 
-        print('Auto tuning')
         shorterline = line
         return self.LineFilter(chroma, line=shorterline-5)
 
@@ -105,7 +126,6 @@ class Song(object):
         while filtered_chroma.all() == 0 :
             filtered_chroma = self.Filtering(chroma, filterrate= filterrate-0.05)
         self.FindNodes2(filtered_chroma, converttime)
-        print('Making Nodes Finished(2/3)')
         return filtered_chroma
 
     def Normalization(self,chroma):
@@ -145,7 +165,7 @@ class Song(object):
             plt.figure(figsize=(10, 10))
             ld.specshow(chroma, y_axis='time', x_axis='time')
             plt.colorbar()
-            plt.title('{}'.format(music_name))
+            plt.title('{}'.format(self.music))
             plt.tight_layout()
             plt.show()
 
@@ -157,7 +177,7 @@ class Song(object):
 class Play(object):
     @staticmethod
     def PlaySong():
-        song = Song(music_name)
+        song = Song()
         highlight = song.Analysis()
 
         init()
@@ -165,9 +185,10 @@ class Play(object):
         display.set_mode((100,100))
         SetWindowPos = windll.user32.SetWindowPos
         SetWindowPos(display.get_wm_info()['window'], -1, 0, 0, 0, 0, 0x0003)
-        mixer.music.load(r'c:\python\data\music\{}.mp3'.format(music_name))
+        mixer.music.load(song.music_dict[song.music])
         print('Music Start!')
         mixer.music.play(start=highlight)
+        # display.iconify()
         time.wait(play_duration * 1000)
         quit()
 
