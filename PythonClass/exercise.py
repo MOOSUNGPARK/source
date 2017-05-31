@@ -15,16 +15,16 @@ from random import random
 # withcoffee / imissyou / ahyeah / newface /
 # skyrim / noreply / soran / friday / wouldu /
 # whistle / beautiful / loser / soso /
-# superfantastic / aoa / liz / ending /
-# butterfly / oohahh / seethrough / primary /
+# superfantastic / liz / ending /
+# butterfly / oohahh / seethrough /
 
 ############### 플레이 정보 ###############
-music_name = 'whistle'           # 노래 제목
-play_duration = 5              # 재생 시간
+music_name = 'bigbang'           # 노래 제목
+play_duration = 10              # 재생 시간
 
 #########################################
 class Song(object):
-    def __init__(self,music_name,show=True):
+    def __init__(self,music_name,show=False):
         self.music = music_name
         self.time = 0
         self.show = show
@@ -33,7 +33,7 @@ class Song(object):
         self.alreadyexists = []
 
     def LoadSong(self):
-        y, sr = load(r'd:\python\data\music\{}.mp3'.format(self.music), sr=882)
+        y, sr = load(r'c:\python\data\music\{}.mp3'.format(self.music), sr=882)
         s = np.abs(stft(y)**2)
         self.time = get_duration(y=y, sr=sr)
         chroma = feature.chroma_stft(S=s, sr=sr)
@@ -41,66 +41,70 @@ class Song(object):
         print('Loading Finished(1/3)')
         return cosine_similarity(chromaT)
 
-    # def IfCondition(self):
-    #     temp = []
-    #     for i in range(10):
-    #         temp.append('chroma[rn+{}][cn+{}]'.format(2*i,2*i))
-    #     return ' + '.join(temp)
-
-    # def FindNodes(self, cs, converttime, ifcondition, accuracy):
-    #     for m in range(len(cs)):
-    #         try:
-    #             for n in range(m-1):
-    #                 if [m,n] not in self.alreadyexists and eval(ifcondition)/10 >= accuracy:
-    #                     self.result.append((int(converttime * m),int(converttime * n)))
-    #                     self.nodes.append((int(converttime * m)))
-    #                     self.nodes.append((int(converttime * n)))
-    #                     [self.alreadyexists.append([m + i, n + i]) for i in range(20)]
-    #         except IndexError:
-    #             continue
-    def FindNodes(self, chroma, converttime):
-        chroma[chroma <= 0] = 0
-        print('nan')
-        maxchroma = np.max(chroma)
-        print(np.median(chroma))
+    def FindNodes2(self,chroma, converttime):
         for rn in range(len(chroma)):
             for cn in range(rn):
-                # if chroma[rn][cn] > 0.3*np.max(chroma):
-                # if chroma[rn][cn] > np.median(chroma):
-                # if chroma[rn][cn] > np.nanmean(chroma):
-                try:
-                    # if eval(self.IfCondition()) > 0:
-                    if chroma[rn-1][cn-1] < chroma[rn][cn] and chroma[rn][cn] < chroma[rn+1][cn+1] :#and chroma[rn+10][cn+10] >0:
-                        self.result.append((int(converttime * rn),int(converttime * cn)))
-                        self.nodes.append((int(converttime * rn)))
-                        self.nodes.append((int(converttime * cn)))
-                except IndexError:
-                    continue
-        if self.result == []:
-            print('zzz')
-            for rn in range(len(chroma)):
-                for cn in range(rn):
-                    if chroma[rn][cn] >0:
-                        self.result.append((int(converttime * rn), int(converttime * cn)))
-                        self.nodes.append((int(converttime * rn)))
-                        self.nodes.append((int(converttime * cn)))
+                chroma[rn][cn] = 0
+        chroma[chroma <= 0] = 0
+        frequency = self.LineFilter(chroma)
+        best_frequency = round(converttime * max(frequency, key = lambda item: item[1])[0],1)
+        print('Highlight : {}m {}s'.format(int(best_frequency//60), int(best_frequency%60)))
+        self.result.append(best_frequency)
 
+    # def BestLine(self,chroma):
+    #     longest=[]
+    #     temp=0
+    #     for cn in range(len(chroma)):
+    #         for rn in range(cn):
+    #             cnt=0
+    #             temp=0
+    #             while chroma[rn+cnt][cn+cnt] != 0:
+    #                 cnt += 1
+    #                 temp += 1
+    #             # if temp >= 10:
+    #             longest.append(temp)
+    #             # if longest <= temp:
+    #             #     longest = deepcopy(temp)
+    #     linelist=list(set(longest))
+    #     # linelist=longest
+    #     print(sorted(linelist, reverse=True))
+    #     # return sorted(longest, reverse=True)[1]
+    #     print(sorted(linelist, reverse=True)[int(len(linelist) * 0.75)])
+    #     # return sorted(linelist, reverse=True)[int(len(linelist) * 0.75)]
+    #     return 20
+    def LineFilter(self,chroma, line=25):
+        # line = int(self.BestLine(chroma))
 
-    def fibo(self, num):
-        if num == 2:
-            return 2
-        elif num == 1 :
-            return 1
-        return self.fibo(num - 1) + self.fibo(num - 2)
+        frequency = []
+        for cn in range(len(chroma)-line):
+            # frequency.append([cn,np.count_nonzero(chroma[:][cn:cn+line])//line])
+            correctcnt = 0
+            for rn in range(len(chroma)-line):
+                cnt = 0
+                while chroma[rn+cnt][cn+cnt] != 0 and cnt < line:
+                    cnt += 1
+
+                if cnt == line:
+                    correctcnt += 1
+
+            frequency.append([cn,correctcnt])
+        if max(frequency, key=lambda k:k[1])[1] >= 3 or line==0 :
+            # print(max(frequency, key=lambda k:k[1])[1])
+            # print(frequency)
+            return frequency
+
+        print('Auto tuning')
+        shorterline = line
+        return self.LineFilter(chroma, line=shorterline-5)
 
     def MakeNodes(self):
         chroma = self.LoadSong()
         converttime = (self.time / len(chroma))
-        filterrate = 0.3
-        filtered_chroma = self.Filtering(chroma, filterrate=filterrate)
+        filtered_chroma = self.Filtering(chroma)
+        filterrate = 0.25
         while filtered_chroma.all() == 0 :
             filtered_chroma = self.Filtering(chroma, filterrate= filterrate-0.05)
-        self.FindNodes(filtered_chroma, converttime)
+        self.FindNodes2(filtered_chroma, converttime)
         print('Making Nodes Finished(2/3)')
         return filtered_chroma
 
@@ -111,12 +115,15 @@ class Song(object):
 
     def Tensor(self,chroma):
         tensor = np.zeros((9, 9))
-        plus = (chroma[0][0] + chroma[1][1] + chroma[2][2] + chroma[3][3] + chroma[4][4] + chroma[5][5] + chroma[6][6] +
-                chroma[7][7] + chroma[8][8])
+
+        plus = (chroma[0][0] + chroma[1][1] + chroma[2][2] +
+                chroma[3][3] + chroma[4][4] + chroma[5][5] +
+                chroma[6][6] + chroma[7][7] + chroma[8][8])
         tensor[4][4] = ((10 / 9) * plus - (1 / 9) * np.sum(chroma)) / 9
+
         return tensor
 
-    def Filtering(self, chroma, cnt=3, filterrate = 0.3):
+    def Filtering(self, chroma, cnt=3, filterrate = 0.25):
         recursive_cnt = cnt
         chroma_copy = deepcopy(chroma)
         chroma = np.zeros((len(chroma), (len(chroma))))
@@ -124,14 +131,11 @@ class Song(object):
         for rn in range(len(chroma) - 8):
             for cn in range(len(chroma) - 8):
                 chroma[rn:rn + 9, cn:cn + 9] += self.Tensor(chroma_copy[rn:rn + 9, cn:cn + 9])
-        # for rownum in range(len(chroma)):
-        #     for colnum in range(len(chroma)):
-        #         chroma[rownum, colnum] = 0 if chroma[rownum, colnum] <= 0 else chroma[rownum, colnum]
+        chroma[chroma <= filterrate * np.max(chroma)] = 0
         # chroma[chroma <= 0] = 0
-        chroma[chroma <= filterrate*np.max(chroma)] = 0
-        # chroma[chroma == np.max(chroma)] = 1
 
         if cnt == 0:
+            # chroma[chroma <= 0.3 * np.max(chroma)] = 0
             return self.Normalization(chroma)
         print('Count down', recursive_cnt)
         return self.Filtering(chroma, cnt=recursive_cnt - 1)
@@ -147,21 +151,8 @@ class Song(object):
 
     def Analysis(self):
         chroma = self.MakeNodes()
-        print(self.result)
-        print(self.nodes)
-
-        G = nx.MultiGraph()
-        G.add_nodes_from(list(set(self.nodes)))
-        G.add_edges_from(self.result)
-
-        self.Chromagram(chroma, show = self.show)
-
-        ########## eigenvector_centrality ##########
-        centrality = nx.eigenvector_centrality_numpy(G)
-        print('Analyzing Finished(3/3)')
-        print(max(centrality, key=centrality.get) - 1)
-        return max(centrality, key=centrality.get) - 1.5
-        # return min(self.result, key=lambda k : k[0])[0] - 1
+        self.Chromagram(chroma, show=self.show)
+        return self.result[0] - 1.5
 
 class Play(object):
     @staticmethod
@@ -174,7 +165,7 @@ class Play(object):
         display.set_mode((100,100))
         SetWindowPos = windll.user32.SetWindowPos
         SetWindowPos(display.get_wm_info()['window'], -1, 0, 0, 0, 0, 0x0003)
-        mixer.music.load(r'd:\python\data\music\{}.mp3'.format(music_name))
+        mixer.music.load(r'c:\python\data\music\{}.mp3'.format(music_name))
         print('Music Start!')
         mixer.music.play(start=highlight)
         time.wait(play_duration * 1000)
