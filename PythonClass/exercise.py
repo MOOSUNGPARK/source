@@ -10,11 +10,13 @@ from copy import deepcopy
 from random import choice
 import os
 
-############### 플레이 정보 ###############
+################ 플레이 정보 ################
 
-play_duration = 10              # 재생 시간
+play_duration = 10                # 재생 시간
+file_loc = 'c:/python/data/music' # 노래 위치
 
-#########################################
+###########################################
+
 class Song(object):
     def __init__(self,show=False):
         self.music_dict = {}
@@ -22,8 +24,21 @@ class Song(object):
         self.time = 0
         self.show = show
         self.result = []
-        self.nodes = []
-        self.alreadyexists = []
+########################################################################
+    def LoadSong(self):
+        self.music_dict = self.SearchSong(file_loc)
+        self.music = self.Input()
+
+        if self.music.upper() == 'RANDOM':
+            self.music = choice(list(self.music_dict.keys()))
+
+        y, sr = load(self.music_dict[self.music], sr=882)
+        s = np.abs(stft(y)**2)
+        self.time = get_duration(y=y, sr=sr)
+        chroma = feature.chroma_stft(S=s, sr=sr)
+        chromaT = np.transpose(chroma,axes=(1,0))
+        print('\nLoading Finished!')
+        return cosine_similarity(chromaT)
 
     def SearchSong(self, dirname):
         filenames = os.listdir(dirname)
@@ -37,41 +52,114 @@ class Song(object):
         return music_dict
 
     def Input(self):
-        music_list = []
-        print('---------------------------------------------Music List---------------------------------------------')
-        for idx, music in enumerate(list(self.music_dict.keys()),1):
-            music_list.append(music.ljust(22))
+        print('---------------------------------------------'
+              'Music List---------------------------------------------')
+        music_dict_list = list(self.music_dict.keys())
+        for idx in range(len(music_dict_list)//5 + 1):
+            try:
+                print(' '.join([i.ljust(25) for i in music_dict_list[5 * idx : 5 * idx +5]]))
+            except IndexError:
+                print(' '.join([i.ljust(25) for i in music_dict_list[5 * idx: -1]]))
 
-            if (idx % 5 == 0 or idx == len(list(self.music_dict.keys()))):
-                print(' '.join(music_list))
-                music_list = []
         return input('\n원하는 노래 제목을 입력하세요.(랜덤 원할 경우 random 입력) ')
 
-    def LoadSong(self):
-        self.music_dict = self.SearchSong('d:/python/data/music')
-        self.music = self.Input()
+########################################################################################
+    def Analysis(self):
+        chroma = self.MakeNodes()
+        self.Chromagram(chroma, show=self.show)
+        return self.result[0] - 1.5
 
-        if self.music.upper() == 'RANDOM':
-            self.music = choice(list(self.music_dict.keys()))
+    def MakeNodes(self):
+        chroma = self.LoadSong()
+        converttime = (self.time / len(chroma))
+        filtered_chroma = self.Filtering(chroma)
+        filterrate = 0.25
+        while filtered_chroma.all() == 0 :
+            filtered_chroma = self.Filtering(chroma, filterrate= filterrate-0.05)
+        self.FindNodes(filtered_chroma, converttime)
+        return filtered_chroma
 
-        y, sr = load(self.music_dict[self.music], sr=882)
-        s = np.abs(stft(y)**2)
-        self.time = get_duration(y=y, sr=sr)
-        chroma = feature.chroma_stft(S=s, sr=sr)
-        chromaT=np.transpose(chroma,axes=(1,0))
-        print('\nLoading Finished!')
-        return cosine_similarity(chromaT)
+    def Filtering(self, chroma, cnt=3, filterrate = 0.25):
+        recursive_cnt = cnt
+        chroma_copy = deepcopy(chroma)
+        chroma = np.zeros((len(chroma), (len(chroma))))
 
-    def FindNodes2(self,chroma, converttime):
+        for rn in range(len(chroma) - 8):
+            for cn in range(len(chroma) - 8):
+                chroma[rn:rn + 9, cn:cn + 9] += self.Tensor(chroma_copy[rn:rn + 9, cn:cn + 9])
+        chroma[chroma <= filterrate * np.max(chroma)] = 0
+        # chroma[chroma <= 0] = 0
+
+        if cnt == 0:
+            # chroma[chroma <= 0.3 * np.max(chroma)] = 0
+            return self.Normalization(chroma)
+
+        print('Count down', recursive_cnt)
+        return self.Filtering(chroma, cnt=recursive_cnt - 1)
+
+    def FindNodes(self,chroma,converttime):
         for rn in range(len(chroma)):
             for cn in range(rn):
                 chroma[rn][cn] = 0
         chroma[chroma <= 0] = 0
         frequency = self.LineFilter(chroma)
         best_frequency = round(converttime * max(frequency, key = lambda item: item[1])[0],1)
-        print('\nMusic Name : {}'.format(self.music))
+        print('\nMusic Name : {}'.format(self.music.upper()))
         print('Highlight : {}m {}s'.format(int(best_frequency//60), int(best_frequency%60)))
         self.result.append(best_frequency)
+
+########################################################################################
+    def LineFilter(self,chroma, maxcorrectcnt=3, line=25):
+        maxcnt = maxcorrectcnt
+        shorterline = line
+        frequency = []
+
+        for cn in range(len(chroma)-line):
+            correctcnt = 0
+            for rn in range(len(chroma)-line):
+                cnt = 0
+                while chroma[rn+cnt][cn+cnt] != 0 and cnt < line:
+                    cnt += 1
+                if cnt == line:
+                    correctcnt += 1
+            frequency.append([cn,correctcnt])
+
+        if line <= 5 :
+            return self.LineFilter(chroma, maxcorrectcnt=maxcnt-1, line=25)
+
+        if max(frequency, key=lambda k:k[1])[1] >= maxcnt:
+            # print(max(frequency, key=lambda k:k[1])[1])
+            # print(frequency)
+            return frequency
+
+        return self.LineFilter(chroma, maxcorrectcnt=maxcnt, line=shorterline-5)
+
+    def Tensor(self,chroma):
+        tensor = np.zeros((9, 9))
+
+        plus = (chroma[0][0] + chroma[1][1] + chroma[2][2] +
+                chroma[3][3] + chroma[4][4] + chroma[5][5] +
+                chroma[6][6] + chroma[7][7] + chroma[8][8])
+        tensor[4][4] = ((10 / 9) * plus - (1 / 9) * np.sum(chroma)) / 9
+
+        return tensor
+
+########################################################################################
+    def Normalization(self,chroma):
+        for idx in range(len(chroma)):
+            chroma[idx][idx] = 0
+        return (chroma-np.mean(chroma))/np.max(chroma)
+
+########################################################################################
+    def Chromagram(self, chroma, show=False):
+        if show == True:
+            plt.figure(figsize=(10, 10))
+            ld.specshow(chroma, y_axis='time', x_axis='time')
+            plt.colorbar()
+            plt.title('{}'.format(self.music))
+            plt.tight_layout()
+            plt.show()
+
 
     # def BestLine(self,chroma):
     #     longest=[]
@@ -94,85 +182,6 @@ class Song(object):
     #     print(sorted(linelist, reverse=True)[int(len(linelist) * 0.75)])
     #     # return sorted(linelist, reverse=True)[int(len(linelist) * 0.75)]
     #     return 20
-    def LineFilter(self,chroma, line=25):
-        # line = int(self.BestLine(chroma))
-
-        frequency = []
-        for cn in range(len(chroma)-line):
-            # frequency.append([cn,np.count_nonzero(chroma[:][cn:cn+line])//line])
-            correctcnt = 0
-            for rn in range(len(chroma)-line):
-                cnt = 0
-                while chroma[rn+cnt][cn+cnt] != 0 and cnt < line:
-                    cnt += 1
-
-                if cnt == line:
-                    correctcnt += 1
-
-            frequency.append([cn,correctcnt])
-        if max(frequency, key=lambda k:k[1])[1] >= 3 or line==0 :
-            # print(max(frequency, key=lambda k:k[1])[1])
-            # print(frequency)
-            return frequency
-
-        shorterline = line
-        return self.LineFilter(chroma, line=shorterline-5)
-
-    def MakeNodes(self):
-        chroma = self.LoadSong()
-        converttime = (self.time / len(chroma))
-        filtered_chroma = self.Filtering(chroma)
-        filterrate = 0.25
-        while filtered_chroma.all() == 0 :
-            filtered_chroma = self.Filtering(chroma, filterrate= filterrate-0.05)
-        self.FindNodes2(filtered_chroma, converttime)
-        return filtered_chroma
-
-    def Normalization(self,chroma):
-        for idx in range(len(chroma)):
-            chroma[idx][idx] = 0
-        return (chroma-np.mean(chroma))/np.max(chroma)
-
-    def Tensor(self,chroma):
-        tensor = np.zeros((9, 9))
-
-        plus = (chroma[0][0] + chroma[1][1] + chroma[2][2] +
-                chroma[3][3] + chroma[4][4] + chroma[5][5] +
-                chroma[6][6] + chroma[7][7] + chroma[8][8])
-        tensor[4][4] = ((10 / 9) * plus - (1 / 9) * np.sum(chroma)) / 9
-
-        return tensor
-
-    def Filtering(self, chroma, cnt=3, filterrate = 0.25):
-        recursive_cnt = cnt
-        chroma_copy = deepcopy(chroma)
-        chroma = np.zeros((len(chroma), (len(chroma))))
-
-        for rn in range(len(chroma) - 8):
-            for cn in range(len(chroma) - 8):
-                chroma[rn:rn + 9, cn:cn + 9] += self.Tensor(chroma_copy[rn:rn + 9, cn:cn + 9])
-        chroma[chroma <= filterrate * np.max(chroma)] = 0
-        # chroma[chroma <= 0] = 0
-
-        if cnt == 0:
-            # chroma[chroma <= 0.3 * np.max(chroma)] = 0
-            return self.Normalization(chroma)
-        print('Count down', recursive_cnt)
-        return self.Filtering(chroma, cnt=recursive_cnt - 1)
-
-    def Chromagram(self, chroma, show = False):
-        if show == True:
-            plt.figure(figsize=(10, 10))
-            ld.specshow(chroma, y_axis='time', x_axis='time')
-            plt.colorbar()
-            plt.title('{}'.format(self.music))
-            plt.tight_layout()
-            plt.show()
-
-    def Analysis(self):
-        chroma = self.MakeNodes()
-        self.Chromagram(chroma, show=self.show)
-        return self.result[0] - 1.5
 
 class Play(object):
     @staticmethod

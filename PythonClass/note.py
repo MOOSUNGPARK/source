@@ -1,16 +1,47 @@
-import numpy as np
+from multiprocessing import Process, Queue
+import time as tm
+def MultiProcess(func,arg):
+    procs = []
+    for i in range(3):
+        p = Process(target=func, args=(arg, ))
+        procs.append(p)
+    for p in procs:
+        p.join()
 
-a = [[12,3,4,5,6],[12,3,4,5,0],[12,3,4,5,6],[12,3,4,5,6],[12,3,4,-1,100]]
-ab= np.array(a)
-abc = []
-for rownum in range(len(a)):
-    for colnum in range(len(a[0])):
-        if a[rownum][colnum] == np.max(ab) :
-            abc.append([rownum,colnum])
+def do_work(start, end, result):
+    sum = 0
+    for i in range(start, end):
+        sum += i
+    result.put(sum)
+    return
 
-print(abc)
 
-print(np.sum(ab))
+s_time = tm.time()
+if __name__ == '__main__':
 
-print(np.count_nonzero(ab[:][:2]))
+    START, END = 0, 20000000
+    result = Queue()
+    pr1 = Process(target=do_work, args=(START, END / 2, result))
+    pr2 = Process(target=do_work, args=(END / 2, END, result))
+    pr1.start()
+    pr2.start()
+    pr1.join()
+    pr2.join()
+    result.put('STOP')
+    sum = 0
+    while True:
+        tmp = result.get()
+        if tmp == 'STOP':
+            break
+        else:
+            sum += tmp
 
+print('Result : ', sum, 'time = ', tm.time() - s_time)
+
+def MultiProcess(func,arg):
+    procs = []
+    for i in range(3):
+        p = Process(target=func, args=(arg, ))
+        procs.append(p)
+    for p in procs:
+        p.join()
