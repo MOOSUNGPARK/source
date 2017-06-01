@@ -1,49 +1,23 @@
-from librosa import load, stft, feature, get_duration
-
-import librosa.display as ld
-import numpy as np
+from librosa import load, stft, feature, get_duration, display as ld
 from sklearn.metrics.pairwise import cosine_similarity
-import matplotlib.pyplot as plt
 from pygame import mixer,init, display, time, quit
 from ctypes import windll
 from copy import deepcopy
 from random import choice
+import matplotlib.pyplot as plt
+import numpy as np
 import os
 
+################## 플레이 정보 ##################
+play_duration = 10                # 노래 재생 시간
+file_loc = 'c:/python/data/music' # 노래 폴더 위치
+show_chroma = False                # 크로마그램 출력
+###############################################
 
 
-
-
-
-
-from multiprocessing import Process
-import time as tm
-def MultiProcess(func,arg):
-    procs = []
-    for i in range(3):
-        p = Process(target=func, args=(arg, ))
-        procs.append(p)
-    for p in procs:
-        p.join()
-
-
-
-
-
-
-
-
-
-
-################ 플레이 정보 ################
-play_duration = 10                # 재생 시간
-file_loc = 'c:/python/data/music' # 노래 위치
-###########################################
-
-
-################ 노래 클래스 ################
+################## 노래 클래스 ##################
 class Song(object):
-    def __init__(self,show=False):
+    def __init__(self,show=show_chroma):
         self.music_dict = {}  # 노래 이름을 key로, 파일경로를 value로 하는 딕셔너리
         self.music = ''       # 재생할 노래 이름
         self.time = 0         # 노래 총 길이
@@ -82,8 +56,8 @@ class Song(object):
 
     # (노래 로딩 SUB) 처음에 노래 리스트를 화면에 출력하고 재생할 노래 입력받는 메소드
     def Input(self):
-        print('---------------------------------------------'
-              'Music List---------------------------------------------')
+        print('---------------------------------------------------'
+              'Music List---------------------------------------------------')
         music_dict_list = list(self.music_dict.keys())
         for idx in range(len(music_dict_list)//5 + 1):
             try:
@@ -208,7 +182,7 @@ class Song(object):
             plt.tight_layout()
             plt.show()
 
-################ 재생 클래스 ################
+################## 재생 클래스 ##################
 class Play(object):
     @staticmethod
     def PlaySong():
@@ -226,5 +200,6 @@ class Play(object):
         time.wait(play_duration * 1000)
         quit()
 
+################## 메인 실행절 ##################
 if __name__ == '__main__':
     Play.PlaySong()
