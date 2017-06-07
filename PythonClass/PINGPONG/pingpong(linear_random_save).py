@@ -9,15 +9,15 @@ from copy import deepcopy
 
 ############ 공의 위치 파일 저장/불러오기 #############
 # 공의 위치 파일 저장(1회만 파일 저장) ####### !!!! 두번째부터는 None으로 놓기!!!! #######
-save_ballloc = 'c:\python\data\pingpong_move.csv'
+save_ballloc = 'd:\python\data\pingpong_move.csv'
 # save_ballloc 파일 위치 입력(반드시 입력해야 함. save_ballloc 의 위치와 동일한 위치로 설정)
-load_ballloc = 'c:\python\data\pingpong_move.csv'
+load_ballloc = 'd:\python\data\pingpong_move.csv'
 
 ############ 회귀분석 가중치 파일 저장/불러오기 #############
 # 가중치 파일 저장(저장하고 싶으면 위치 입력. 아니면 None 으로 놓기)
-save_weightloc = 'c:\python\data\pingpong_weight.csv'
+save_weightloc = 'd:\python\data\pingpong_weight.csv'
 # save_weightloc 파일 위치 입력(파일 참조하지 않으려면 None 으로 놓기)
-load_weightloc = 'c:\python\data\pingpong_weight.csv'
+load_weightloc = 'd:\python\data\pingpong_weight.csv'
 
 ############ 경사감소법 튜닝 ###########
 # 경사감소법 learning_rate(변경x)
@@ -173,7 +173,7 @@ class machine_learning():
     ########## 비용함수 메소드 ###########
     @staticmethod
     def Loss(x, y, weight):
-        loss = np.sum((x.dot(weight) - y) ** 2) / (2 * len(x))
+        loss = np.sum((x.dot(weight) - y.reshape(len(y),1)) ** 2) / (2 * len(x))
         return loss
 
     ########## 경사감소법 및 회귀분석 가중치 계산 메소드 ##########
