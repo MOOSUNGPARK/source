@@ -9,19 +9,19 @@ from copy import deepcopy
 
 ############ 공의 위치 파일 저장/불러오기 #############
 # 공의 위치 파일 저장(1회만 파일 저장) ####### !!!! 두번째부터는 None으로 놓기!!!! #######
-save_ballloc = 'd:\python\data\pingpong_move.csv'
+save_ballloc = 'c:\python\data\pingpong_move.csv'
 # save_ballloc 파일 위치 입력(반드시 입력해야 함. save_ballloc 의 위치와 동일한 위치로 설정)
-load_ballloc = 'd:\python\data\pingpong_move.csv'
+load_ballloc = 'c:\python\data\pingpong_move.csv'
 
 ############ 회귀분석 가중치 파일 저장/불러오기 #############
 # 가중치 파일 저장(저장하고 싶으면 위치 입력. 아니면 None 으로 놓기)
-save_weightloc = 'd:\python\data\pingpong_weight.csv'
+save_weightloc = 'c:\python\data\pingpong_weight.csv'
 # save_weightloc 파일 위치 입력(파일 참조하지 않으려면 None 으로 놓기)
-load_weightloc = 'd:\python\data\pingpong_weight.csv'
+load_weightloc = 'c:\python\data\pingpong_weight.csv'
 
 ############ 경사감소법 튜닝 ###########
 # 경사감소법 learning_rate(변경x)
-learning_rate = 0.00002
+learning_rate = 0.0002
 # 경사감소법 시행횟수(변경x)
 training_cnt= 50000
 #가능조합(learning_rate = 0.00001, training_cnt = 50000)
@@ -185,7 +185,6 @@ class machine_learning():
         minloss = 10 ** 20
 
         WEIGHT = np.zeros((4,1)) # 초기 weight
-#        WEIGHT = np.array([[1.00532467], [192.09769571], [0.65254131], [-0.21751378]]) # 100000번 돌린 weight
         loss_history = np.zeros((descent_cnt, 1))
 
         for cnt in range(descent_cnt):
@@ -206,12 +205,12 @@ class machine_learning():
             loss_history[cnt, 0] = machine_learning.Loss(X, Y, WEIGHT)
 
             ########## BOLD DRIVER 방법 #########
-            # if minloss >= loss_history[cnt,0]:
-            #     minloss = loss_history[cnt,0]
-            #     alpha *= 1.1
-            # elif minloss < loss_history[cnt,0]:
-            #     alpha *= 0.5
-            #     WEIGHT = WEIGHT_backup
+            if minloss >= loss_history[cnt,0]:
+                minloss = loss_history[cnt,0]
+                alpha *= 1.1
+            elif minloss < loss_history[cnt,0]:
+                alpha *= 0.5
+                WEIGHT = WEIGHT_backup
         return WEIGHT, loss_history
 
 
