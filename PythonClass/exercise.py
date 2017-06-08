@@ -9,21 +9,21 @@ from copy import deepcopy
 
 ############ 공의 위치 파일 저장/불러오기 #############
 # 공의 위치 파일 저장(1회만 파일 저장) ####### !!!! 두번째부터는 None으로 놓기!!!! #######
-save_ballloc = 'c:\python\data\pingpong_move.csv'
+save_ballloc = 'c:\python\data\pingpong_move1.csv'
 # save_ballloc 파일 위치 입력(반드시 입력해야 함. save_ballloc 의 위치와 동일한 위치로 설정)
-load_ballloc = 'c:\python\data\pingpong_move.csv'
+load_ballloc = 'c:\python\data\pingpong_move1.csv'
 
 ############ 회귀분석 가중치 파일 저장/불러오기 #############
 # 가중치 파일 저장(저장하고 싶으면 위치 입력. 아니면 None 으로 놓기)
-save_weightloc = 'c:\python\data\pingpong_weight.csv'
+save_weightloc = 'c:\python\data\pingpong_weight1.csv'
 # save_weightloc 파일 위치 입력(파일 참조하지 않으려면 None 으로 놓기)
-load_weightloc = 'c:\python\data\pingpong_weight.csv'
+load_weightloc = 'c:\python\data\pingpong_weight1.csv'
 
 ############ 경사감소법 튜닝 ###########
 # 경사감소법 learning_rate(변경x)
-learning_rate = 0.00002
+learning_rate = 0.005
 # 경사감소법 시행횟수(변경x)
-training_cnt= 50000
+training_cnt= 150000
 #가능조합(learning_rate = 0.00001, training_cnt = 50000)
 #가능조합(learning_rate = 0.00002, training_cnt = 25000)
 
@@ -44,8 +44,33 @@ class Ball:
         self.save = save
         self.ball_start = []
         self.ball_end = []
-        self.convertloc = self.canvas.coords(self.id)[0]
         self.leftorright = 0
+
+    def draw(self):
+        self.canvas.move(self.id, self.x, self.y)  # 공을 움직이게 하는 부분
+        pos = self.canvas.coords(self.id)  # 볼의 현재 좌표를 출력해준다. 공 좌표( 서쪽(0) , 남쪽(1) , 동쪽(2), 북쪽(3) )
+        paddle_pos = self.canvas.coords(self.paddle.id)
+
+        if pos[1] <= 0:
+            self.y *= -1
+
+        if pos[3] >= self.canvas_height:
+            self.x = random.choice([-1,1])
+            self.y *= -1
+
+        if pos[0] <= 0:
+            self.x *= -1
+
+        if pos[2] >= self.canvas_width:
+            self.x *= -1  # 공을 왼쪽으로 돌린다.
+
+        if self.hit_paddle(pos) == True:
+            self.x = random.choice(range(-11,12,2))
+            self.y *= -1
+            ######### (공의 시작 x좌표, 시작 시 x속력, y속력, 상수1) 을 저장 ##########
+            self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
+            ######### (공이 떨어진 x 좌표) 를 저장
+            self.ball_end.append(pos[0])
 
     def hit_paddle(self, pos):  # 패들에 공이 튀기게 하는 함수
         paddle_pos = self.canvas.coords(self.paddle.id)
@@ -57,56 +82,6 @@ class Ball:
                 if pos[3] >= paddle_pos[1] and pos[3] <= paddle_pos[3]:  # 공이 패들에 닿았을때 좌표
                     return True
         return False
-
-    ############# 공이 떨어지는 가상의 좌표 ############
-    def endloc(self, pos):
-        paddle_pos = self.canvas.coords(self.paddle.id)
-        if 290 > pos[1] >= 285 and pos[3] <= paddle_pos[3] and self.y > 0:  # 공이 패들 통과할 때의 좌표
-            return pos[0]
-
-    def draw(self):
-        self.canvas.move(self.id, self.x, self.y)  # 공을 움직이게 하는 부분
-        pos = self.canvas.coords(self.id)  # 볼의 현재 좌표를 출력해준다. 공 좌표( 서쪽(0) , 남쪽(1) , 동쪽(2), 북쪽(3) )
-        paddle_pos = self.canvas.coords(self.paddle.id)
-
-        #############################################################
-        # 가상의 좌표를 만드는 과정
-        # self.leftorright는 기본은 0, 최초로 벽에 부딪혔을 때 왼쪽 벽이면 -1, 오른쪽 벽이면 1 을 출력
-        if self.leftorright == 0:
-            self.convertloc += float(self.x)
-        elif self.leftorright != 0:
-            self.convertloc += self.leftorright * abs(float(self.x))
-        #############################################################
-        if pos[1] <= 0:
-            self.y *= -1
-
-        if pos[3] >= self.canvas_height:
-            self.x = random.choice([-1,1])
-            self.y *= -1
-
-        if pos[0] <= 0:
-            self.x *= -1
-            ######### 최초로 왼쪽 벽에 부딪히면 self.leftorright = -1이 됨 ##########
-            if self.leftorright == 0:
-                self.leftorright = -1
-
-        if pos[2] >= self.canvas_width:
-            self.x *= -1  # 공을 왼쪽으로 돌린다.
-            ######### 최초로 오른쪽 벽에 부딪히면 self.leftorright = 1이 됨 ##########
-            if self.leftorright == 0:
-                self.leftorright = 1
-
-        if self.hit_paddle(pos) == True:
-            self.x = random.choice(range(-11,12,2))
-            self.y *= -1
-            ######### (공의 시작 x좌표, 시작 시 x속력, y속력, 상수1) 을 저장 ##########
-            self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
-            ######### (공이 떨어진 x 좌표) 를 저장
-            self.ball_end.append(self.convertloc)
-            ######### 패들에 부딪히면, 새로운 공의 시작 정보를 저장하기 위해 가상좌표와 leftorright 값을 초기화 ########
-            self.convertloc = pos[0]
-            self.leftorright = 0
-
 
 class Paddle:
     def __init__(self, canvas, color):
@@ -124,35 +99,15 @@ class Paddle:
             return
         self.canvas.move(self.id, self.x, 0)
 
-    ############ 공이 떨어지는 가상의 좌표를 실제 게임 내 좌표로 바꿔주는 메소드 ##############
-    def convertendloc(self, convertloc):
-        cnt = 0
-        if convertloc in range(486):
-            return convertloc
-        elif convertloc < 0:
-            while True:
-                if cnt % 2 == 0 and cnt * -485 - convertloc in range(486):
-                    return cnt * -485 - convertloc
-
-                elif cnt % 2 == 1 and (cnt + 1) * 485 + convertloc in range(486):
-                    return (cnt + 1) * 485 + convertloc
-                cnt += 1
-        elif convertloc > 485:
-            while True:
-                if cnt % 2 == 0 and (cnt + 2) * 485 - convertloc in range(486):
-                    return (cnt + 2) * 485 - convertloc
-                elif cnt % 2 == 1 and (cnt + 1) * -485 + convertloc in range(486):
-                    return (cnt + 1) * -485 + convertloc
-                cnt += 1
-
     ############# 회귀분석식을 이용해 공이 떨어질 가상의 위치 예측하는 메소드 ##############
     def prediction(self, input, weight):
         return weight[0] * input[0] + weight[1] * input[1] + weight[2] * input[2] + weight[3] * input[3]
 
     ############# 공이 떨어질 위치로 패들을 움직이는 메소드 #############
     def predict_move(self, convertloc):
-        loc = self.convertendloc(convertloc)
+        loc = int(paddle.prediction(ball.ball_start[-1], weight)[0])
         pos = self.canvas.coords(self.id)
+
         if pos[0]+40  <loc-5 and pos[2]-40  > loc+10:
             self.x = 0
             print('stop')
@@ -173,7 +128,8 @@ class machine_learning():
     ########## 비용함수 메소드 ###########
     @staticmethod
     def Loss(x, y, weight):
-        loss = np.sum((x.dot(weight) - y) ** 2) / (2 * len(x))
+        loss = np.sum((x.dot(weight) - y.reshape(len(y),1)) ** 2) / (2 * len(x))
+        print(loss)
         return loss
 
     ########## 경사감소법 및 회귀분석 가중치 계산 메소드 ##########
@@ -185,7 +141,6 @@ class machine_learning():
         minloss = 10 ** 20
 
         WEIGHT = np.zeros((4,1)) # 초기 weight
-#        WEIGHT = np.array([[1.00532467], [192.09769571], [0.65254131], [-0.21751378]]) # 100000번 돌린 weight
         loss_history = np.zeros((descent_cnt, 1))
 
         for cnt in range(descent_cnt):
@@ -206,12 +161,12 @@ class machine_learning():
             loss_history[cnt, 0] = machine_learning.Loss(X, Y, WEIGHT)
 
             ########## BOLD DRIVER 방법 #########
-            # if minloss >= loss_history[cnt,0]:
-            #     minloss = loss_history[cnt,0]
-            #     alpha *= 1.1
-            # elif minloss < loss_history[cnt,0]:
-            #     alpha *= 0.5
-            #     WEIGHT = WEIGHT_backup
+            if minloss >= loss_history[cnt,0]:
+                minloss = loss_history[cnt,0]
+                alpha *= 1.1
+            elif minloss < loss_history[cnt,0]:
+                alpha *= 0.5
+                WEIGHT = WEIGHT_backup
         return WEIGHT, loss_history
 
 
@@ -301,10 +256,12 @@ if __name__ == '__main__':
             ball.draw()
             try:
                 convertloc = int(paddle.prediction(ball.ball_start[-1], weight)[0])
+                print('pre',convertloc)
                 print('prediction', paddle.predict_move(convertloc))
                 paddle.move(paddle.x, 0)
             except IndexError:
                 #paddle.move(random.choice([-3, 3]), 0) # 맨처음에 랜덤으로 두게 하려면 활성화
+                print('indexerror')
                 paddle.move(ball.x,0) # 맨처음에 공을 따라가게 하려면 활성화
             paddle.draw()
 
