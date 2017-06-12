@@ -2,8 +2,8 @@ from tkinter import Frame, Canvas, Label, Button, LEFT, RIGHT, ALL, Tk, StringVa
 from random import randint
 
 
-class main:
-    def __init__(self, master,game):
+class UI:
+    def __init__(self, master, game):
         self.frame = Frame(master)
         self.frame.pack(fill="both", expand=True)
         self.canvas = Canvas(self.frame, width=1000, height=600)
@@ -19,16 +19,16 @@ class main:
         self.loadgame = Button(self.frameb, text='Load Game', height=4, command=self.Loadgame,
                              bg='white', fg='purple')
         self.loadgame.pack(fill="both", expand=True, side=LEFT)
-        self.hit = Button(self.frameb, text='hit', width= 5, height=2, command=self.Newgame,
+        self.hit = Button(self.frameb, text='hit', width= 5, height=2, command=self.Hitbutton,
                               bg='purple', fg='white')
         self.hit.pack(fill="both", expand=True)
-        self.nohit = Button(self.frameb, text='No hit', width= 5, height=2, command=self.Newgame,
+        self.nohit = Button(self.frameb, text='No hit', width= 5, height=2, command=self.Nohitbutton,
                               bg='purple', fg='white')
         self.nohit.pack(fill="both", expand=True, side=TOP)
-
-
         self.__board()
         self.__game = game
+        self.X1 = ''
+        self.Y1 = ''
 
     @property
     def Game(self):
@@ -46,9 +46,7 @@ class main:
     def Newgame(self):
         self.canvas.delete(ALL)
         self.__board()
-
         # self.label['text'] = '{}\n{}'.format(self.Game.printhometeam, self.Game.printawayteam)
-
         self.canvas.bind("<ButtonPress-1>", self.Throwandhit)
 
     def __board(self):
@@ -65,13 +63,33 @@ class main:
         self.canvas.create_rectangle(500, 600, 1000, 600, outline="black")
         self.canvas.create_rectangle(0, 100, 480, 600, fill="green")
 
+        self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
+        self.canvas.create_line(240, 135, 445, 330, width=4, fill="white")
+        self.canvas.create_line(40, 330, 240, 515, width=4, fill="white")
+        self.canvas.create_line(445, 330, 240, 515, width=4, fill="white")
+
+        self.canvas.create_oval(225, 120, 255, 150, fill="white")
+        self.canvas.create_oval(20, 315, 50, 345, fill="white")
+        self.canvas.create_oval(430, 315, 460, 345, fill="white")
+        self.canvas.create_oval(225, 500, 255, 530, fill="white")
+
+        # self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
+        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
+        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
+
     def Throwandhit(self, event):
         for k in range(500, 1000, 100):
             for j in range(100, 600, 100):
                 if event.x in range(k, k + 100) and event.y in range(j, j + 100):
-                    X1 = int((k-500) / 100)
-                    Y1 = int((j-100) / 100)
-        print(X1,Y1)
+                    self.X1 = int((k-500) / 100)
+                    self.Y1 = int((j-100) / 100)
+        print(self.X1, self.Y1)
+
+    def Hitbutton(self):
+        print('hit')
+
+    def Nohitbutton(self):
+        print('no hit')
 
 import random
 import re
@@ -470,8 +488,11 @@ class Game:
     def hit_judgment(self, random_ball, hit_numbers): #(공던질위치, 구질) #융
         cnt = 0
         Foul = False
-        UPDOWN = abs(Game.LOCATION[random_ball[1]][0] - Game.LOCATION[hit_numbers[1]][0]) #투수와 타자의 선택한 공 위치의 높낮이차이 #융
-        L_OR_R = abs(Game.LOCATION[random_ball[1]][1] - Game.LOCATION[hit_numbers[1]][1]) #투수와 타자의 선택한 공 위치의 좌우차이 #융
+        # UPDOWN = abs(Game.LOCATION[random_ball[1]][0] - Game.LOCATION[hit_numbers[1]][0]) #투수와 타자의 선택한 공 위치의 높낮이차이 #융
+        UPDOWN = abs(Game.LOCATION[random_ball[1]][0] - UI.Y1)  # 투수와 타자의 선택한 공 위치의 높낮이차이 #융
+        # L_OR_R = abs(Game.LOCATION[random_ball[1]][1] - Game.LOCATION[hit_numbers[1]][1]) #투수와 타자의 선택한 공 위치의 좌우차이 #융
+        L_OR_R = abs(Game.LOCATION[random_ball[1]][1] - UI.X1) #투수와 타자의 선택한 공 위치의 좌우차이 #융
+
         if random_ball[0] == hit_numbers[0]: #투수가 던진 공의 구질과 타자가 선택한 구질이 같을 때 #융
             if random_ball[1] == hit_numbers[1]:#위치가 같으니까 홈런 #융
                 cnt += 4
@@ -558,7 +579,6 @@ if __name__ == '__main__':
     game_team_list = []
 
     while True:
-
         if game_team_list == [] :
             print('====================================================================================================')
             print('한화 / ', '롯데 / ', '삼성 / ', 'KIA / ', 'SK / ', 'LG / ', '두산 / ', '넥센 / ', 'KT / ', 'NC / ')
@@ -567,7 +587,7 @@ if __name__ == '__main__':
             if (game_team_list[0] in Game.TEAM_LIST) and (game_team_list[1] in Game.TEAM_LIST):
                 game = Game(game_team_list)
                 root = Tk()
-                app = main(root, game)
+                app = UI(root, game)
                 # root.mainloop()
             else:
                 print('입력한 팀 정보가 존재하지 않습니다. 다시 입력해주세요.')
