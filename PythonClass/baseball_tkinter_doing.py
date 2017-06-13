@@ -2,94 +2,6 @@ from tkinter import Frame, Canvas, Label, Button, LEFT, RIGHT, ALL, Tk, StringVa
 from random import randint
 
 
-class UI:
-    def __init__(self, master, game):
-        self.frame = Frame(master)
-        self.frame.pack(fill="both", expand=True)
-        self.canvas = Canvas(self.frame, width=1000, height=600)
-        self.canvas.pack(fill="both", expand=True)
-        self.label = Label(self.frame, text='야구 게임', height=6, bg='white', fg='black')
-        self.label.pack(fill="both", expand=True)
-        self.label.place(x=0, y=0, width=1000, height = 100, bordermode='outside' )
-        self.frameb = Frame(self.frame)
-        self.frameb.pack(fill="both", expand=True)
-        self.newgame = Button(self.frameb, text='New Game', height=4, command=self.Newgame,
-                              bg='purple', fg='white')
-        self.newgame.pack(fill="both", expand=True, side=LEFT)
-        self.loadgame = Button(self.frameb, text='Load Game', height=4, command=self.Loadgame,
-                             bg='white', fg='purple')
-        self.loadgame.pack(fill="both", expand=True, side=LEFT)
-        self.hit = Button(self.frameb, text='hit', width= 5, height=2, command=self.Hitbutton,
-                              bg='purple', fg='white')
-        self.hit.pack(fill="both", expand=True)
-        self.nohit = Button(self.frameb, text='No hit', width= 5, height=2, command=self.Nohitbutton,
-                              bg='purple', fg='white')
-        self.nohit.pack(fill="both", expand=True, side=TOP)
-        self.__board()
-        self.__game = game
-        self.X1 = ''
-        self.Y1 = ''
-
-    @property
-    def Game(self):
-        return self.__game
-
-    def Loadgame(self):
-        self.canvas.delete(ALL)
-        self.label['text'] = ('Choose Your Team')
-        self.canvas.bind("<ButtonPress-1>")
-        self.__board()
-        self.TTT = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-        self.i = 0
-        self.j = False
-
-    def Newgame(self):
-        self.canvas.delete(ALL)
-        self.__board()
-        # self.label['text'] = '{}\n{}'.format(self.Game.printhometeam, self.Game.printawayteam)
-        self.canvas.bind("<ButtonPress-1>", self.Throwandhit)
-
-    def __board(self):
-        self.canvas.create_rectangle(500, 0, 1000, 600, outline="black")
-        self.canvas.create_rectangle(500, 0, 1000, 100, outline="black")
-        self.canvas.create_rectangle(600, 600, 700, 0, outline="black")
-        self.canvas.create_rectangle(500, 100, 1000, 200, outline="black")
-        self.canvas.create_rectangle(700, 600, 800, 0, outline="black")
-        self.canvas.create_rectangle(500, 200, 1000, 300, outline="black")
-        self.canvas.create_rectangle(800, 600, 900, 0, outline="black")
-        self.canvas.create_rectangle(500, 300, 1000, 400, outline="black")
-        self.canvas.create_rectangle(900, 600, 1000, 0, outline="black")
-        self.canvas.create_rectangle(500, 400, 1000, 500, outline="black")
-        self.canvas.create_rectangle(500, 600, 1000, 600, outline="black")
-        self.canvas.create_rectangle(0, 100, 480, 600, fill="green")
-
-        self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
-        self.canvas.create_line(240, 135, 445, 330, width=4, fill="white")
-        self.canvas.create_line(40, 330, 240, 515, width=4, fill="white")
-        self.canvas.create_line(445, 330, 240, 515, width=4, fill="white")
-
-        self.canvas.create_oval(225, 120, 255, 150, fill="white")
-        self.canvas.create_oval(20, 315, 50, 345, fill="white")
-        self.canvas.create_oval(430, 315, 460, 345, fill="white")
-        self.canvas.create_oval(225, 500, 255, 530, fill="white")
-
-        # self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
-        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
-        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
-
-    def Throwandhit(self, event):
-        for k in range(500, 1000, 100):
-            for j in range(100, 600, 100):
-                if event.x in range(k, k + 100) and event.y in range(j, j + 100):
-                    self.X1 = int((k-500) / 100)
-                    self.Y1 = int((j-100) / 100)
-        print(self.X1, self.Y1)
-
-    def Hitbutton(self):
-        print('hit')
-
-    def Nohitbutton(self):
-        print('no hit')
 
 import random
 import re
@@ -231,7 +143,7 @@ class Team:
 ###################################################################################################
 ## 게임 관련 클래스
 ###################################################################################################
-class Game:
+class Game(object):
     TEAM_LIST = {
         '한화': ({1: '정근우'}, {2: '이용규'}, {3: '송광민'}, {4: '최진행'}, {5: '하주석'}, {6: '장민석'}, {7: '로사리오'}, {8: '이양기'}, {9: '최재훈'}),
         '롯데': ({1: '나경민'}, {2: '손아섭'}, {3: '최준석'}, {4: '이대호'}, {5: '강민호'}, {6: '김문호'}, {7: '정훈'}, {8: '번즈'}, {9: '신본기'}),
@@ -489,9 +401,9 @@ class Game:
         cnt = 0
         Foul = False
         # UPDOWN = abs(Game.LOCATION[random_ball[1]][0] - Game.LOCATION[hit_numbers[1]][0]) #투수와 타자의 선택한 공 위치의 높낮이차이 #융
-        UPDOWN = abs(Game.LOCATION[random_ball[1]][0] - UI.Y1)  # 투수와 타자의 선택한 공 위치의 높낮이차이 #융
+        UPDOWN = abs(Game.LOCATION[random_ball[1]][0] - Main.Y1)  # 투수와 타자의 선택한 공 위치의 높낮이차이 #융
         # L_OR_R = abs(Game.LOCATION[random_ball[1]][1] - Game.LOCATION[hit_numbers[1]][1]) #투수와 타자의 선택한 공 위치의 좌우차이 #융
-        L_OR_R = abs(Game.LOCATION[random_ball[1]][1] - UI.X1) #투수와 타자의 선택한 공 위치의 좌우차이 #융
+        L_OR_R = abs(Game.LOCATION[random_ball[1]][1] - Main.X1) #투수와 타자의 선택한 공 위치의 좌우차이 #융
 
         if random_ball[0] == hit_numbers[0]: #투수가 던진 공의 구질과 타자가 선택한 구질이 같을 때 #융
             if random_ball[1] == hit_numbers[1]:#위치가 같으니까 홈런 #융
@@ -570,9 +482,158 @@ class Game:
     # 랜덤으로 숫자 생성(1~20)
     def throws_numbers(self):
         while True:
-            random_loc = random.randint(0, 24)  # 0 ~ 24 중에 랜덤 수를 출력
+            random_loc = [random.randint(0, 5), random.randint(0, 5)]  # 0 ~ 24 중에 랜덤 수를 출력
             random_ball= random.randint(0,  1)   #
             return random_ball, random_loc
+
+class Main(Game):
+    def __init__(self, master, game_team_list):
+        super(Main, self).__init__(game_team_list)
+        self.frame = Frame(master)
+        self.frame.pack(fill="both", expand=True)
+        self.canvas = Canvas(self.frame, width=1000, height=600)
+        self.canvas.pack(fill="both", expand=True)
+
+        self.label = Label(self.frame, text='야구 게임', height=6, bg='white', fg='black')
+        self.label.pack(fill="both", expand=True)
+        self.label.place(x=0, y=0, width=1000, height = 100, bordermode='outside' )
+        self.frameb = Frame(self.frame)
+        self.frameb.pack(fill="both", expand=True)
+        self.startgame = Button(self.frameb, text='Start Game', height=4, command=self.start_game(),
+                              bg='purple', fg='white')
+        self.startgame.pack(fill="both", expand=True, side=LEFT)
+
+        self.loadgame = Button(self.frameb, text='Load Game', height=4, command=self.Loadgame,
+                             bg='white', fg='purple')
+        self.loadgame.pack(fill="both", expand=True, side=LEFT)
+        self.hit = Button(self.frameb, text='hit', width= 5, height=2, command=self.Hitbutton,
+                              bg='purple', fg='white')
+        self.hit.pack(fill="both", expand=True)
+        self.nohit = Button(self.frameb, text='No hit', width= 5, height=2, command=self.Nohitbutton,
+                              bg='purple', fg='white')
+        self.nohit.pack(fill="both", expand=True, side=TOP)
+        self.__board()
+
+        self.X1 = ''
+        self.Y1 = ''
+
+    def Loadgame(self):
+        # self.canvas.delete(ALL)
+        self.label['text'] = ('Choose Your Team')
+        self.canvas.bind("<ButtonPress-1>")
+        self.__board()
+        self.TTT = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        self.i = 0
+        self.j = False
+
+    def start_game(self):
+        # while Game.INNING <= 1: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
+        print('====================================================================================================')
+        print('== {} 이닝 {} 팀 공격 시작합니다.'.format(Game.INNING, self.hometeam.team_name if Game.CHANGE == 0 else self.awayteam.team_name))
+        print('====================================================================================================\n')
+        # self.canvas.delete(ALL)
+        self.__board()
+        self.canvas.bind("<ButtonPress-1>", self.Throwandhit)
+        self.canvas.after(5000,self.attack())
+        super(Main,self).start_game()
+
+    def attack(self):
+        self.__board()
+        curr_team = self.hometeam if Game.CHANGE == 0 else self.awayteam
+        player_list = curr_team.player_list
+        MATRIX = 5
+        PITCH_LOCATION = "| " + "{:^6s} | " * MATRIX #투구 영역 융
+        PITCH_LOCATION = (PITCH_LOCATION + '\n') * MATRIX #융
+        PITCH_LOCATION = "---------" * MATRIX + "\n" + PITCH_LOCATION + "---------" * MATRIX #융
+
+
+        if Game.OUT_CNT < 3:
+            player = self.select_player(Game.BATTER_NUMBER[Game.CHANGE], player_list)
+            print('====================================================================================================')
+            print('== [{}] {}번 타자[{}] 타석에 들어섭니다.'.format(curr_team.team_name, player.number, player.name))
+            print('====================================================================================================\n')
+
+
+            self.__board()
+            random_numbers = self.throws_numbers()  # 컴퓨터가 랜덤으로 숫자 2개 생성(구질[0](0~1), 던질위치[1](0~24))
+
+
+    # def start_game(self):
+    #     while Game.INNING <= 1: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
+    #         print('====================================================================================================')
+    #         print('== {} 이닝 {} 팀 공격 시작합니다.'.format(Game.INNING, self.hometeam.team_name if Game.CHANGE == 0 else self.awayteam.team_name))
+    #         print('====================================================================================================\n')
+    #         self.attack()
+    #
+    #         if Game.CHANGE == 2:  # 이닝 교체
+    #             Game.INNING += 1
+    #             Game.CHANGE = 0
+    #
+    #     print('============================================================================================================')
+    #     print('== 게임 종료!!!')
+    #     print('============================================================================================================\n')
+    #     self.show_record()
+
+    # def Startgame(self):
+    #     self.canvas.delete(ALL)
+    #     self.__board()
+    #     # self.label['text'] = '{}\n{}'.format(self.Game.printhometeam, self.Game.printawayteam)
+    #     self.canvas.bind("<ButtonPress-1>", self.Throwandhit)
+
+    def __board(self):
+        self.canvas.create_rectangle(500, 0, 1000, 600, outline="black")
+        self.canvas.create_rectangle(500, 0, 1000, 100, outline="black")
+        self.canvas.create_rectangle(600, 600, 700, 0, outline="black")
+        self.canvas.create_rectangle(500, 100, 1000, 200, outline="black")
+        self.canvas.create_rectangle(700, 600, 800, 0, outline="black")
+        self.canvas.create_rectangle(500, 200, 1000, 300, outline="black")
+        self.canvas.create_rectangle(800, 600, 900, 0, outline="black")
+        self.canvas.create_rectangle(500, 300, 1000, 400, outline="black")
+        self.canvas.create_rectangle(900, 600, 1000, 0, outline="black")
+        self.canvas.create_rectangle(500, 400, 1000, 500, outline="black")
+        self.canvas.create_rectangle(500, 600, 1000, 600, outline="black")
+        self.canvas.create_rectangle(0, 100, 480, 600, fill="green")
+
+        self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
+        self.canvas.create_line(240, 135, 445, 330, width=4, fill="white")
+        self.canvas.create_line(40, 330, 240, 515, width=4, fill="white")
+        self.canvas.create_line(445, 330, 240, 515, width=4, fill="white")
+
+        self.canvas.create_oval(225, 120, 255, 150, fill="white")
+        self.canvas.create_oval(20, 315, 50, 345, fill="white")
+        self.canvas.create_oval(430, 315, 460, 345, fill="white")
+        self.canvas.create_oval(225, 500, 255, 530, fill="white")
+
+        # self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
+        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
+        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
+
+    def Throwandhit(self, event):
+        for k in range(500, 1000, 100):
+            for j in range(100, 600, 100):
+                if event.x in range(k, k + 100) and event.y in range(j, j + 100):
+                    X1 = int((k-500) / 100)
+                    Y1 = int((j-100) / 100)
+                    return X1, Y1
+
+
+    def Hitbutton(self):
+        print('hit')
+        return 1
+
+    def Nohitbutton(self):
+        print('no hit')
+        return 1
+
+    def Hitornot(self):
+        if self.Hitbutton():
+            return 1
+        elif self.Nohitbutton():
+            return 0
+        return -1
+
+
+
 
 if __name__ == '__main__':
 
@@ -585,15 +646,16 @@ if __name__ == '__main__':
             game_team_list = input('=> 게임을 진행할 두 팀을 입력하세요 : ').split(' ')
             print('====================================================================================================\n')
             if (game_team_list[0] in Game.TEAM_LIST) and (game_team_list[1] in Game.TEAM_LIST):
-                game = Game(game_team_list)
+                # game = Game(game_team_list)
                 root = Tk()
-                app = UI(root, game)
+                app = Main(root, game_team_list)
                 # root.mainloop()
+                break
             else:
                 print('입력한 팀 정보가 존재하지 않습니다. 다시 입력해주세요.')
 
-        root.update()
-
+        # root.update()
+    root.mainloop()
             # break
 
 
