@@ -160,9 +160,9 @@ class Main(object):
         self.frame.pack(fill="both", expand=True)
         self.canvas = Canvas(self.frame, width=1000, height=600)
         self.canvas.pack(fill="both", expand=True)
-        self.label = Label(self.frame, text='야구 게임', height=6, bg='white', fg='black')
-        self.label.pack(fill="both", expand=True)
-        self.label.place(x=0, y=0, width=1000, height=100, bordermode='outside')
+        # self.label = Label(self.frame, text='야구 게임', height=6, bg='white', fg='black')
+        # self.label.pack(fill="both", expand=True)
+        # self.label.place(x=0, y=0, width=1000, height=100, bordermode='outside')
         self.frameb = Frame(self.frame)
         self.frameb.pack(fill="both", expand=True)
         self.newgame = Button(self.frameb, text='New Game', height=4, command=self.game.start_game, bg='purple',
@@ -205,7 +205,24 @@ class Main(object):
     #     # self.label['text'] = '{}\n{}'.format(self.Game.printhometeam, self.Game.printawayteam)
     #     self.canvas.bind("<ButtonPress-1>", Main.Throwandhit)
 
+    def bubble(self):
+        xval = 320
+        yval = 480
+        self.canvas.create_oval(xval, yval, xval + 30, yval + 30, fill="green")
+        self.canvas.create_text(xval + 15, yval + 15, text="B",font=12)
+        self.canvas.update()
+
+
     def board(self, *args):
+        hometeam = self.game.hometeam.team_name
+        awayteam = self.game.awayteam.team_name
+        homescore = self.game.SCORE[0]
+        awayscore = self.game.SCORE[1]
+        announce = self.game.ANNOUNCE
+
+
+
+
         self.canvas.create_rectangle(500, 0, 1000, 600, outline="black")
         self.canvas.create_rectangle(500, 0, 1000, 100, outline="black")
         self.canvas.create_rectangle(600, 600, 700, 0, outline="black")
@@ -234,6 +251,16 @@ class Main(object):
         self.canvas.create_oval(20, 315, 50, 345, fill=Main.COLOR[self.game.ADVANCE[2]])  # 3루
         self.canvas.create_oval(430, 315, 460, 345, fill=Main.COLOR[self.game.ADVANCE[0]])  # 1루
         self.canvas.create_oval(225, 500, 255, 530, fill="white")
+
+
+        self.label = Label(self.frame, text='{} : {}          {} : {}'.format(hometeam, homescore, awayscore, awayteam), height=6, bg='white', fg='black')
+        self.label.config(font=("Courier", 20))
+        self.label.pack(fill="both", expand=True)
+        self.label.place(x=0, y=0, width=1000, height=38, bordermode='outside')
+        self.label = Label(self.frame, text=announce, height=6, bg='white', fg='black')
+        self.label.config(font=("Courier", 10))
+        self.label.pack(fill="both", expand=True)
+        self.label.place(x=0, y=30, width=1000, height=70, bordermode='outside')
         # self.change_color()
 
         # print('----------------------sㅋㅋㅋ')
@@ -385,7 +412,7 @@ class Game(object):
                 15: [3, 0], 16: [3, 1], 17: [3, 2], 18: [3, 3], 19: [3, 4],
                 20: [4, 0], 21: [4, 1], 22: [4, 2], 23: [4, 3], 24: [4, 4]
                 } #던지는 위치의 좌표를 리스트로 저장.
-
+    ANNOUNCE= ''
     # a = ADVANCE[0]
     # b = ADVANCE[1]
     # c = ADVANCE[2]
@@ -409,18 +436,18 @@ class Game(object):
     # 게임 수행 메서드
     def start_game(self):
         if Game.INNING <= 2: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
-            print('====================================================================================================')
-            print('== {} 이닝 {} 팀 공격 시작합니다.'.format(Game.INNING, self.hometeam.team_name if Game.CHANGE == 0 else self.awayteam.team_name))
-            print('====================================================================================================\n')
+            # print('====================================================================================================')
+            Game.ANNOUNCE = '{} 이닝 {} 팀 공격 시작합니다.'.format(Game.INNING, self.hometeam.team_name if Game.CHANGE == 0 else self.awayteam.team_name)
+            # print('====================================================================================================\n')
             self.attack()
 
             if Game.CHANGE == 2:  # 이닝 교체
                 Game.INNING += 1
                 Game.CHANGE = 0
             self.start_game()
-        print('============================================================================================================')
-        print('== 게임 종료!!!')
-        print('============================================================================================================\n')
+        # print('============================================================================================================')
+        Game.ANNOUNCE = '게임 종료!!!'
+        # print('============================================================================================================\n')
         self.show_record()
 
     # 팀별 선수 기록 출력
@@ -461,20 +488,20 @@ class Game(object):
 
         if Game.OUT_CNT < 3:
             player = self.select_player(Game.BATTER_NUMBER[Game.CHANGE], player_list)
-            print('====================================================================================================')
-            print('== [{}] {}번 타자[{}] 타석에 들어섭니다.'.format(curr_team.team_name, player.number, player.name))
-            print('====================================================================================================\n')
+            # print('====================================================================================================')
+            Game.ANNOUNCE += '\n' + '[{}] {}번 타자[{}] 타석에 들어섭니다.\n 현재 타석 : {}번 타자[{}], 타율 : {}, 볼넷 : {}, 홈런 : {}'.format(curr_team.team_name, player.number, player.name,player.number, player.name, player.record.avg, player.record.bob, player.record.homerun)
+            # print('====================================================================================================\n')
 
 
             random_numbers = self.throws_numbers()  # 컴퓨터가 랜덤으로 숫자 2개 생성(구질[0](0~1), 던질위치[1](0~24))
-            print('== [전광판] =========================================================================================')
-            print('==    {}      | {} : {}'.format(Game.ADVANCE[1], self.hometeam.team_name, Game.SCORE[0]))
-            print('==  {}   {}    | {} : {}'.format(Game.ADVANCE[2], Game.ADVANCE[0], self.awayteam.team_name, Game.SCORE[1]))
-            print('== [OUT : {}, BALL : {}, STRIKE : {}]'.format(Game.OUT_CNT, Game.BALL_CNT, Game.STRIKE_CNT))
-            print('====================================================================================================')
-            print(PITCH_LOCATION.format(*[str(idx) for idx in range(26)])) #투구 영역 5 * 5 출력 융
-            print('====================================================================================================')
-            print('== 현재 타석 : {}번 타자[{}], 타율 : {}, 볼넷 : {}, 홈런 : {}'.format(player.number, player.name, player.record.avg, player.record.bob, player.record.homerun))
+            # print('== [전광판] =========================================================================================')
+            # print('==    {}      | {} : {}'.format(Game.ADVANCE[1], self.hometeam.team_name, Game.SCORE[0]))
+            # print('==  {}   {}    | {} : {}'.format(Game.ADVANCE[2], Game.ADVANCE[0], self.awayteam.team_name, Game.SCORE[1]))
+            # print('== [OUT : {}, BALL : {}, STRIKE : {}]'.format(Game.OUT_CNT, Game.BALL_CNT, Game.STRIKE_CNT))
+            # print('====================================================================================================')
+            # print(PITCH_LOCATION.format(*[str(idx) for idx in range(26)])) #투구 영역 5 * 5 출력 융
+            # print('====================================================================================================')
+            # print('== 현재 타석 : {}번 타자[{}], 타율 : {}, 볼넷 : {}, 홈런 : {}'.format(player.number, player.name, player.record.avg, player.record.bob, player.record.homerun))
 
             while True:
 
@@ -487,7 +514,7 @@ class Game(object):
                     if Main.HITORNOT != -1:
                         # hit_yn = int(input('타격을 하시겠습니까?(타격 : 1 타격안함 : 0)'))
                         hit_yn = Main.HITORNOT
-                        print(hit_yn)
+                        # print(hit_yn)
                         break
 
                     else:
@@ -504,13 +531,13 @@ class Game(object):
                         #hit_numbers = [Main.FORB, Main.BALLLOC]
 
                         if Main.FORB != -1 and Main.BALLLOC != -1 :
-                            print('▶ 컴퓨터가 발생 시킨 숫자 : {}\n'.format(random_numbers))
+                            # print('▶ 컴퓨터가 발생 시킨 숫자 : {}\n'.format(random_numbers))
                             hit_numbers = [Main.FORB, Main.BALLLOC]
-                            print(hit_numbers)
+                            # print(hit_numbers)
                             # if self.hit_number_check(hit_numbers) is False:
                             #     raise Exception()
                             hit_cnt = self.hit_judgment(random_numbers, hit_numbers)  # 안타 판별
-                            print(hit_cnt,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+                            # print(hit_cnt,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                             break
 
                         # else :
@@ -523,9 +550,9 @@ class Game(object):
                     if hit_cnt[0] == 0:  # strike !!!
                         if hit_cnt[1] == False:#파울이 아닐 때 융
                             Game.STRIKE_CNT += 1
-                            print('== ▣ 스트라이크!!!\n')
+                            Game.ANNOUNCE = '스트라이크!!!'
                             if Game.STRIKE_CNT == 3:
-                                print('== ▣ 삼진 아웃!!!\n')
+                                Game.ANNOUNCE = '삼진 아웃!!!'
                                 Game.STRIKE_CNT = 0
                                 Game.OUT_CNT += 1
                                 player.hit_and_run(0,0,0)
@@ -535,25 +562,24 @@ class Game(object):
                         if hit_cnt[1] == True:#파울일 때
                             if Game.STRIKE_CNT <= 1: #스트라이크 카운트가 1 이하일때는 원래대로 진행 융
                                 Game.STRIKE_CNT += 1
-                                print('== ▣ 파울!!!\n')
-                                print('== ▣ 스트라이크!!!\n')
+                                Game.ANNOUNCE = '파울!!! 스트라이크!!!'
                                 if Game.STRIKE_CNT == 3:
-                                    print('== ▣ 삼진 아웃!!!\n')
+                                    Game.ANNOUNCE = '삼진 아웃!!!'
                                     Game.STRIKE_CNT = 0
                                     Game.OUT_CNT += 1
                                     player.hit_and_run(0, 0, 0)
                                     break
 
                             if Game.STRIKE_CNT == 2: #스트라이크 카운트가 2일때가 문제. 2일때는 파울이어도 스트라이크 카운트가 늘어나선 안됨 융
-                                print('== ▣ 파울이므로 아웃이 아닙니다. 다시 치세요!!!!\n')
+                                Game.ANNOUNCE = '파울이므로 아웃이 아닙니다. 다시 치세요!!!!'
 
                     else:
                         Game.STRIKE_CNT = 0
                         if hit_cnt[0] != 4:
-                            print('== ▣ {}루타!!!\n'.format(hit_cnt[0]))
+                            Game.ANNOUNCE = '{}루타!!!'.format(hit_cnt[0])
                             player.hit_and_run(1 if hit_cnt[0] > 0 else 0, 0, 1 if hit_cnt[0] == 4 else 0)
                         else:
-                            print('== ▣ 홈런!!!\n')
+                            Game.ANNOUNCE = '홈런!!!'
                             player.hit_and_run(1 if hit_cnt[0] > 0 else 0, 0, 1 if hit_cnt[0] == 4 else 0)
                         self.advance_setting(hit_cnt[0])
                         break
@@ -562,9 +588,9 @@ class Game(object):
                     #컴퓨터가 던진 공이 볼일때 융
                     if (random_numbers[1] >= 0 and random_numbers[1] <= 4) or (random_numbers[1] % 5 == 0) or (random_numbers[1] >= 20) or ((random_numbers[1]-4) % 5 ==0):
                         Game.BALL_CNT += 1
-                        print('== ▣ 볼 !!!!!!!!!!!!!!!!!!!!!!')
+                        Game.ANNOUNCE = '볼 !!!!!!!!!!!!!!!!!!!!!!'
                         if Game.BALL_CNT == 4:
-                            print('== ▣ 볼넷 1루출루 !!!!!!!!!!!!!!!!!!!!!! 투수가 정신을 못차리네요!')
+                            Game.ANNOUNCE = '볼넷 1루출루 !!!!!!!!!!!!!!!!!!!!!! 투수가 정신을 못차리네요!'
                             self.advance_setting(1,True)
                             Game.STRIKE_CNT = 0
                             Game.BALL_CNT = 0
@@ -574,9 +600,9 @@ class Game(object):
                     #컴퓨터가 던진 공이 스트라이크 일 때 융
                     if (random_numbers[1]>=6 and random_numbers[1]<=8) or (random_numbers[1]>=11 and random_numbers[1]<=13) or (random_numbers[1]>=16 and random_numbers[1]<=18):
                         Game.STRIKE_CNT += 1
-                        print('== ▣ 스트라이크!!!!!!!!!!!!!')
+                        Game.ANNOUNCE = '스트라이크!!!!!!!!!!!!!'
                         if Game.STRIKE_CNT ==3:
-                            print('== ▣ 방망이도 안 휘두르고 삼진!!!!!!!!!!!!!! 제구력이 훌륭하군요!')
+                            Game.ANNOUNCE = '방망이도 안 휘두르고 삼진!!!!!!!!!!!!!! 제구력이 훌륭하군요!'
                             Game.STRIKE_CNT = 0
                             Game.BALL_CNT = 0
                             Game.OUT_CNT += 1
@@ -649,27 +675,27 @@ class Game(object):
                 cnt += 4
             elif UPDOWN == 0:#높낮이가 같은 선상일 때 #융
                 if L_OR_R == 1: #좌우로 1칸 차이 #융
-                    print('3루타~')
+                    Game.ANNOUNCE = '3루타~'
                     cnt += 3
                 elif L_OR_R == 2: #좌우로 2칸 차이 #융
-                    print('2루타~')
+                    Game.ANNOUNCE = '2루타~'
                     cnt += 2
                 elif L_OR_R >= 3: #좌우로 3칸 차이 #융
-                    print('1루타~')
+                    Game.ANNOUNCE = '1루타~'
                     cnt += 1
             elif UPDOWN == 1:#높낮이 차이가 하나일때 #융
                 if L_OR_R ==1:
-                    print('2루타~')
+                    Game.ANNOUNCE = '2루타~'
                     cnt += 2
                 elif L_OR_R ==2:
-                    print('1루타~')
+                    Game.ANNOUNCE = '1루타~'
                     cnt += 1
                 elif L_OR_R >= 3:
-                    print('파울')
+                    Game.ANNOUNCE = '파울'
                     cnt += 0
                     Foul = True
             elif UPDOWN >= 2:#높낮이가 두개이상 차이날때 #융
-                print('헛스윙~!')
+                Game.ANNOUNCE = '헛스윙~!'
                 cnt += 0
 
         else: #투수가 던진 공의 구질과 타자가 선택한 구질이 다를 때 융
@@ -677,31 +703,29 @@ class Game(object):
                 cnt += 3
             elif UPDOWN == 0:#높낮이가 같은 선상일 때 #융
                 if L_OR_R == 1:
-                    print('2루타~')
+                    Game.ANNOUNCE = '2루타~'
                     cnt += 2
                 elif L_OR_R == 2:
-                    print('1루타~')
+                    Game.ANNOUNCE = '1루타~'
                     cnt += 1
                 elif L_OR_R >= 3:
-                    print('파울 ㅜㅜ')
+                    Game.ANNOUNCE = '파울 ㅜㅜ'
                     cnt += 0
                     Foul = True
             elif UPDOWN == 1:#높낮이 차이가 하나일때 융
                 if L_OR_R ==1:
-                    print('1루타~')
+                    Game.ANNOUNCE = '1루타~'
                     cnt += 1
                 elif L_OR_R ==2:
-                    print('파울ㅠㅠ')
+                    Game.ANNOUNCE = '파울ㅠㅠ'
                     cnt += 0
                     Foul = True
                 elif L_OR_R >= 3:
-                    print('헛스윙')
+                    Game.ANNOUNCE = '헛스윙'
                     cnt += 0
             elif UPDOWN >= 2:#높낮이가 두개이상 차이날때 융
-                print('헛스윙~!')
+                Game.ANNOUNCE = '헛스윙~!'
                 cnt += 0
-
-
 
         return cnt,Foul
 
