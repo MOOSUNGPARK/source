@@ -216,12 +216,13 @@ class Main(object):
     def board(self, *args):
         hometeam = self.game.hometeam.team_name
         awayteam = self.game.awayteam.team_name
+
         homescore = self.game.SCORE[0]
         awayscore = self.game.SCORE[1]
         announce = self.game.ANNOUNCE
-
-
-
+        inning = self.game.INNING
+        change = self.game.CHANGE
+        attackordefence = [["공격", "수비"] if change == 0 else ["수비", "공격"]]
 
         self.canvas.create_rectangle(500, 0, 1000, 600, outline="black")
         self.canvas.create_rectangle(500, 0, 1000, 100, outline="black")
@@ -253,7 +254,7 @@ class Main(object):
         self.canvas.create_oval(225, 500, 255, 530, fill="white")
 
 
-        self.label = Label(self.frame, text='{} : {}          {} : {}'.format(hometeam, homescore, awayscore, awayteam), height=6, bg='white', fg='black')
+        self.label = Label(self.frame, text='{} : {}  ({}) | {}이닝 | ({})  {} : {}'.format(hometeam, homescore, attackordefence[0][0], inning, attackordefence[0][1], awayscore, awayteam), height=6, bg='white', fg='black')
         self.label.config(font=("Courier", 20))
         self.label.pack(fill="both", expand=True)
         self.label.place(x=0, y=0, width=1000, height=38, bordermode='outside')
