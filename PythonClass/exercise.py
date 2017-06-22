@@ -7,12 +7,8 @@ http://stupidpythonideas.blogspot.kr/2013/10/why-your-gui-app-freezes.html
 '''
 
 
-from tkinter import Frame, Canvas, Label, Button, LEFT,  ALL, Tk, StringVar, Entry, W, E, TOP
-
-
-
-import random,threading
-import re,time
+from tkinter import Frame, Canvas, Label, Button, LEFT,  ALL, Tk, TOP
+import random,re,time
 
 #판정관련
 #0 : 헛스윙
@@ -185,10 +181,13 @@ class Main(object):
         self.breakingball.pack(fill="both", expand=True, side=TOP)
         self.canvas.bind("<ButtonPress-1>", Main.Throwandhit)
         self.canvas.bind("<Motion>", self.board)
+        self.ball_color=[]
+        self.strike_color=[]
+        self.out_color=[]
         self.board()
-
-    def __call__(self):
-        self.board()
+    #
+    # def __call__(self):
+    #     self.board()
 
     def Loadgame(self):
         self.canvas.delete(ALL)
@@ -198,20 +197,6 @@ class Main(object):
         self.TTT = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         self.i = 0
         self.j = False
-
-    # def Newgame(self):
-    #     self.canvas.delete(ALL)
-    #     self.__board()
-    #     # self.label['text'] = '{}\n{}'.format(self.Game.printhometeam, self.Game.printawayteam)
-    #     self.canvas.bind("<ButtonPress-1>", Main.Throwandhit)
-
-    def bubble(self):
-        xval = 320
-        yval = 480
-        self.canvas.create_oval(xval, yval, xval + 30, yval + 30, fill="green")
-        self.canvas.create_text(xval + 15, yval + 15, text="B",font=12)
-        self.canvas.update()
-
 
     def board(self, *args):
         hometeam = self.game.hometeam.team_name
@@ -223,6 +208,30 @@ class Main(object):
         inning = self.game.INNING
         change = self.game.CHANGE
         attackordefence = [["공격", "수비"] if change == 0 else ["수비", "공격"]]
+        scoreformat = '{} : {}  ({}) | {}이닝 | ({})  {} : {}'
+
+        if self.game.BALL_CNT==0:
+            self.ball_color=["white","white","white"]
+        elif self.game.BALL_CNT==1:
+            self.ball_color=["orange","white","white"]
+        elif self.game.BALL_CNT==2:
+            self.ball_color=["orange","orange","white"]
+        elif self.game.BALL_CNT==3:
+            self.ball_color=["orange","orange","orange"]
+
+        if self.game.STRIKE_CNT==0:
+            self.strike_color=['white','white']
+        elif self.game.STRIKE_CNT==1:
+            self.strike_color=["blue","white"]
+        elif self.game.STRIKE_CNT==2:
+            self.strike_color=["blue","blue"]
+
+        if self.game.OUT_CNT==0:
+            self.out_color=['white','white']
+        elif self.game.OUT_CNT==1:
+            self.out_color=["red","white"]
+        elif self.game.OUT_CNT==2:
+            self.out_color=["red","red"]
 
         self.canvas.create_rectangle(500, 0, 1000, 600, outline="black")
         self.canvas.create_rectangle(500, 0, 1000, 100, outline="black")
@@ -241,20 +250,24 @@ class Main(object):
         self.canvas.create_line(240, 135, 445, 330, width=4, fill="white")
         self.canvas.create_line(40, 330, 240, 515, width=4, fill="white")
         self.canvas.create_line(445, 330, 240, 515, width=4, fill="white")
-        #
-        # self.canvas.create_oval(225, 120, 255, 150, fill="white",tag="B2") #2루
-        # self.canvas.create_oval(20, 315, 50, 345, fill="white", tag="B3")#3루
-        # self.canvas.create_oval(430, 315, 460, 345, fill="white",tag="B1")#1루
-        # self.canvas.create_oval(225, 500, 255, 530, fill="white")
-        # self.change_color()
 
         self.canvas.create_oval(225, 120, 255, 150, fill=Main.COLOR[self.game.ADVANCE[1]])  # 2루
         self.canvas.create_oval(20, 315, 50, 345, fill=Main.COLOR[self.game.ADVANCE[2]])  # 3루
         self.canvas.create_oval(430, 315, 460, 345, fill=Main.COLOR[self.game.ADVANCE[0]])  # 1루
         self.canvas.create_oval(225, 500, 255, 530, fill="white")
 
+        self.canvas.create_text(350, 490, font=("Courier", 12), text="B")
+        self.canvas.create_oval(370, 480, 390, 500, fill=self.ball_color[0])#볼
+        self.canvas.create_oval(405, 480, 425, 500, fill=self.ball_color[1])#볼
+        self.canvas.create_oval(440, 480, 460, 500, fill=self.ball_color[2])#볼
+        self.canvas.create_text(350, 525, font=("Courier", 12), text="S")
+        self.canvas.create_oval(370, 515, 390, 535, fill=self.strike_color[0])#스트라이크
+        self.canvas.create_oval(405, 515, 425, 535, fill=self.strike_color[1])  # 스트라이크
+        self.canvas.create_text(350, 560, font=("Courier", 12), text="O")
+        self.canvas.create_oval(370, 550, 390, 570, fill=self.out_color[0])  # 아웃
+        self.canvas.create_oval(405, 550, 425, 570, fill=self.out_color[1])  # 아웃
 
-        self.label = Label(self.frame, text='{} : {}  ({}) | {}이닝 | ({})  {} : {}'.format(hometeam, homescore, attackordefence[0][0], inning, attackordefence[0][1], awayscore, awayteam), height=6, bg='white', fg='black')
+        self.label = Label(self.frame, text=scoreformat.format(hometeam, homescore, attackordefence[0][0], inning, attackordefence[0][1], awayscore, awayteam), height=6, bg='white', fg='black')
         self.label.config(font=("Courier", 20))
         self.label.pack(fill="both", expand=True)
         self.label.place(x=0, y=0, width=1000, height=38, bordermode='outside')
@@ -262,68 +275,7 @@ class Main(object):
         self.label.config(font=("Courier", 10))
         self.label.pack(fill="both", expand=True)
         self.label.place(x=0, y=30, width=1000, height=70, bordermode='outside')
-        # self.change_color()
 
-        # print('----------------------sㅋㅋㅋ')
-        # @staticmethod
-        # def board():
-        #     self.canvas.create_rectangle(500, 0, 1000, 600, outline="black")
-        #     self.canvas.create_rectangle(500, 0, 1000, 100, outline="black")
-        #     self.canvas.create_rectangle(600, 600, 700, 0, outline="black")
-        #     self.canvas.create_rectangle(500, 100, 1000, 200, outline="black")
-        #     self.canvas.create_rectangle(700, 600, 800, 0, outline="black")
-        #     self.canvas.create_rectangle(500, 200, 1000, 300, outline="black")
-        #     self.canvas.create_rectangle(800, 600, 900, 0, outline="black")
-        #     self.canvas.create_rectangle(500, 300, 1000, 400, outline="black")
-        #     self.canvas.create_rectangle(900, 600, 1000, 0, outline="black")
-        #     self.canvas.create_rectangle(500, 400, 1000, 500, outline="black")
-        #     self.canvas.create_rectangle(500, 600, 1000, 600, outline="black")
-        #     self.canvas.create_rectangle(0, 100, 480, 600, fill="green")
-        #
-        #     self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
-        #     self.canvas.create_line(240, 135, 445, 330, width=4, fill="white")
-        #     self.canvas.create_line(40, 330, 240, 515, width=4, fill="white")
-        #     self.canvas.create_line(445, 330, 240, 515, width=4, fill="white")
-        #     #
-        #     # self.canvas.create_oval(225, 120, 255, 150, fill="white",tag="B2") #2루
-        #     # self.canvas.create_oval(20, 315, 50, 345, fill="white", tag="B3")#3루
-        #     # self.canvas.create_oval(430, 315, 460, 345, fill="white",tag="B1")#1루
-        #     # self.canvas.create_oval(225, 500, 255, 530, fill="white")
-        #     # self.change_color()
-        #
-        #     self.canvas.create_oval(225, 120, 255, 150, fill=Main.COLOR[self.game.ADVANCE[1]])  # 2루
-        #     self.canvas.create_oval(20, 315, 50, 345, fill=Main.COLOR[self.game.ADVANCE[2]])  # 3루
-        #     self.canvas.create_oval(430, 315, 460, 345, fill=Main.COLOR[self.game.ADVANCE[0]])  # 1루
-        #     self.canvas.create_oval(225, 500, 255, 530, fill="white")
-
-
-
-
-        # def change_color(self):
-        #     if Game.ADVANCE[0]==1:
-        #         self.canvas.find_withtag("B1",fill="black")
-        #     if Game.ADVANCE[1]==1:
-        #         self.canvas.find_withtag("B2", fill="black")
-        #     if Game.ADVANCE[2]==1:
-        #         self.canvas.find_withtag("B3", fill="black")
-        #
-        # self.after(1000, self.change_color)
-
-
-        # d[a]
-        # self.canvas.create_line(240, 135, 35, 330, width=4, fill="white")
-        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
-        # self.canvas.create_line(X + 20, Y + 20, X - 20, Y - 20, width=4, fill="black")
-
-    #
-    # def Throwandhit(self, event):
-    #     for k in range(500, 1000, 100):
-    #         for j in range(100, 600, 100):
-    #             if event.x in range(k, k + 100) and event.y in range(j, j + 100):
-    #                 self.X1 = int((k-500) / 100)
-    #                 self.Y1 = int((j-100) / 100)
-    #     print(self.X1, self.Y1)
-    #     self.King(self.X1,self.Y1)
 
     @staticmethod
     def Throwandhit(event):
@@ -339,47 +291,26 @@ class Main(object):
 
     @staticmethod
     def Hitbutton():
-        print('hit')
+        # print('hit')
         Main.HITORNOT = 1
 
     @staticmethod
     def Nohitbutton():
-        print('no hit')
+        # print('no hit')
         Main.HITORNOT = 0
 
     @staticmethod
     def FastBall():
-        print('Fastball')
+        # print('Fastball')
         Main.FORB = 1
 
     @staticmethod
     def BreakingBall():
-        print('Brakingball')
+        # print('Brakingball')
         Main.FORB = 0
 
 
 
-        # if __name__ == '__main__':
-        #
-        #     game_team_list = []
-        #
-        #     while True:
-        #         if game_team_list == [] :
-        #             print('====================================================================================================')
-        #             print('한화 / ', '롯데 / ', '삼성 / ', 'KIA / ', 'SK / ', 'LG / ', '두산 / ', '넥센 / ', 'KT / ', 'NC / ')
-        #             game_team_list = input('=> 게임을 진행할 두 팀을 입력하세요 : ').split(' ')
-        #             print('====================================================================================================\n')
-        #             if (game_team_list[0] in Game.TEAM_LIST) and (game_team_list[1] in Game.TEAM_LIST):
-        #                 # game = Game(game_team_list)
-        #                 game = Game(game_team_list)
-        #                 game.start_game()
-        #                 # root.mainloop()
-        #                 break
-        #             else:
-        #                 print('입력한 팀 정보가 존재하지 않습니다. 다시 입력해주세요.')
-        #
-        #         # root.update()
-        #             # break
 
 ###################################################################################################
 ## 게임 관련 클래스
@@ -436,7 +367,7 @@ class Game(object):
 
     # 게임 수행 메서드
     def start_game(self):
-        if Game.INNING <= 2: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
+        if Game.INNING <= 1: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
             # print('====================================================================================================')
             Game.ANNOUNCE = '{} 이닝 {} 팀 공격 시작합니다.'.format(Game.INNING, self.hometeam.team_name if Game.CHANGE == 0 else self.awayteam.team_name)
             # print('====================================================================================================\n')
@@ -458,8 +389,8 @@ class Game(object):
                                         self.awayteam.team_name.center(52, ' ') if re.search('[a-zA-Z]+', self.awayteam.team_name) is not None else self.awayteam.team_name.center(50, ' ')))
         print('==  {} | {}  =='.format(('('+str(Game.SCORE[0])+')').center(52, ' '), ('('+str(Game.SCORE[1])+')').center(52, ' ')))
         print('===================================================================================================================')
-        print('== {} | {} | {} | {} | {} | {} '.format('이름'.center(8, ' '), '타율'.center(5, ' '), '타석'.center(4, ' '), '안타'.center(3, ' '), '홈런'.center(3, ' '), '볼넷'.center(5, ' ')), end='')
-        print('| {} | {} | {} | {} | {} | {} =='.format('이름'.center(8, ' '), '타율'.center(5, ' '), '타석'.center(4, ' '), '안타'.center(3, ' '), '홈런'.center(3, ' '), '볼넷'.center(5, ' ')))
+        print('== {} | {} | {} | {} | {} | {} '.format('이름'.center(8, ' '), '타율'.center(5, ' '), '타석'.center(4, ' '), '안타'.center(3, ' '), '홈런'.center(3, ' '), '볼넷'.center(3, ' ')), end='')
+        print('| {} | {} | {} | {} | {} | {} =='.format('이름'.center(8, ' '), '타율'.center(5, ' '), '타석'.center(4, ' '), '안타'.center(3, ' '), '홈런'.center(3, ' '), '볼넷'.center(3, ' ')))
         print('===================================================================================================================')
 
         hometeam_players = self.hometeam.player_list
@@ -563,7 +494,7 @@ class Game(object):
                         if hit_cnt[1] == True:#파울일 때
                             if Game.STRIKE_CNT <= 1: #스트라이크 카운트가 1 이하일때는 원래대로 진행 융
                                 Game.STRIKE_CNT += 1
-                                Game.ANNOUNCE = '파울!!! 스트라이크!!!'
+                                Game.ANNOUNCE = '파울!!!'
                                 if Game.STRIKE_CNT == 3:
                                     Game.ANNOUNCE = '삼진 아웃!!!'
                                     Game.STRIKE_CNT = 0
@@ -571,8 +502,8 @@ class Game(object):
                                     player.hit_and_run(0, 0, 0)
                                     break
 
-                            if Game.STRIKE_CNT == 2: #스트라이크 카운트가 2일때가 문제. 2일때는 파울이어도 스트라이크 카운트가 늘어나선 안됨 융
-                                Game.ANNOUNCE = '파울이므로 아웃이 아닙니다. 다시 치세요!!!!'
+                            # if Game.STRIKE_CNT == 2: #스트라이크 카운트가 2일때가 문제. 2일때는 파울이어도 스트라이크 카운트가 늘어나선 안됨 융
+                            #     Game.ANNOUNCE = '파울이므로 아웃이 아닙니다. 다시 치세요!!!!'
 
                     else:
                         Game.STRIKE_CNT = 0
