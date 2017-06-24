@@ -157,7 +157,7 @@ d:/data/ 폴더 만들어야 합니다.
 
 class Saveandload:
     DATA_SET = 0
-    FILE_PATH = 'd:/data/'
+    FILE_PATH = 'c:/data/'
     CHECK = 0
     LOAD_YN = False
     print('LOAD_YN = ', LOAD_YN)
