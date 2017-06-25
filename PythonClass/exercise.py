@@ -10,6 +10,27 @@ http://stupidpythonideas.blogspot.kr/2013/10/why-your-gui-app-freezes.html
 from tkinter import Frame, Canvas, Label, Button, LEFT,  ALL, Tk, TOP
 import random,re,time,csv
 
+
+############# 기록을 저장할 경로 설정 ###################         #지은
+##### 저장할 경로는 항상 새로운 경로일 것! ##########
+
+### 실시간 선수 기록 저장 ####
+save_player_path = "d:\\data\\baseball_save_player2.csv"
+
+### 최종 경기 기록 저장 ###
+save_result_path = "d:\\data\\baseball_save_result.csv"
+
+############ 파일을  load할 경로 설정 ###################
+##### load할 파일이 없으면 None 으로 설정! ###########
+
+### 게임을 이어서 할 경우 실시간 경기 기록 불러오기 ###
+load_player_path = "d:\\data\\baseball_save_player1.csv"
+
+### 기록 분석을 위한 최종 경기 기록 데이터가 필요할 경우 ###
+load_result_path = None
+
+########################################################
+
 #판정관련
 #0 : 헛스윙
 #0 : 파울
@@ -151,13 +172,10 @@ class Team:
 d:/data/ 폴더 만들어야 합니다.
 
 """
-'''
-제껀 없어도 돼용 - 지은
-'''
 
 class Saveandload:
     DATA_SET = 0
-    FILE_PATH = 'c:/data/'
+    FILE_PATH = 'd:/data/'
     CHECK = 0
     LOAD_YN = False
     print('LOAD_YN = ', LOAD_YN)
@@ -243,12 +261,11 @@ class Saveandload:
                 SCORE = [int(i) for i in line]
             else:
                 BATTER_NUMBER = [int(i) for i in line]
-        print('이거이거이거',[INNING, CHANGE, adv, STRIKE_CNT, BALL_CNT, OUT_CNT, SCORE, BATTER_NUMBER])
         return [INNING, CHANGE, adv, STRIKE_CNT, BALL_CNT, OUT_CNT, SCORE, BATTER_NUMBER]
 
     @staticmethod
     def load_to_start_game():
-        if Game.INNING == 1 and Saveandload.LOAD_YN == True:
+        if Game.LOAD_CHK == True and Saveandload.LOAD_YN == True:
             temp = Saveandload.load()  # list
             # INNING = 0
             Game.INNING = temp[0]
@@ -272,15 +289,45 @@ class Saveandload:
         else:
             pass
 
-"""
-test.txt의 데이터 형태는
+    @staticmethod
+    def save_record(save_path, *save_col):  # 지은
+        csvFile = open(save_path, 'a')
+        try :
+            writer = csv.writer(csvFile)
+            writer.writerow(save_col)
 
-0         #이닝
-1         #체인지
-0,0,0     #진루상황
+        finally:
+            csvFile.close()
 
-위처럼 저장되며, 불러올 때도 저 형태의 데이터를 idx를 참고삼아 불러옴.
-"""
+    @staticmethod
+    def load_record(hometeam, awayteam, home, away, load_path):   # 지은
+        try:
+            if load_path == None :
+                print ("불러올 파일이 없습니다. 새 게임을 시작합니다.")
+                return Main.start_game()
+            else :
+                # load한 csv파일을 records 리스트에 담기
+                records = [records for records in csv.reader(open(load_path, 'r')) if len(records) !=0 ]
+                print(records)
+                #records 리스트를 선수별로 unpacking
+                for record in records:
+                    curr_team = home if record[0] == hometeam else away
+                    teamnumber = 0 if record[0] == hometeam else 1
+                    player_list = curr_team.player_list
+                    player = player_list[int(record[1]) - 1]
+                    _, _, _, atbat, hit, bob, homerun, avg = record
+                    player.record.atbat = int(atbat)
+                    player.record.hit = int(hit)
+                    player.record.bob = int(bob)
+                    player.record.homerun = int(homerun)
+                    player.record.avg = float(avg)
+                return Main.Loadgame
+
+        except FileNotFoundError :
+            print('파일 위치를 잘못 입력하셨습니다.')
+
+
+
 
 
 ###################################################################################################
@@ -309,7 +356,7 @@ class Game(object):
     ADVANCE = [0, 0, 0]  # 진루 상황
     SCORE = [0, 0]  # [home, away]
     BATTER_NUMBER = [1, 1]  # [home, away] 타자 순번
-
+    LOAD_CHK = True
     MATRIX = 5
     LOCATION = {0: [0, 0], 1: [0, 1], 2: [0, 2], 3: [0, 3], 4: [0, 4],
                 5: [1, 0], 6: [1, 1], 7: [1, 2], 8: [1, 3], 9: [1, 4],
@@ -324,6 +371,7 @@ class Game(object):
         print('Away Team : ' + game_team_list[1]+' : ', Game.TEAM_LIST[game_team_list[1]])
         self.__hometeam = Team(game_team_list[0], Game.TEAM_LIST[game_team_list[0]])
         self.__awayteam = Team(game_team_list[1], Game.TEAM_LIST[game_team_list[1]])
+        self.game_team_list = game_team_list
         self.root = root
 
     @property
@@ -337,20 +385,6 @@ class Game(object):
     # 게임 수행 메서드
     def start_game(self):
         pass
-    #     if Game.INNING <= 1: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
-    #         # print('====================================================================================================')
-    #         Game.ANNOUNCE = '{} 이닝 {} 팀 공격 시작합니다.'.format(Game.INNING, self.hometeam.team_name if Game.CHANGE == 0 else self.awayteam.team_name)
-    #         # print('====================================================================================================\n')
-    #         self.attack()
-    #
-    #         if Game.CHANGE == 2:  # 이닝 교체
-    #             Game.INNING += 1
-    #             Game.CHANGE = 0
-    #         self.start_game()
-    #     # print('============================================================================================================')
-    #     Game.ANNOUNCE = '게임 종료!!!'
-    #     # print('============================================================================================================\n')
-    #     self.show_record()
 
     # 팀별 선수 기록 출력
     def show_record(self):
@@ -372,14 +406,11 @@ class Game(object):
             ap = awayteam_players[i]
             ap_rec = ap.record
 
-
             save_hp=[self.hometeam.team_name, hp.name, hp_rec.avg, hp_rec.atbat, hp_rec.hit, hp_rec.homerun, hp_rec.bob ] # 지은
             save_ap=[self.awayteam.team_name, ap.name, ap_rec.avg, ap_rec.atbat, ap_rec.hit, ap_rec.homerun, ap_rec.bob ] # 지은
 
-            self.save_record("c:\\data\\baseball_save_result2.csv", *save_hp)   # 지은
-            self.save_record("c:\\data\\baseball_save_result2.csv", *save_ap)   # 지은
-
-
+            Saveandload.save_record(save_result_path, *save_hp)   # 지은
+            Saveandload.save_record(save_result_path, *save_ap)   # 지은
 
             print('== {} | {} | {} | {} | {} | {} |'.format(hp.name.center(6+(4-len(hp.name)), ' '), str(hp_rec.avg).center(7, ' '),
                                                       str(hp_rec.atbat).center(6, ' '), str(hp_rec.hit).center(5, ' '), str(hp_rec.homerun).center(5, ' '), str(hp_rec.bob).center(5,' ')), end='')
@@ -390,157 +421,6 @@ class Game(object):
     # 공격 수행 메서드
     def attack(self):
         pass
-
-        # curr_team = self.hometeam if Game.CHANGE == 0 else self.awayteam
-        # player_list = curr_team.player_list
-        # MATRIX = 5
-        # PITCH_LOCATION = "| " + "{:^6s} | " * MATRIX #투구 영역 융
-        # PITCH_LOCATION = (PITCH_LOCATION + '\n') * MATRIX #융
-        # PITCH_LOCATION = "---------" * MATRIX + "\n" + PITCH_LOCATION + "---------" * MATRIX #융
-        # hit_numbers = []
-        #
-        #
-        # self.load_record("c:\\data\\baseball_save_result.csv") # 지은
-        #
-        #
-        #
-        # if Game.OUT_CNT < 3:
-        #     player = self.select_player(Game.BATTER_NUMBER[Game.CHANGE], player_list)
-        #     # print('====================================================================================================')
-        #     Game.ANNOUNCE += '\n' + '[{}] {}번 타자[{}] 타석에 들어섭니다.\n 현재 타석 : {}번 타자[{}], 타율 : {}, 볼넷 : {}, 홈런 : {}'.format(curr_team.team_name, player.number, player.name,player.number, player.name, player.record.avg, player.record.bob, player.record.homerun)
-        #     # print('====================================================================================================\n')
-        #
-        #
-        #     random_numbers = self.throws_numbers()  # 컴퓨터가 랜덤으로 숫자 2개 생성(구질[0](0~1), 던질위치[1](0~24))
-        #     # print('== [전광판] =========================================================================================')
-        #     # print('==    {}      | {} : {}'.format(Game.ADVANCE[1], self.hometeam.team_name, Game.SCORE[0]))
-        #     # print('==  {}   {}    | {} : {}'.format(Game.ADVANCE[2], Game.ADVANCE[0], self.awayteam.team_name, Game.SCORE[1]))
-        #     # print('== [OUT : {}, BALL : {}, STRIKE : {}]'.format(Game.OUT_CNT, Game.BALL_CNT, Game.STRIKE_CNT))
-        #     # print('====================================================================================================')
-        #     # print(PITCH_LOCATION.format(*[str(idx) for idx in range(26)])) #투구 영역 5 * 5 출력 융
-        #     # print('====================================================================================================')
-        #     # print('== 현재 타석 : {}번 타자[{}], 타율 : {}, 볼넷 : {}, 홈런 : {}'.format(player.number, player.name, player.record.avg, player.record.bob, player.record.homerun))
-        #
-        #     while True:
-        #
-        #         Main.FORB = -1
-        #         Main.BALLLOC = -1
-        #         Main.HITORNOT = -1
-        #
-        #         while True:
-        #             self.root.update()
-        #             if Main.HITORNOT != -1:
-        #                 # hit_yn = int(input('타격을 하시겠습니까?(타격 : 1 타격안함 : 0)'))
-        #                 hit_yn = Main.HITORNOT
-        #                 # print(hit_yn)
-        #                 break
-        #
-        #             else:
-        #                 #print('Hit 여부 선택하세요.')
-        #                 #print(Main.HITORNOT)
-        #                 # self.attack()
-        #                 time.sleep(0.05)
-        #                 continue
-        #
-        #         if hit_yn == 1 :#################타격 시############################ #융
-        #             while True :
-        #                 self.root.update()
-        #                 time.sleep(0.05)
-        #                 #hit_numbers = [Main.FORB, Main.BALLLOC]
-        #
-        #                 if Main.FORB != -1 and Main.BALLLOC != -1 :
-        #                     # print('▶ 컴퓨터가 발생 시킨 숫자 : {}\n'.format(random_numbers))
-        #                     hit_numbers = [Main.FORB, Main.BALLLOC]
-        #                     # print(hit_numbers)
-        #                     # if self.hit_number_check(hit_numbers) is False:
-        #                     #     raise Exception()
-        #                     hit_cnt = self.hit_judgment(random_numbers, hit_numbers)  # 안타 판별
-        #                     # print(hit_cnt,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        #                     break
-        #
-        #                 # else :
-        #                 #     print('== ▣ 잘못된 숫자가 입력되었습니다.')
-        #                 #     print(hit_numbers)
-        #                 #     print('====================================================================================================')
-        #                 #     print('▶ 컴퓨터가 발생 시킨 숫자 : {}\n'.format(random_numbers))
-        #                 #     continue
-        #
-        #             if hit_cnt[0] == 0:  # strike !!!
-        #                 if hit_cnt[1] == False:#파울이 아닐 때 융
-        #                     Game.STRIKE_CNT += 1
-        #                     Game.ANNOUNCE = '스트라이크!!!'
-        #                     if Game.STRIKE_CNT == 3:
-        #                         Game.ANNOUNCE = '삼진 아웃!!!'
-        #                         Game.STRIKE_CNT = 0
-        #                         Game.OUT_CNT += 1
-        #                         player.hit_and_run(0,0,0)
-        #                         break
-        #
-        #
-        #                 if hit_cnt[1] == True:#파울일 때
-        #                     if Game.STRIKE_CNT <= 1: #스트라이크 카운트가 1 이하일때는 원래대로 진행 융
-        #                         Game.STRIKE_CNT += 1
-        #                         Game.ANNOUNCE = '파울!!!'
-        #                         if Game.STRIKE_CNT == 3:
-        #                             Game.ANNOUNCE = '삼진 아웃!!!'
-        #                             Game.STRIKE_CNT = 0
-        #                             Game.OUT_CNT += 1
-        #                             player.hit_and_run(0, 0, 0)
-        #                             break
-        #
-        #                     # if Game.STRIKE_CNT == 2: #스트라이크 카운트가 2일때가 문제. 2일때는 파울이어도 스트라이크 카운트가 늘어나선 안됨 융
-        #                     #     Game.ANNOUNCE = '파울이므로 아웃이 아닙니다. 다시 치세요!!!!'
-        #
-        #             else:
-        #                 Game.STRIKE_CNT = 0
-        #                 if hit_cnt[0] != 4:
-        #                     Game.ANNOUNCE = '{}루타!!!'.format(hit_cnt[0])
-        #                     player.hit_and_run(1 if hit_cnt[0] > 0 else 0, 0, 1 if hit_cnt[0] == 4 else 0)
-        #                 else:
-        #                     Game.ANNOUNCE = '홈런!!!'
-        #                     player.hit_and_run(1 if hit_cnt[0] > 0 else 0, 0, 1 if hit_cnt[0] == 4 else 0)
-        #                 self.advance_setting(hit_cnt[0])
-        #                 break
-        #
-        #         elif hit_yn==0:######타격안하고 지켜보기 시전########################### 융
-        #             #컴퓨터가 던진 공이 볼일때 융
-        #             if (random_numbers[1] >= 0 and random_numbers[1] <= 4) or (random_numbers[1] % 5 == 0) or (random_numbers[1] >= 20) or ((random_numbers[1]-4) % 5 ==0):
-        #                 Game.BALL_CNT += 1
-        #                 Game.ANNOUNCE = '볼 !!!!!!!!!!!!!!!!!!!!!!'
-        #                 if Game.BALL_CNT == 4:
-        #                     Game.ANNOUNCE = '볼넷 1루출루 !!!!!!!!!!!!!!!!!!!!!! 투수가 정신을 못차리네요!'
-        #                     self.advance_setting(1,True)
-        #                     Game.STRIKE_CNT = 0
-        #                     Game.BALL_CNT = 0
-        #                     player.hit_and_run(0,1,0)
-        #                     break
-        #
-        #             #컴퓨터가 던진 공이 스트라이크 일 때 융
-        #             if (random_numbers[1]>=6 and random_numbers[1]<=8) or (random_numbers[1]>=11 and random_numbers[1]<=13) or (random_numbers[1]>=16 and random_numbers[1]<=18):
-        #                 Game.STRIKE_CNT += 1
-        #                 Game.ANNOUNCE = '스트라이크!!!!!!!!!!!!!'
-        #                 if Game.STRIKE_CNT ==3:
-        #                     Game.ANNOUNCE = '방망이도 안 휘두르고 삼진!!!!!!!!!!!!!! 제구력이 훌륭하군요!'
-        #                     Game.STRIKE_CNT = 0
-        #                     Game.BALL_CNT = 0
-        #                     Game.OUT_CNT += 1
-        #                     player.hit_and_run(0, 0, 0)
-        #                     break
-        #         else :
-        #             continue
-        #
-        #
-        #     if Game.BATTER_NUMBER[Game.CHANGE] == 9:
-        #         Game.BATTER_NUMBER[Game.CHANGE] = 1
-        #     else:
-        #         Game.BATTER_NUMBER[Game.CHANGE] += 1
-        #     self.attack()
-        # else:
-        #     Game.CHANGE += 1
-        #     Game.STRIKE_CNT = 0
-        #     Game.BALL_CNT = 0
-        #     Game.OUT_CNT = 0
-        #     Game.ADVANCE = [0, 0, 0]
 
     # 진루 및 득점 설정하는 메서드
     def advance_setting(self, hit_cnt, bob=False):
@@ -669,11 +549,15 @@ class Game(object):
             random_ball= random.randint(0,  1)   #
             return random_ball, random_loc
 
+
+
+
 class Main(Game):
     HITORNOT = -1
     FORB = -1
     BALLLOC = -1
     COLOR = ["white", "red"]
+
 
     def __init__(self, master, game_team_list, root):
         super().__init__(master,game_team_list,root)
@@ -716,6 +600,7 @@ class Main(Game):
     def attack(self):
         curr_team = self.hometeam if Game.CHANGE == 0 else self.awayteam
         player_list = curr_team.player_list
+        print('pawoejfpoajwpefjpawj     playerlist', player_list)
         MATRIX = 5
         PITCH_LOCATION = "| " + "{:^6s} | " * MATRIX #투구 영역 융
         PITCH_LOCATION = (PITCH_LOCATION + '\n') * MATRIX #융
@@ -742,15 +627,16 @@ class Main(Game):
 
             while True:
 
-                PLAYER_INFO = [player.number, player.name, player.record.avg, player.record.bob,
-                                                player.record.homerun]
+                PLAYER_INFO = [curr_team.team_name, player.number, player.name, player.record.atbat, player.record.hit, player.record.bob,
+                               player.record.homerun, player.record.avg]
                 CNT = [Game.STRIKE_CNT, Game.BALL_CNT, Game.OUT_CNT]
                 GAME_INFO = [Game.INNING, Game.CHANGE]
                 ADV = Game.ADVANCE
                 SCORE = Game.SCORE
                 BATTER_NUMBER = Game.BATTER_NUMBER
-                print()
+
                 Saveandload.make_data_set(CNT, GAME_INFO, ADV, SCORE, BATTER_NUMBER)
+                Saveandload.save_record(save_player_path, *PLAYER_INFO)            #지은
 
                 Main.FORB = -1
                 Main.BALLLOC = -1
@@ -868,7 +754,9 @@ class Main(Game):
                 else :
                     continue
 
-
+            PLAYER_INFO = [curr_team.team_name, player.number, player.name, player.record.atbat, player.record.hit, player.record.bob,
+                           player.record.homerun, player.record.avg]
+            Saveandload.save_record(save_player_path, *PLAYER_INFO)  # 지은
             if Game.BATTER_NUMBER[Game.CHANGE] == 9:
                 Game.BATTER_NUMBER[Game.CHANGE] = 1
             else:
@@ -884,8 +772,10 @@ class Main(Game):
 
     def start_game(self):
         Saveandload.load_to_start_game()
+        Saveandload.load_record(self.game_team_list[0], self.game_team_list[1], self.hometeam, self.awayteam, load_player_path)   #지은
+        Game.LOAD_CHK = False
 
-        if Game.INNING <= 1: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
+        if Game.INNING <= 3: #게임을 진행할 이닝을 설정. 현재는 1이닝만 진행하게끔 되어 있음.
             # print('====================================================================================================')
             Game.ANNOUNCE = '{} 이닝 {} 팀 공격 시작합니다.'.format(Game.INNING, self.game.hometeam.team_name if Game.CHANGE == 0 else self.game.awayteam.team_name)
             # print('====================================================================================================\n')
@@ -1049,6 +939,7 @@ if __name__ == '__main__':
     root = Tk()
     app = Main(root, game_team_list, root)
     root.mainloop()
+
 
 
 
