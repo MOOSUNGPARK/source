@@ -174,7 +174,7 @@ class machine_learning():
     @staticmethod
     def Loss(x, y, weight):
         loss = np.sum((x.dot(weight) - y.reshape(len(y),1)) ** 2) / (2 * len(x))
-        print('loss',loss)
+        print(loss)
         return loss
 
     ########## 경사감소법 및 회귀분석 가중치 계산 메소드 ##########
@@ -221,7 +221,7 @@ class SaveLoad():
     def saveCSV(ballloc, weightloc):
         try:
             if weightloc != None:
-                f = open((weightloc), 'wt')
+                f = open((weightloc), 'a')
                 w = csv.writer(f, delimiter=',', lineterminator='\n')
 
                 for key in machine_learning.gradient_descent(np.array(ball_loc_save), learning_rate, training_cnt)[0]:
@@ -229,7 +229,7 @@ class SaveLoad():
                 f.close()
                 print('weight saved')
             if ballloc != None:
-                f = open((ballloc), 'wt')
+                f = open((ballloc), 'a')
                 w = csv.writer(f, delimiter=',', lineterminator='\n')
 
                 for key in ball_loc_save:
