@@ -221,7 +221,7 @@ class SaveLoad():
     def saveCSV(ballloc, weightloc):
         try:
             if weightloc != None:
-                f = open((weightloc), 'a')
+                f = open((weightloc), 'wt')
                 w = csv.writer(f, delimiter=',', lineterminator='\n')
 
                 for key in machine_learning.gradient_descent(np.array(ball_loc_save), learning_rate, training_cnt)[0]:
@@ -229,7 +229,7 @@ class SaveLoad():
                 f.close()
                 print('weight saved')
             if ballloc != None:
-                f = open((ballloc), 'a')
+                f = open((ballloc), 'wt')
                 w = csv.writer(f, delimiter=',', lineterminator='\n')
 
                 for key in ball_loc_save:
