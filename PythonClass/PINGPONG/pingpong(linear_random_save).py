@@ -23,7 +23,7 @@ load_weightloc = 'c:\python\data\pingpong_weight.csv'
 # 경사감소법 learning_rate(변경x)
 learning_rate = 0.5
 # 경사감소법 시행횟수(변경x)
-training_cnt= 10000
+training_cnt= 20000
 #가능조합(learning_rate = 0.00001, training_cnt = 50000)
 #가능조합(learning_rate = 0.00002, training_cnt = 25000)
 
@@ -174,7 +174,7 @@ class machine_learning():
     @staticmethod
     def Loss(x, y, weight):
         loss = np.sum((x.dot(weight) - y.reshape(len(y),1)) ** 2) / (2 * len(x))
-        print(loss)
+        print('loss',loss)
         return loss
 
     ########## 경사감소법 및 회귀분석 가중치 계산 메소드 ##########
