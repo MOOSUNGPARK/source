@@ -1,188 +1,103 @@
-import tkinter as tk
+'''
+
+1. 게시물 url-> 
+2. smi/ rar/ zip 나눠서 url 저장하고 각 폴더에 한꺼번에 크롤링해서 다운받기 
+
+'''
 
 
-base=tk.Tk()  #this is the main frame
-root=tk.Frame(base)  #Really this is not necessary -- the other widgets could be attached to "base", but I've added it to demonstrate putting a frame in a frame.
-root.grid(row=0,column=0)
-scoreboard=tk.Frame(root)
-scoreboard.grid(row=0,column=0,columnspan=2)
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from bs4 import BeautifulSoup
+import time
+import urllib.request
+from PIL import Image
 
-###
-#Code to add stuff to scoreboard ...
-# e.g.
-###
-scorestuff=tk.Label(scoreboard,text="Here is the scoreboard")
-scorestuff.grid(row=0,column=0)
-#End scoreboard
+class DramaCrawler:
+    __CHROME_DRIVER_PATH = 'c:\\'
+    __IMAGE_PATH = 'c:\\python\\data\\drama'
+    __SEARCH_KEYWORD = ['개']
 
-#Start cards.
-cards=tk.Frame(root)
-cards.grid(row=1,column=0)
-###
-# Code to add pitcher and batter cards
-###
-clabel=tk.Label(cards,text="Stuff to add cards here")
-clabel.grid(row=0,column=0)
-#end cards
-
-#Offense/Defense frames....
-offense=tk.Frame(root)
-offense.grid(row=1,column=1)
-offense.isgridded=True #Dynamically add "isgridded" attribute.
-offense_label=tk.Label(offense,text="Offense is coolest")
-offense_label.grid(row=0,column=0)
-
-defense=tk.Frame(root)
-defense.isgridded=False
-defense_label=tk.Label(defense,text="Defense is coolest")
-defense_label.grid(row=0,column=0)
-
-def switchOffenseDefense():
-    print("Called")
-    if(offense.isgridded):
-        offense.isgridded=False
-        offense.grid_forget()
-        defense.isgridded=True
-        defense.grid(row=1,column=1)
-    else:
-        defense.isgridded=False
-        defense.grid_forget()
-        offense.isgridded=True
-        offense.grid(row=1,column=1)
+    def __init__(self):
+        self.__image_urls = []
+        self._google_image_url = 'https://www.google.com/imghp?hl=ko'
+        self._drama_sub_url = 'http://cineaste.co.kr/bbs/board.php?bo_table=psd_dramacap&page='
+        self._set_chrome_driver()
 
 
-switch_button=tk.Button(root,text="Switch",command=switchOffenseDefense)
-switch_button.grid(row=2,column=1)
+    def _set_chrome_driver(self):
+        self.driver = webdriver.Chrome(DramaCrawler.__CHROME_DRIVER_PATH + 'chromedriver')
 
-root.mainloop()
+    def _extract_image_url(self, images):
+        number = 1
+        for image in images:
+            try:
+                image_src = image['src']
+                if image_src is not None:
+                    self.__image_urls.append((number, image_src))
+                    number += 1
+            except KeyError:
+                print(image['name'] + ', src 속성이 존재하지 않습니다.')
 
+    def _get_image_crawling(self, keyword):
+        self.driver.get(self._google_image_url)
+        self.driver.find_element_by_id("lst-ib").clear()
+        self.driver.find_element_by_id("lst-ib").send_keys(keyword)
+        self.driver.find_element_by_id("lst-ib").submit()
+        time.sleep(3)
 
+        before_img_cnt = 0
+        clicked = False
 
+        while True:
+            self.driver.find_element_by_xpath("//body").send_keys(Keys.END)
+            html = self.driver.page_source
+            soup = BeautifulSoup(html, 'html.parser')
+            images = soup.find_all('img', class_='rg_ic rg_i')
+            after_img_cnt = len(images)
 
+            if before_img_cnt == after_img_cnt:
+                if soup.find('input', id='smb') and clicked is False:
+                    self.driver.find_element_by_id('smb').click()
+                    clicked = True
+                    time.sleep(3)
+                else:
+                    self._extract_image_url(images)
+                    self.driver.quit()
+                    break
+            else:
+                before_img_cnt = after_img_cnt
+                time.sleep(3)
 
-import tkinter as tk
-import tkinter.messagebox as messagebox
+    def _image_downloads(self):
+        for name, url in self.__image_urls:
+            urllib.request.urlretrieve(url, DramaCrawler.__IMAGE_PATH + str(name) + '.jpg')
 
-board = [ [None]*10 for _ in range(10) ]
+    def _image_to_thumbnail(self):
+        for name, _ in self.__image_urls:
+            try:
+                im = Image.open(DramaCrawler.__IMAGE_PATH + str(name) + '.jpg')
+                im.thumbnail((128, 128), Image.ANTIALIAS)
+                im.save(DramaCrawler.__IMAGE_PATH + str(name) + '_thumbnail.jpg')
+            except:
+                print(str(name) + '.jpg, file is not exists.')
 
-counter = 0
-root = tk.Tk()
+    def play_crawler(self):
+        for keyword in DramaCrawler.__SEARCH_KEYWORD:
+            print('crawling start.')
+            self._get_image_crawling(keyword)
+            print('crawling complete.')
+            print('image count : ' + str(len(self.__image_urls)))
 
-def check_board():
-    freespaces = 0
-    redspaces = 0
-    greenspaces = 0
-    for i,row in enumerate(board):
-        for j,column in enumerate(row):
-            if board[i][j] == "red":
-                redspaces += 1
-            elif board[i][j] == "green":
-                greenspaces += 1
-            elif board[i][j] == None:
-                freespaces += 1
+            print('image downloading.')
+            self._image_downloads()
+            print('image downloading complete.')
 
-    if freespaces == 0:
-        if greenspaces > redspaces:
-            winner = "green"
-        elif greenspaces < redspaces:
-            winner = "red"
-        else:
-            winner = "draw"
+            print('image to thumbnail start.')
+            self._image_to_thumbnail()
+            print('image to thumbnail end.')
 
-        if winner != "draw":
-            messagebox.showinfo("Game Over!",winner+" wins!")
-        else:
-            messagebox.showinfo("Game Over!","The game was a draw!")
+            self.__image_urls.clear()
 
-
-
-
-def on_click(i,j,event):
-    global counter
-    if counter < 100:
-        if board[i][j] == None:
-            color = "green" if counter%2 else "red"
-            enemycolor = "red" if counter%2 else "green"
-            event.widget.config(bg=color)
-            board[i][j] = color
-            for k in range(-1,2):
-                for l in range(-1,2):
-                    try:
-                        if board[i+k][j+l] == enemycolor:
-                            board[i+k][j+l] = color
-                    except IndexError:
-                        pass
-            counter += 1
-            global gameframe
-            gameframe.destroy()
-            redraw()
-            root.wm_title(enemycolor+"'s turn")
-        else:
-            messagebox.showinfo("Alert","This square is already occupied!")
-        check_board()
-
-
-def redraw():
-    global gameframe
-    gameframe = tk.Frame(root)
-    gameframe.pack()
-
-    for i,row in enumerate(board):
-
-        for j,column in enumerate(row):
-            name = str(i)+str(j)
-            L = tk.Label(gameframe,text='    ',bg= "grey" if board[i][j] == None else board[i][j])
-            L.grid(row=i,column=j,padx='3',pady='3')
-            L.bind('<Button-1>',lambda e,i=i,j=j:on_click(i,j,e))
-
-
-redraw()
-root.mainloop()
-
-
-
-
-
-
-
-#######################################
-
-#Imports all (*) classes,
-#atributes, and methods of tkinter into the
-#current workspace
-
-from tkinter import Tk, StringVar, Label, Entry, Button, W, E
-
-root = Tk()
-root.title('how to get text from textbox')
-
-
-#**********************************
-mystring = StringVar()
-
-####define the function that the signup button will do
-def getvalue():
-    print(mystring.get())
-    return mystring.get()
-
-#*************************************
-
-Label(root, text="Text to get").grid(row=0, sticky=W)  #label
-Entry(root, textvariable = mystring).grid(row=0, column=1, sticky=E) #entry textbox
-
-WSignUp = Button(root, text="print text", command=getvalue).grid(row=3, column=0, sticky=W) #button
-
-
-############################################
-# executes the mainloop (that is, the event loop) method of the root
-# object. The mainloop method is what keeps the root window visible.
-# If you remove the line, the window created will disappear
-# immediately as the script stops running. This will happen so fast
-# that you will not even see the window appearing on your screen.
-# Keeping the mainloop running also lets you keep the
-# program running until you press the close buton
-root.mainloop()
-# while True :
-#     root.update()
-
-
+crawler = DramaCrawler()
+crawler.play_crawler()
