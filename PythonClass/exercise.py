@@ -39,8 +39,6 @@ class SubtitleCrawler:
                         bookno = url3.split('/')[-1]
                         if bookno.isdigit():
                             self._download_url.append('http://www.gutenberg.org/cache/epub/{0}/pg{0}.txt'.format(bookno))
-                            print('성공')
-                        print(idx3, bookno)
 
             except:
                 print('no.' + str(idx), 'url load failed')
@@ -58,7 +56,6 @@ class SubtitleCrawler:
 
     def _make_save_dir(self, extension):
         save_path = SubtitleCrawler.__SAVE_FILE_PATH + '{}\\'.format(extension)
-        print(os.path.split(save_path)[0])
         if not os.path.isdir(os.path.split(save_path)[0]):
             os.mkdir(os.path.split(save_path)[0])
 
