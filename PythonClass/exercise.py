@@ -1,52 +1,75 @@
-import io
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.converter import TextConverter
-from pdfminer.layout import LAParams
-from pdfminer.pdfpage import PDFPage
+from selenium import webdriver
+from urllib.request import urlretrieve
 import os
+from bs4 import BeautifulSoup
 
 
-def convert_pdf_to_txt(path):
-    rsrcmgr = PDFResourceManager()
-    retstr = io.StringIO()
-    codec = 'utf-8'
-    laparams = LAParams()
-    device = TextConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
-    fp = open(path, 'rb')
-    interpreter = PDFPageInterpreter(rsrcmgr, device)
-    password = ""
-    maxpages = 0
-    caching = True
-    pagenos = set()
+class SubtitleCrawler:
+    __CHROME_DRIVER_PATH = 'c:\\chromedriver\\'
+    __SAVE_FILE_PATH = 'd:\\data\\'
 
-    for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages,
-                                  password=password,
-                                  caching=caching,
-                                  check_extractable=True):
-        interpreter.process_page(page)
+    def __init__(self):
+        self._sub_url = 'https://www.gutenberg.org/wiki/Category:Fiction_Bookshelf'
+        self._download_url = []
+        self._set_chrome_driver()
 
-    text = retstr.getvalue()
+    def _set_chrome_driver(self):
+        self.driver = webdriver.Chrome(SubtitleCrawler.__CHROME_DRIVER_PATH + 'chromedriver')
 
-    fp.close()
-    device.close()
-    retstr.close()
-    return text
+    def _get_sub_url(self):
+        self.driver.get(self._sub_url)
+        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+        body = soup.find_all('li')
+        self._make_save_dir('ebook')
 
+        for idx, tag in enumerate(body):
+            try:
+                url = tag.find_all('a')
 
-def pdf_list(dirname):
-    filenames = os.listdir(dirname)                     # 지정된 폴더 내 파일이름들 불러오기
-    music_dict = {}
-    for filename in filenames:
-        full_filename = os.path.join(dirname, filename) # full_filename = 경로+파일이름
-        ext = os.path.splitext(full_filename)[-1]       # ext에 확장자 넣기
-        file = os.path.splitext(filename)[0]            # file에 확장자를 제외한 파일이름만 넣기
-        if ext == '.mp3':                               # 확장자가 mp3 인 파일만 music_dict 딕셔너리에 넣기
-            music_dict[file] = full_filename            # 파일이름(key), 경로+파일이름(value)
-    return music_dict                                   # music_dict 딕셔너리 리턴
+                for tag2 in url:
+                    url2 = tag2.get('href')
+                    category = url2.split('/')[-1]
 
+                    self.driver.get('https://www.gutenberg.org/wiki/'+category)
+                    soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+                    body2 = soup.find_all('li')
 
-print(convert_pdf_to_txt('d://italianjob.pdf'))
+                    for idx3, tag3 in enumerate(body2):
+                        url3 = tag3.a['href']
+                        bookno = url3.split('/')[-1]
+                        if bookno.isdigit():
+                            self._download_url.append('http://www.gutenberg.org/cache/epub/{0}/pg{0}.txt'.format(bookno))
+                            print('성공')
+                        print(idx3, bookno)
 
-ital = open('d://italianjob.txt', 'w', encoding='UTF-8', newline='')
-ital.write(convert_pdf_to_txt('d://italianjob.pdf'))
-ital.close()
+            except:
+                print('no.' + str(idx), 'url load failed')
+
+    def _sub_downloads(self):
+        for idx, urlextension in enumerate(self._download_url):
+            try:
+                url = urlextension
+                print(url)
+                urlretrieve(url, SubtitleCrawler.__SAVE_FILE_PATH + 'ebook\\e{0}.txt'.format(idx))
+                if idx / 10 == idx // 10:
+                    print('no.' + str(idx), 'subtitle downloading')
+            except:
+                print('no.' + str(idx), 'subtitle downloading failed')
+
+    def _make_save_dir(self, extension):
+        save_path = SubtitleCrawler.__SAVE_FILE_PATH + '{}\\'.format(extension)
+        print(os.path.split(save_path)[0])
+        if not os.path.isdir(os.path.split(save_path)[0]):
+            os.mkdir(os.path.split(save_path)[0])
+
+    def play_crawler(self):
+        print('crawling start.')
+        self._get_sub_url()
+        print('crawling complete.')
+        print('subtitle downloading.')
+        self._sub_downloads()
+        print('downloading complete.')
+
+if __name__ == '__main__':
+    crawler = SubtitleCrawler()
+    crawler.play_crawler()

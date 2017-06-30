@@ -9,13 +9,12 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
 
-
 class SubtitleCrawler:
     __CHROME_DRIVER_PATH = 'c:\\chromedriver\\'
     __SAVE_FILE_PATH = 'd:\\data\\'
 
     def __init__(self):
-        self._sub_url = 'http://www.simplyscripts.com/movie-screenplays.html'
+        self._sub_url = 'https://www.gutenberg.org/wiki/Science_Fiction_(Bookshelf)'
         self._download_url = []
         self._set_chrome_driver()
 
@@ -25,71 +24,37 @@ class SubtitleCrawler:
     def _get_sub_url(self):
         self.driver.get(self._sub_url)
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-        body = soup.find_all('p')
+        body = soup.find_all('ul')
+        self._make_save_dir('ebook')
 
         for idx, tag in enumerate(body):
             try:
+                # print(link.a["href"])   #print(link.find('a')[href])도 같음
                 url = tag.a['href']
-                extension = url.split('.')[-1].lower()
-                self._make_save_dir(extension)
-                self._download_url.append([url,extension])
+
+                bookno = url.split('/')[-1]
+                self._download_url.append('http://www.gutenberg.org/cache/epub/{0}/pg{0}.txt'.format(bookno))
+                # self._make_save_dir(extension)
+                # self._download_url.append([url, extension])
             except:
-                print('no.'+str(idx),'url load failed')
+                print('no.' + str(idx), 'url load failed')
 
     def _sub_downloads(self):
         for idx, urlextension in enumerate(self._download_url):
-            try :
-                url = urlextension[0]
-                extension = urlextension[1]
+            try:
+                url = urlextension
+                print(url)
+                urlretrieve(url, SubtitleCrawler.__SAVE_FILE_PATH + 'ebook\\e{0}.txt'.format(idx))
+                if idx / 10 == idx // 10:
+                    print('no.' + str(idx), 'subtitle downloading')
+            except:
+                print('no.' + str(idx), 'subtitle downloading failed')
 
-                if extension in ('html', 'htm'):
-                    urlretrieve(url, SubtitleCrawler.__SAVE_FILE_PATH + 'txt\\m{}.txt'.format(idx))
-                else:
-                    urlretrieve(url, SubtitleCrawler.__SAVE_FILE_PATH + '{0}\\m{1}.{0}'.format(extension, idx))
-                if idx/10 == idx//10 :
-                    print('no.'+str(idx), 'subtitle downloading')
-
-            except :
-                print('no.'+str(idx), 'subtitle downloading failed')
-
-    def _make_save_dir(self,extension):
+    def _make_save_dir(self, extension):
         save_path = SubtitleCrawler.__SAVE_FILE_PATH + '{}\\'.format(extension)
-        if not os.path.isdir(os.path.split(save_path)[0]) and extension not in ('html', 'htm'):
+        print(os.path.split(save_path)[0])
+        if not os.path.isdir(os.path.split(save_path)[0]):
             os.mkdir(os.path.split(save_path)[0])
-
-    def _pdf_to_txt(self, pdf_file_path):
-        filenames = os.listdir(pdf_file_path)  # 지정된 폴더 내 파일이름들 불러오기
-        full_filenames = []
-        for filename in filenames:
-            full_filenames.append(os.path.join(pdf_file_path, filename))  # full_filename = 경로+파일이름
-
-        for full_filename in full_filenames:
-            rsrcmgr = PDFResourceManager()
-            retstr = io.StringIO()
-            codec = 'utf-8'
-            laparams = LAParams()
-            device = TextConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
-            interpreter = PDFPageInterpreter(rsrcmgr, device)
-            password = ""
-            maxpages = 0
-            caching = True
-            pagenos = set()
-            fp = open(full_filename, 'rb')
-            for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages,
-                                          password=password,
-                                          caching=caching,
-                                          check_extractable=True):
-                interpreter.process_page(page)
-
-            text = retstr.getvalue()
-
-            fp.close()
-            device.close()
-            retstr.close()
-            # return text
-            ital = open('d://italianjob.txt', 'w', encoding='UTF-8', newline='')
-            ital.write(text)
-            ital.close()
 
     def play_crawler(self):
         print('crawling start.')
@@ -99,5 +64,6 @@ class SubtitleCrawler:
         self._sub_downloads()
         print('downloading complete.')
 
-crawler = SubtitleCrawler()
-crawler.play_crawler()
+if __name__ == '__main__':
+    crawler = SubtitleCrawler()
+    crawler.play_crawler()
