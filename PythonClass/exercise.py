@@ -6,10 +6,10 @@ from bs4 import BeautifulSoup
 
 class SubtitleCrawler:
     __CHROME_DRIVER_PATH = 'c:\\chromedriver\\'
-    __SAVE_FILE_PATH = 'c:\\data\\'
+    __SAVE_FILE_PATH = 'd:\\data\\'
 
     def __init__(self):
-        self._sub_url = 'https://www.gutenberg.org/wiki/Category:Fiction_Bookshelf'
+        self._sub_url = 'https://www.gutenberg.org/wiki/Category:Children%27s_Bookshelf'
         self._download_url = []
         self._set_chrome_driver()
 
