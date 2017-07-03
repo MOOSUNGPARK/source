@@ -18,7 +18,7 @@ class SubtitleCrawler:
         self.options = Options()
         self.options.add_extension(self.__CHROME_DRIVER_PATH + 'zenmate.crx')
         self.driver = webdriver.Chrome(executable_path= SubtitleCrawler.__CHROME_DRIVER_PATH + 'chromedriver',
-                                       chrome_options=self.options )
+                                      chrome_options=self.options )
         # self.driver = webdriver.Chrome(executable_path= SubtitleCrawler.__CHROME_DRIVER_PATH + 'chromedriver')
 
     def _get_sub_url(self, page):
@@ -45,8 +45,8 @@ class SubtitleCrawler:
                             self._download_url.append(self._sub_url + url2)
                 except:
                     continue
-            print(self._download_url)
-            self._sub_downloads(page)
+            print(page,'-----------------',self._download_url)
+            # self._sub_downloads(page)
             self._download_url = []
             self._get_sub_url(page+1)
         else :
@@ -70,7 +70,7 @@ class SubtitleCrawler:
 
     def play_crawler(self):
         print('crawling start.')
-        self._get_sub_url(3)
+        self._get_sub_url(9)
         print('crawling complete.')
         print('subtitle downloading.')
         # self._sub_downloads()
