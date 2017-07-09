@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import random
 from copy import copy, deepcopy
 
@@ -250,7 +249,7 @@ if __name__ == "__main__":
 
 
 
-=======
+
 import random
 from copy import copy, deepcopy
 
@@ -501,5 +500,3 @@ if __name__ == "__main__":
         p2.episode_over(winner)
 
 
-
->>>>>>> init
