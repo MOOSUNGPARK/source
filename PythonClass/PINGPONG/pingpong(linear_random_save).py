@@ -23,7 +23,7 @@ load_weightloc = 'c:\python\data\pingpong_weight.csv'
 # 경사감소법 learning_rate(변경x)
 learning_rate = 0.0001
 # 경사감소법 시행횟수(변경x)
-training_cnt= 20000
+training_cnt= 30000
 #가능조합(learning_rate = 0.00001, training_cnt = 50000)
 #가능조합(learning_rate = 0.00002, training_cnt = 25000)
 
