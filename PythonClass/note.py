@@ -1,18 +1,13 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
-a = np.array([ [1,2], [3,4] ])
-b = np.array([ [5,6], [7,8] ])
-print(a*b)
+t = np.arange(0, 12, 0.1)
+print(t)
 
-aa = np.matrix([ [1,2], [3,4] ])
-bb = np.matrix([ [5,6], [7,8] ])
-print(aa*bb)
-
-c = [ [1,2], [3,4] ]
-d = [ [5,6], [7,8] ]
-e = [ [0,0], [0,0] ]
-
-for rn in range(len(c)):
-    for cn in range(len(c[0])):
-        e[rn][cn] = c[rn][cn] * d[rn][cn]
-print(e)
+plt.figure()
+plt.plot(t)
+plt.grid()
+plt.xlabel('size')
+plt.ylabel('cost')
+plt.title('size & cost')
+plt.show()

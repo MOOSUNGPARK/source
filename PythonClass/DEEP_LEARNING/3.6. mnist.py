@@ -1,3 +1,6 @@
 import sys, os
-sys.path.append(os.pardir)
-from dataset.mnist import load_mnist
+sys.path.insert(0,os.getcwd())
+# from mnist import load_mnist
+
+
+print(sys.path)
