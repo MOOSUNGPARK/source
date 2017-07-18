@@ -14,7 +14,7 @@ class TwoLayerNet :
 
         # 계층 생성
         self.layers = OrderedDict()
-        
+
 
 
 
