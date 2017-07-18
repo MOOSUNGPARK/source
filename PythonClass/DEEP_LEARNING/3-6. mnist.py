@@ -37,8 +37,6 @@ def get_data():
 def init_network():
     with open('C:\python\deep-learning-from-scratch\ch03\\sample_weight.pkl', 'rb') as f:
         network = pickle.load(f)
-    print('len',len(network))
-    print(network)
     return network
 
 def predict(network, x):
@@ -63,7 +61,21 @@ for i in range(len(x)) :
     p = np.argmax(y) # 확률이 가장 높은 원소의 인덱스
     if p == t[i] :
         accuracy_cnt += 1
-print('Accuracy :', str(float(accuracy_cnt)/len(x)))
+print('Accuracy : ', str(float(accuracy_cnt)/len(x)))
 
 
+### 배치 처리 ###
+x, t = get_data()
+network = init_network()
+
+batch_size = 100
+accuracy_cnt = 0
+
+for i in range(0,len(x),batch_size):
+    x_batch = x[i:i+batch_size]
+    y_batch = predict(network, x_batch)
+    p = np.argmax(y_batch, axis=1) # axix = 1 은 행을 축으로 각 행마다 argmax 찾는다는 소리
+    accuracy_cnt += np.sum(p == t[i:i+batch_size])
+
+print('배치처리 Accuracy : ',accuracy_cnt/len(x))
 
