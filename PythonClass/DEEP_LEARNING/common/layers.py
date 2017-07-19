@@ -1,7 +1,6 @@
 # coding: utf-8
-import numpy as np
-from PythonClass.DEEP_LEARNING.functions import *
-from PythonClass.DEEP_LEARNING.util import im2col, col2im
+from PythonClass.DEEP_LEARNING.common.functions import *
+from PythonClass.DEEP_LEARNING.common.util import im2col, col2im
 
 
 class Relu:

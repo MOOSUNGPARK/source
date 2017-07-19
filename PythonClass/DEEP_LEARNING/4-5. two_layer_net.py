@@ -1,8 +1,5 @@
-import numpy as np
-from PythonClass.DEEP_LEARNING.dataset.mnist import load_mnist
-from PythonClass.DEEP_LEARNING.functions import *
-from PythonClass.DEEP_LEARNING.gradient import numerical_gradient
-import matplotlib.pylab as plt
+from PythonClass.DEEP_LEARNING.common.functions import *
+from PythonClass.DEEP_LEARNING.common.gradient import numerical_gradient
 
 
 class TwoLayerNet :

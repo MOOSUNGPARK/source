@@ -1,7 +1,8 @@
-from PythonClass.DEEP_LEARNING.dataset.mnist import load_mnist
-from PythonClass.DEEP_LEARNING.functions import *
-from PythonClass.DEEP_LEARNING.TwoLayerNet import TwoLayerNet
 import matplotlib.pyplot as plt
+
+from PythonClass.DEEP_LEARNING.TwoLayerNet import TwoLayerNet
+from PythonClass.DEEP_LEARNING.common.functions import *
+from PythonClass.DEEP_LEARNING.dataset.mnist import load_mnist
 
 (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
 

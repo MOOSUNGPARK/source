@@ -1,9 +1,9 @@
-import numpy as np
-from PythonClass.DEEP_LEARNING.dataset.mnist import load_mnist
-from PythonClass.DEEP_LEARNING.functions import softmax, cross_entropy_error
-from PythonClass.DEEP_LEARNING.gradient import numerical_gradient
 import matplotlib.pylab as plt
+import numpy as np
 
+from PythonClass.DEEP_LEARNING.common.functions import softmax, cross_entropy_error
+from PythonClass.DEEP_LEARNING.common.gradient import numerical_gradient
+from PythonClass.DEEP_LEARNING.dataset.mnist import load_mnist
 
 
 ### 손실함수1. 평균 제곱 오차 ###
