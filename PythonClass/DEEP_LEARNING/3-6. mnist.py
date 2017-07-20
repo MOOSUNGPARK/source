@@ -1,6 +1,6 @@
 import sys, os
 # sys.path.append('C:\\python\\source\\PythonClass\\DEEP_LEARNING\\dataset')
-from PythonClass.DEEP_LEARNING.dataset.mnist import load_mnist # 디렉토리 패스 설정 다시 하기
+from dataset.mnist import load_mnist
 import numpy as np
 from PIL import Image
 import pickle
@@ -35,7 +35,7 @@ def get_data():
     return x_test, t_test
 
 def init_network():
-    with open('C:\python\deep-learning-from-scratch\ch03\\sample_weight.pkl', 'rb') as f:
+    with open('C:\\python\\deep-learning-from-scratch\\ch03\\sample_weight.pkl', 'rb') as f:
         network = pickle.load(f)
     return network
 
@@ -56,6 +56,7 @@ x, t = get_data()
 network = init_network()
 
 accuracy_cnt = 0
+
 for i in range(len(x)) :
     y = predict(network, x[i])
     p = np.argmax(y) # 확률이 가장 높은 원소의 인덱스
