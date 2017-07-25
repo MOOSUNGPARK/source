@@ -42,6 +42,9 @@ def softmax(x):
 def mean_squared_error(y, t):
     return 0.5 * np.sum((y - t) ** 2)
 
+def mean_squared_error_axis1(y, t):
+    return 0.5 * np.sum((y - t) ** 2, axis=1)
+
 
 def cross_entropy_error(y, t):
     if y.ndim == 1:

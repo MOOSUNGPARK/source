@@ -1,7 +1,8 @@
 from collections import OrderedDict
 
-from PythonClass.DEEP_LEARNING.common.gradient import numerical_gradient
-from PythonClass.DEEP_LEARNING.common.layers import *
+from common.gradient import numerical_gradient
+from common.layers import *
+
 
 
 class TwoLayerNet :

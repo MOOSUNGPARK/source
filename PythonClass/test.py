@@ -21,9 +21,9 @@ load_weightloc = 'c:\python\data\pingpong_weight.csv'
 
 ############ 경사감소법 튜닝 ###########
 # 경사감소법 learning_rate(변경x)
-learning_rate = 0.5
+learning_rate = 0.0001
 # 경사감소법 시행횟수(변경x)
-training_cnt= 20000
+training_cnt= 30000
 #가능조합(learning_rate = 0.00001, training_cnt = 50000)
 #가능조합(learning_rate = 0.00002, training_cnt = 25000)
 
@@ -44,8 +44,6 @@ class Ball:
         self.save = save
         self.ball_start = []
         self.ball_end = []
-        self.convertloc = self.canvas.coords(self.id)[0]
-        self.leftorright = 0
 
     def hit_paddle(self, pos):  # 패들에 공이 튀기게 하는 함수
         paddle_pos = self.canvas.coords(self.paddle.id)
@@ -58,25 +56,11 @@ class Ball:
                     return True
         return False
 
-    ############# 공이 떨어지는 가상의 좌표 ############
-    def endloc(self, pos):
-        paddle_pos = self.canvas.coords(self.paddle.id)
-        if 290 > pos[1] >= 285 and pos[3] <= paddle_pos[3] and self.y > 0:  # 공이 패들 통과할 때의 좌표
-            return pos[0]
-
     def draw(self):
         self.canvas.move(self.id, self.x, self.y)  # 공을 움직이게 하는 부분
         pos = self.canvas.coords(self.id)  # 볼의 현재 좌표를 출력해준다. 공 좌표( 서쪽(0) , 남쪽(1) , 동쪽(2), 북쪽(3) )
         paddle_pos = self.canvas.coords(self.paddle.id)
 
-        #############################################################
-        # 가상의 좌표를 만드는 과정
-        # self.leftorright는 기본은 0, 최초로 벽에 부딪혔을 때 왼쪽 벽이면 -1, 오른쪽 벽이면 1 을 출력
-        if self.leftorright == 0:
-            self.convertloc += float(self.x)
-        elif self.leftorright != 0:
-            self.convertloc += self.leftorright * abs(float(self.x))
-        #############################################################
         if pos[1] <= 0:
             self.y *= -1
 
@@ -86,15 +70,9 @@ class Ball:
 
         if pos[0] <= 0:
             self.x *= -1
-            ######### 최초로 왼쪽 벽에 부딪히면 self.leftorright = -1이 됨 ##########
-            if self.leftorright == 0:
-                self.leftorright = -1
 
         if pos[2] >= self.canvas_width:
             self.x *= -1  # 공을 왼쪽으로 돌린다.
-            ######### 최초로 오른쪽 벽에 부딪히면 self.leftorright = 1이 됨 ##########
-            if self.leftorright == 0:
-                self.leftorright = 1
 
         if self.hit_paddle(pos) == True:
             self.x = random.choice(range(-11,12,2))
@@ -102,10 +80,7 @@ class Ball:
             ######### (공의 시작 x좌표, 시작 시 x속력, y속력, 상수1) 을 저장 ##########
             self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
             ######### (공이 떨어진 x 좌표) 를 저장
-            self.ball_end.append(self.convertloc)
-            ######### 패들에 부딪히면, 새로운 공의 시작 정보를 저장하기 위해 가상좌표와 leftorright 값을 초기화 ########
-            self.convertloc = pos[0]
-            self.leftorright = 0
+            self.ball_end.append([pos[0], float(self.x), float(self.y), 1.0])
 
 
 class Paddle:
@@ -123,27 +98,6 @@ class Paddle:
         elif pos[2] >= self.canvas_width and self.x > 0:  # 패들의 위치가 오른쪽 끝이고,이동하려는 방향이 오른쪽이면 종료
             return
         self.canvas.move(self.id, self.x, 0)
-
-    ############ 공이 떨어지는 가상의 좌표를 실제 게임 내 좌표로 바꿔주는 메소드 ##############
-    def convertendloc(self, convertloc):
-        cnt = 0
-        if convertloc in range(486):
-            return convertloc
-        elif convertloc < 0:
-            while True:
-                if cnt % 2 == 0 and cnt * -485 - convertloc in range(486):
-                    return cnt * -485 - convertloc
-
-                elif cnt % 2 == 1 and (cnt + 1) * 485 + convertloc in range(486):
-                    return (cnt + 1) * 485 + convertloc
-                cnt += 1
-        elif convertloc > 485:
-            while True:
-                if cnt % 2 == 0 and (cnt + 2) * 485 - convertloc in range(486):
-                    return (cnt + 2) * 485 - convertloc
-                elif cnt % 2 == 1 and (cnt + 1) * -485 + convertloc in range(486):
-                    return (cnt + 1) * -485 + convertloc
-                cnt += 1
 
     ############# 회귀분석식을 이용해 공이 떨어질 가상의 위치 예측하는 메소드 ##############
     def prediction(self, input, weight):
@@ -174,7 +128,7 @@ class machine_learning():
     @staticmethod
     def Loss(x, y, weight):
         loss = np.sum((x.dot(weight) - y.reshape(len(y),1)) ** 2) / (2 * len(x))
-        print('loss',loss)
+        print(loss)
         return loss
 
     ########## 경사감소법 및 회귀분석 가중치 계산 메소드 ##########
@@ -214,6 +168,9 @@ class machine_learning():
                 WEIGHT = WEIGHT_backup
         return WEIGHT, loss_history
 
+class NeuralNet():
+
+
 
 ########### 세이브 로드 관련 클래스 ###########
 class SaveLoad():
@@ -221,7 +178,7 @@ class SaveLoad():
     def saveCSV(ballloc, weightloc):
         try:
             if weightloc != None:
-                f = open((weightloc), 'wt')
+                f = open((weightloc), 'a')
                 w = csv.writer(f, delimiter=',', lineterminator='\n')
 
                 for key in machine_learning.gradient_descent(np.array(ball_loc_save), learning_rate, training_cnt)[0]:
@@ -229,7 +186,7 @@ class SaveLoad():
                 f.close()
                 print('weight saved')
             if ballloc != None:
-                f = open((ballloc), 'wt')
+                f = open((ballloc), 'a')
                 w = csv.writer(f, delimiter=',', lineterminator='\n')
 
                 for key in ball_loc_save:
