@@ -4,11 +4,13 @@ import time
 import numpy as np
 import csv
 from copy import deepcopy
+from collections import OrderedDict
+from common.layers import *
 
 ##########################################################################
 
 ############ 공의 위치 파일 저장/불러오기 #############
-# 공의 위치 파일 저장(1회만 파일 저장) ####### !!!! 두번째부터는 None으로 놓기!!!! #######
+# 공의 위치 파일 저장(1회만 파일 저장) #######
 save_ballloc = 'c:\python\data\pingpong_move.csv'
 # save_ballloc 파일 위치 입력(반드시 입력해야 함. save_ballloc 의 위치와 동일한 위치로 설정)
 load_ballloc = 'c:\python\data\pingpong_move.csv'
@@ -77,11 +79,10 @@ class Ball:
         if self.hit_paddle(pos) == True:
             self.x = random.choice(range(-11,12,2))
             self.y *= -1
-            ######### (공의 시작 x좌표, 시작 시 x속력, y속력, 상수1) 을 저장 ##########
-            self.ball_start.append([pos[0], float(self.x), float(self.y), 1.0])
+            ######### (공의 시작 x좌표, 공의 시작 y좌표, 시작 시 x속력, y속력) 을 저장 ##########
+            self.ball_start.append([pos[0], pos[1] ,float(self.x), float(self.y)])
             ######### (공이 떨어진 x 좌표) 를 저장
-            self.ball_end.append([pos[0], float(self.x), float(self.y), 1.0])
-
+            self.ball_end.append(pos[0])
 
 class Paddle:
     def __init__(self, canvas, color):
@@ -104,8 +105,8 @@ class Paddle:
         return weight[0] * input[0] + weight[1] * input[1] + weight[2] * input[2] + weight[3] * input[3]
 
     ############# 공이 떨어질 위치로 패들을 움직이는 메소드 #############
-    def predict_move(self, convertloc):
-        loc = self.convertendloc(convertloc)
+    def predict_move(self, predictedloc):
+        loc = predictedloc
         pos = self.canvas.coords(self.id)
         if pos[0]+40  <loc-5 and pos[2]-40  > loc+10:
             self.x = 0
@@ -122,54 +123,56 @@ class Paddle:
     def move(self, x, y):
         self.x = x
 
-############# 경사감소법 및 회귀분석 머신러닝 ################
-class machine_learning():
-    ########## 비용함수 메소드 ###########
-    @staticmethod
-    def Loss(x, y, weight):
-        loss = np.sum((x.dot(weight) - y.reshape(len(y),1)) ** 2) / (2 * len(x))
-        print(loss)
-        return loss
+############# 신경망 ################
+class NeuralNet:
+    def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
+        self.params = {}
+        self.params['W1'] = weight_init_std * np.random.randn(input_size, hidden_size)
+        self.params['b1'] = np.zeros(hidden_size)
+        self.params['W2'] = weight_init_std * np.random.randn(hidden_size, hidden_size)
+        self.params['b2'] = np.zeros(hidden_size)
+        self.params['W3'] = weight_init_std * np.random.randn(hidden_size, hidden_size)
+        self.params['b3'] = np.zeros(hidden_size)
 
-    ########## 경사감소법 및 회귀분석 가중치 계산 메소드 ##########
-    @staticmethod
-    def gradient_descent(x, alpha=0.00001, descent_cnt=1):
-        X = x[:, 0:4]
-        Y = x[:, 4]
-        M = len(x)
-        minloss = 10 ** 20
+        self.layers = OrderedDict()
+        self.layers['Affine1'] = Affine(self.params['W1'], self.params['b1'])
+        self.layers['Relu1'] = Relu()
+        self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
+        self.layers['Relu2'] = Relu()
+        self.layers['Affine3'] = Affine(self.params['W3'], self.params['b3'])
 
-        WEIGHT = np.zeros((4,1)) # 초기 weight
-        loss_history = np.zeros((descent_cnt, 1))
+        self.lastlayers = IdentityWithLoss()
 
-        for cnt in range(descent_cnt):
-            predictions = X.dot(WEIGHT).flatten()
+    def predict(self, x):
+        for layer in self.layers.values():
+            x = layer.forward(x)
 
-            errors_x1 = (predictions - Y) * X[:, 0]
-            errors_x2 = (predictions - Y) * X[:, 1]
-            errors_x3 = (predictions - Y) * X[:, 2]
-            errors_w0 = (predictions - Y) * X[:, 3]
+        return x
 
-            WEIGHT_backup = deepcopy(WEIGHT)
-            # beta = theta - alpha * (X.T.dot(X.dot(beta)-y)/m)
-            WEIGHT[0][0] = WEIGHT[0][0] - alpha * (1.0 / M) * errors_x1.sum()
-            WEIGHT[1][0] = WEIGHT[1][0] - alpha * (1.0 / M) * errors_x2.sum()
-            WEIGHT[2][0] = WEIGHT[2][0] - alpha * (1.0 / M) * errors_x3.sum()
-            WEIGHT[3][0] = WEIGHT[3][0] - alpha * (1.0 / M) * errors_w0.sum()
+    def loss(self, x, t):
+        y = self.predict(x)
+        return self.lastlayers.forward(y, t)
 
-            loss_history[cnt, 0] = machine_learning.Loss(X, Y, WEIGHT)
+    def gradient(self, x, t):
+        self.loss(x, t)
 
-            ########## BOLD DRIVER 방법 #########
-            if minloss >= loss_history[cnt,0]:
-                minloss = loss_history[cnt,0]
-                alpha *= 1.1
-            elif minloss < loss_history[cnt,0]:
-                alpha *= 0.5
-                WEIGHT = WEIGHT_backup
-        return WEIGHT, loss_history
+        dout = self.lastlayers.backward()
 
-class NeuralNet():
+        layers = list(self.layers.values())
+        layers.reverse()
 
+        for layer in layers:
+            dout = layer.backward(dout)
+
+        grads = {}
+        grads['W1'] = self.layers['Affine1'].dW
+        grads['b1'] = self.layers['Affine1'].db
+        grads['W2'] = self.layers['Affine2'].dW
+        grads['b2'] = self.layers['Affine2'].db
+        grads['W3'] = self.layers['Affine3'].dW
+        grads['b3'] = self.layers['Affine3'].db
+
+        return grads
 
 
 ########### 세이브 로드 관련 클래스 ###########
@@ -177,14 +180,14 @@ class SaveLoad():
     @staticmethod
     def saveCSV(ballloc, weightloc):
         try:
-            if weightloc != None:
-                f = open((weightloc), 'a')
-                w = csv.writer(f, delimiter=',', lineterminator='\n')
-
-                for key in machine_learning.gradient_descent(np.array(ball_loc_save), learning_rate, training_cnt)[0]:
-                    w.writerow(key)
-                f.close()
-                print('weight saved')
+            # if weightloc != None:
+            #     f = open((weightloc), 'a')
+            #     w = csv.writer(f, delimiter=',', lineterminator='\n')
+            #
+            #     for key in NeuralNet.gradient( ):
+            #         w.writerow(key)
+            #     f.close()
+            #     print('weight saved')
             if ballloc != None:
                 f = open((ballloc), 'a')
                 w = csv.writer(f, delimiter=',', lineterminator='\n')
@@ -197,22 +200,22 @@ class SaveLoad():
         except FileNotFoundError and TypeError:
             print('No Save')
 
-    @staticmethod
-    def loadCSV(ballloc,weightloc = None):
-        try:
-            if weightloc == None :
-                pingpong = [data for data in csv.reader(open(ballloc, 'r'))]
-                for pp in range(len(pingpong)):
-                    for p in range(5):
-                        pingpong[pp][p] = float(pingpong[pp][p])
-                pingpong = np.array(pingpong)
-                return machine_learning.gradient_descent(pingpong,learning_rate, training_cnt)[0]
-            else :
-                weight = [data for data in csv.reader(open(weightloc, 'r'))]
-                return np.array([weight[-4],weight[-3],weight[-2],weight[-1]],dtype=float)
-
-        except FileNotFoundError :
-            print('파일 로드 위치를 지정해주세요')
+    # @staticmethod
+    # def loadCSV(ballloc,weightloc = None):
+    #     try:
+    #         # if weightloc == None :
+    #         #     pingpong = [data for data in csv.reader(open(ballloc, 'r'))]
+    #         #     for pp in range(len(pingpong)):
+    #         #         for p in range(5):
+    #         #             pingpong[pp][p] = float(pingpong[pp][p])
+    #         #     pingpong = np.array(pingpong)
+    #         #     return machine_learning.gradient_descent(pingpong,learning_rate, training_cnt)[0]
+    #         else :
+    #             weight = [data for data in csv.reader(open(weightloc, 'r'))]
+    #             return np.array([weight[-4],weight[-3],weight[-2],weight[-1]],dtype=float)
+    #
+    #     except FileNotFoundError :
+    #         print('파일 로드 위치를 지정해주세요')
 
 
 if __name__ == '__main__':
@@ -230,14 +233,14 @@ if __name__ == '__main__':
     paddle = Paddle(canvas, 'black')
     ball = Ball(canvas, paddle, 'black', save=True)
 
-    for i in range(10000):
+    for i in range(100000):
         if ball.hit_bottom == False:
             ball.draw()
             paddle.move(paddle.x,0)
             paddle.draw()
 
     ball_loc_save = []
-    for idx_start in range(0,len(ball.ball_start)-1):
+    for idx_start in range(len(ball.ball_start)-1):
         try:
             ball_loc_save.append(ball.ball_start[idx_start]+[ball.ball_end[idx_start+1]])
         except IndexError:
