@@ -111,7 +111,7 @@ class Song(object):
         chroma = chroma.reshape(self.chroma_len,-1)
         chroma[chroma <= filterrate * np.max(chroma)] = 0    # 노이즈 제거
 
-        if recursive_cnt == 0:                                         # 마지막 재귀 시 chroma 를 정규화시켜서 데이터 정제하고 리턴
+        if recursive_cnt == 0:                               # 마지막 재귀 시 chroma 를 정규화시켜서 데이터 정제하고 리턴
             return self.Normalization(chroma)
 
         print('Count down', recursive_cnt)
