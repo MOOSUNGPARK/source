@@ -188,6 +188,7 @@ class Play(object):
         time.wait(play_duration * 1000)
         quit()
 
+################## 기타 함수 클래스 ##################
 class Common:
     @staticmethod
     def im2col_sliding_strided(A, padsize, stepsize=1):
