@@ -104,7 +104,7 @@ class Song(object):
     def Filtering(self, chroma, cnt=3, filterrate = 0.25):
         recursive_cnt = cnt                                  # 재귀횟수
         chroma_copy = deepcopy(chroma)                       # 원본 데이터 변경 방지를 위한 deepcopy 백업
-        chroma = np.zeros((len(chroma), (len(chroma))))      # 백업 후 chroma의 모든 값을 0으로 초기화
+        chroma = np.zeros_like(chroma)      # 백업 후 chroma의 모든 값을 0으로 초기화
 
         # Tensor()메소드를 이용해 9x9의 작은 tensor로 chroma 내 대각선(대각선은 코사인 유사도가 높은 부분을 의미)을 강조
         for rn in range(len(chroma) - 8):
