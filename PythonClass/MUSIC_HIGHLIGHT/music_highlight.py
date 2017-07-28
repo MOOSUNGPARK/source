@@ -120,7 +120,9 @@ class Song(object):
 
     # (필터링1 SUB) 필터링 시 사용하는 Tensor 를 만드는 메소드
     def Tensor(self,chroma):
-        tensor = np.zeros((9, 9))
+        e = np.eye(9,9)         # 9x9 단위행렬
+        e[e<=0] = -1/9          # 0인 부분을 -1/9로 변환
+        tensor = np.zeros((9,9))
 
         # 대각선 부분은 1을, 그 외 부분은 (-1)을 곱해서 대각선 부분의 값을 증폭시킨 후 그 평균값을 array의 중앙값으로 설정
         # 예 ) 3x3 tensor 를 사용한 원본데이터 필터링
@@ -129,11 +131,7 @@ class Song(object):
         #    2 / 2 / 1 --->    -1 /  1 / -1 --->    0 / 0.8 / 0
         #    0 / 0 / 1 --->    -1 / -1 /  1 --->    0 /  0  / 0
 
-        plus = (chroma[0][0] + chroma[1][1] + chroma[2][2] +
-                chroma[3][3] + chroma[4][4] + chroma[5][5] +
-                chroma[6][6] + chroma[7][7] + chroma[8][8])
-        tensor[4][4] = ((10 / 9) * plus - (1 / 9) * np.sum(chroma)) / 9
-
+        tensor[4][4] = np.sum(chroma * e) / 9
         return tensor
 
     # (필터링2) 코사인 유사도가 높은 대각선 방향의 패턴을 카운팅하는 메소드
