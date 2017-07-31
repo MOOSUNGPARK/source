@@ -2,6 +2,7 @@
 
 import numpy as np
 from ch05.two_layer_net import TwoLayerNet
+from PythonClass.cifar_10.functions import AdaGrad, Adam, Momentum
 
 
 train_file_list = ['data/train_data_' + str(i) + '.csv' for i in range(1, 51)]
@@ -28,6 +29,9 @@ def read_data(filename):
     return data_setting(data)
 
 network = TwoLayerNet(input_size=1024, hidden_size=50, output_size=10)
+adam = Adam()
+adagrad = AdaGrad()
+momentum = Momentum()
 
 epochs = 5
 batch_size = 100  # 배치 단위
@@ -50,8 +54,10 @@ for epoch in range(epochs):
             grad = network.gradient(train_x_batch, train_y_batch)  # 기울기 계산
 
             # Weight, Bias 갱신
-            for key in network.params.keys():
-                network.params[key] -= learning_rate * grad[key]
+            # for key in network.params.keys():
+            #     network.params[key] -= learning_rate * grad[key]
+            # adam.update(network.params, grad)
+            momentum.update(network.params, grad)
 
             loss = network.loss(train_x_batch, train_y_batch)  # 변경된 Weight, Bias 을 가지고 loss 구함
             train_loss_list.append(loss)  # 매 batch 단위 수행시마다 loss 값을 저장

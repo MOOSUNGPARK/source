@@ -24,7 +24,51 @@ class Momentum:
             self.v[key] = self.momentum * self.v[key] - self.lr * grads[key]
             params[key] += self.v[key]
 
+class AdaGrad:
+    def __init__(self, lr=0.01):
+        self.lr = lr
+        self.h = None
 
+    def update(self,params,grads):
+        if self.h is None:
+            self.h = {}
+            for key, val in params.items():
+                self.h[key] = np.zeros_like(val)
+        for key in params.keys():
+            self.h[key] += grads[key] * grads[key]
+            params[key] -= self.lr * grads[key] / (np.sqrt(self.h[key]) + 1e-7)
+
+
+class Adam:
+    def __init__(self, lr=0.001, beta1=0.9, beta2=0.999):
+        self.lr = lr
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.iter = 0
+        self.m = None
+        self.v = None
+
+    def update(self, params, grads):
+        if self.m is None:
+            self.m, self.v = {}, {}
+            for key, val in params.items():
+                self.m[key] = np.zeros_like(val)
+                self.v[key] = np.zeros_like(val)
+
+        self.iter += 1
+        lr_t = self.lr * np.sqrt(1.0 - self.beta2 ** self.iter) / (1.0 - self.beta1 ** self.iter)
+
+        for key in params.keys():
+            # self.m[key] = self.beta1*self.m[key] + (1-self.beta1)*grads[key]
+            # self.v[key] = self.beta2*self.v[key] + (1-self.beta2)*(grads[key]**2)
+            self.m[key] += (1 - self.beta1) * (grads[key] - self.m[key])
+            self.v[key] += (1 - self.beta2) * (grads[key] ** 2 - self.v[key])
+
+            params[key] -= lr_t * self.m[key] / (np.sqrt(self.v[key]) + 1e-7)
+
+            # unbias_m += (1 - self.beta1) * (grads[key] - self.m[key]) # correct bias
+            # unbisa_b += (1 - self.beta2) * (grads[key]*grads[key] - self.v[key]) # correct bias
+            # params[key] += self.lr * unbias_m / (np.sqrt(unbisa_b) + 1e-7)
 
 class TwoLayerNet:
     def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
@@ -41,6 +85,8 @@ class TwoLayerNet:
         self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
         self.lastLayer = SoftmaxWithLoss()
         self.momentum = Momentum()
+        self.adagrad = AdaGrad()
+        self.adam = Adam()
 
     def predict(self, x):
         for layer in self.layers.values():
@@ -119,11 +165,18 @@ for i in range(iters_num): # 10000
     grad = network.gradient(x_batch, t_batch)
     # 매개변수 갱신
 
-    for key in ('W1', 'b1', 'W2', 'b2'):
-        network.params[key] -= learning_rate * grad[key]
+    # SGD
+    # for key in ('W1', 'b1', 'W2', 'b2'):
+    #     network.params[key] -= learning_rate * grad[key]
 
-    network.momentum.update(network.params, grad)
+    # Momentum
+    # network.momentum.update(network.params, grad)
 
+    # AdaGrad
+    # network.adagrad.update(network.params, grad)
+
+    # Adam
+    network.adam.update(network.params, grad)
 
     # 학습 경과 기록
     loss = network.loss(x_batch, t_batch)
