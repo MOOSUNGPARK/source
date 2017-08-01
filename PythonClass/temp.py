@@ -8,6 +8,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 from dataset.mnist import load_mnist
 
+
 class Momentum:
     def __init__(self, lr=0.01, momentum=0.9):
         self.lr = lr
@@ -74,19 +75,33 @@ class TwoLayerNet:
     def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
         # 가중치 초기화
         self.params = {}
-        self.params['W1'] = weight_init_std * np.random.randn(input_size, hidden_size)
+        self.params['W1'] = np.sqrt(2) * np.random.randn(input_size, hidden_size) / np.sqrt(input_size)
         self.params['b1'] = np.zeros(hidden_size)
-        self.params['W2'] = weight_init_std * np.random.randn(hidden_size, output_size)
-        self.params['b2'] = np.zeros(output_size)
+        self.params['W2'] = np.sqrt(2) * np.random.randn(hidden_size, hidden_size) / np.sqrt(hidden_size)
+        self.params['b2'] = np.zeros(hidden_size)
+        self.params['W3'] = np.sqrt(2) * np.random.randn(hidden_size, hidden_size) / np.sqrt(hidden_size)
+        self.params['b3'] = np.zeros(hidden_size)
+        self.params['W4'] = np.sqrt(2) * np.random.randn(hidden_size, hidden_size) / np.sqrt(hidden_size)
+        self.params['b4'] = np.zeros(hidden_size)
+        self.params['W5'] = np.sqrt(2) * np.random.randn(hidden_size, output_size) / np.sqrt(hidden_size)
+        self.params['b5'] = np.zeros(output_size)
         # 계층 생성
         self.layers = OrderedDict()
         self.layers['Affine1'] = Affine(self.params['W1'], self.params['b1'])
         self.layers['Relu1'] = Relu()
         self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
+        self.layers['Relu2'] = Relu()
+        self.layers['Affine3'] = Affine(self.params['W3'], self.params['b3'])
+        self.layers['Relu3'] = Relu()
+        self.layers['Affine4'] = Affine(self.params['W4'], self.params['b4'])
+        self.layers['Relu4'] = Relu()
+        self.layers['Affine5'] = Affine(self.params['W5'], self.params['b5'])
+
         self.lastLayer = SoftmaxWithLoss()
         self.momentum = Momentum()
         self.adagrad = AdaGrad()
         self.adam = Adam()
+        self.sigmoid = Sigmoid()
 
     def predict(self, x):
         for layer in self.layers.values():
@@ -114,6 +129,12 @@ class TwoLayerNet:
         grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
         grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
         grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
+        grads['W3'] = numerical_gradient(loss_W, self.params['W3'])
+        grads['b3'] = numerical_gradient(loss_W, self.params['b3'])
+        grads['W4'] = numerical_gradient(loss_W, self.params['W4'])
+        grads['b4'] = numerical_gradient(loss_W, self.params['b4'])
+        grads['W5'] = numerical_gradient(loss_W, self.params['W5'])
+        grads['b5'] = numerical_gradient(loss_W, self.params['b5'])
         return grads
 
 
@@ -131,6 +152,9 @@ class TwoLayerNet:
         grads = {}
         grads['W1'], grads['b1'] = self.layers['Affine1'].dW, self.layers['Affine1'].db
         grads['W2'], grads['b2'] = self.layers['Affine2'].dW, self.layers['Affine2'].db
+        grads['W3'], grads['b3'] = self.layers['Affine3'].dW, self.layers['Affine3'].db
+        grads['W4'], grads['b4'] = self.layers['Affine4'].dW, self.layers['Affine4'].db
+        grads['W5'], grads['b5'] = self.layers['Affine5'].dW, self.layers['Affine5'].db
         return grads
 
 # 데이터 읽기
@@ -176,7 +200,7 @@ for i in range(iters_num): # 10000
     # network.adagrad.update(network.params, grad)
 
     # Adam
-    network.adam.update(network.params, grad)
+    network.momentum.update(network.params, grad)
 
     # 학습 경과 기록
     loss = network.loss(x_batch, t_batch)
