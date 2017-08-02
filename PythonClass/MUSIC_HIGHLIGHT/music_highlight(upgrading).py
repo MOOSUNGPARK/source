@@ -1,6 +1,6 @@
-from librosa import load, stft, feature, get_duration, display as ld
+from librosa import load, stft, feature, get_duration, display as dp
 from sklearn.metrics.pairwise import cosine_similarity
-from pygame import mixer,init, display, time, quit
+from pygame import mixer, init, display, time, quit
 from ctypes import windll
 from random import choice
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ import os
 ################## 플레이 정보 ##################
 play_duration = 10                # 노래 재생 시간
 file_loc = 'c:/python/data/music' # 노래 폴더 위치
-show_chroma = False               # 크로마그램 출력
+show_chroma = True               # 크로마그램 출력
 ###############################################
 
 
@@ -38,7 +38,9 @@ class Song(object):
         s = np.abs(stft(y)**2)                            # 노래의 파워 데이터(주파수의 진폭)
         self.time = get_duration(y=y, sr=sr)              # 노래의 총 길이(샘플링 데이터 갯수)
         chroma = feature.chroma_stft(S=s, sr=sr)          # 크로마그램으로 변환
+        self._Chromagram(chroma, show=self.show, title='music chromagram_line41')  # 크로마그램 그래프를 출력
         chromaT = np.transpose(chroma,axes=(1,0))         # time-time 코사인 유사도 구하기 위해 전치행렬로 변환
+        self._Chromagram(chromaT, show=self.show, title='music transpose_line43')  # 전치화된 크로마그램 그래프를 출력
         print('\nLoading Finished!')
         return cosine_similarity(chromaT)                 # 노래 각 부분의 코사인 유사도를 리턴
 
@@ -72,12 +74,13 @@ class Song(object):
     # (노래 분석 MAIN) 하이라이트를 뽑아서 리턴하는 메소드(여기서 리턴한 하이라이트 정보를 Play클래스의 PlaySong()메소드에서 재생)
     def Analysis(self):
         chroma = self._Denoising()                 # 코사인유사도 정보를 Denoising()메소드를 이용해 노이즈 제거
-        self._Chromagram(chroma, show=self.show)   # self.show = True 일 경우 노래 시작 전 크로마그램 그래프를 출력
+        self._Chromagram(chroma, show=self.show, title='final_line77')   # self.show = True 일 경우 노래 시작 전 크로마그램 그래프를 출력
         return self.best_repeated_part[0] - 1.5               # 하이라이트 시간(self.result[0])-1.5초를 리턴(하이라이트 직전부터 재생)
 
     # (노래 분석 SUB) 코사인 유사도의 노이즈를 제거하는 메소드(Filtering()메소드와 Tensor()메소드를 이용해 노이즈 제거)
     def _Denoising(self):
         chroma = self._LoadSong()                  # 코사인유사도를 chroma에 넣기
+        self._Chromagram(chroma, show=self.show, title='after cosine similarity_line83') # 코사인 유사도 적용 후 크로마그램
         converttime = (self.time / len(chroma))   # 샘플링된 노래 시간 정보를 실제 노래 시간 정보로 변환해주기 위한 변수
         filtered_chroma = self._Filtering(chroma)  # Filtering()메소드로 chroma 의 노이즈 제거
         filterrate = 0.25                         # Filtering()메소드의 필터링 비율(하위25% 값을 제거한다는 의미)
@@ -110,6 +113,7 @@ class Song(object):
         chroma = np.dot(chroma, self._Tensor()) / 9
         chroma = chroma.reshape(self.chroma_len,-1)
         chroma[chroma <= filterrate * np.max(chroma)] = 0    # 노이즈 제거
+        self._Chromagram(chroma, show=self.show, title='filtering_line116')  # 필터링한 크로마그램 그래프를 출력
 
         if recursive_cnt == 0:                               # 마지막 재귀 시 chroma 를 정규화시켜서 데이터 정제하고 리턴
             return Common.Normalization(chroma)
@@ -153,12 +157,13 @@ class Song(object):
 
     ##### 크로마그램 출력 메소드 #####
 
-    def _Chromagram(self, chroma, show=False):
+    def _Chromagram(self, chroma, show=False, title=None):
         if show == True:
             plt.figure(figsize=(10, 10))
-            ld.specshow(chroma, y_axis='time', x_axis='time')
+            dp.specshow(chroma, y_axis='time', x_axis='time')
             plt.colorbar()
-            plt.title('{}'.format(self.music.upper()))
+            # plt.title('{}'.format(self.music.upper()))
+            plt.title(title)
             plt.tight_layout()
             plt.show()
 
