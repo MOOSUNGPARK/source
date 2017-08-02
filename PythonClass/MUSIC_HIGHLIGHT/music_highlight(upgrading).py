@@ -10,7 +10,7 @@ import os
 ################## 플레이 정보 ##################
 play_duration = 10                # 노래 재생 시간
 file_loc = 'c:/python/data/music' # 노래 폴더 위치
-show_chroma = True               # 크로마그램 출력
+show_chroma = False               # 크로마그램 출력
 ###############################################
 
 
