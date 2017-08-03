@@ -254,15 +254,15 @@ while True :
 
         a = pygame.surfarray.array3d(screen)
 
-        
+
         aa = rebin(rgb2gray(a), (64,48))
 
         aaa = rgb2gray(a)
 
-        surf = pygame.surfarray.make_surface(aaa)
+        # surf = pygame.surfarray.make_surface(aaa)
         # display = pygame.display.set_mode((640, 480))
-        screen.blit(surf, (0, 0))
-        pygame.display.update()
+        # screen.blit(surf, (0, 0))
+        # pygame.display.update()
         # pygame.surfarray.blit_array(screen, aaa)
         # state.append(aa)
         #
