@@ -2,6 +2,10 @@ import tensorflow as tf
 import numpy as np
 from dataset.mnist import load_mnist
 
+# 데이터 정규화/ 클래스화/ 검증데이터(훈련 데이터의 10%) 추가해서 1000에폭 중 100에폭마다 검증데이터로 정확도 확인하게 /
+# 배치 크기를 200으로 늘리고 그 중 랜덤으로 100개의 미니배치 뽑아서 학습시키기
+# 배치 정규화
+
 ##### mnist 데이터 불러오기 및 정제 #####
 
 ############################################
@@ -18,7 +22,7 @@ from dataset.mnist import load_mnist
 mnist = np.loadtxt('mnist.csv', delimiter=',', unpack=False, dtype='float32')
 print(mnist.shape)
 
-train_num = int(mnist.shape[0] * 0.9)
+train_num = int(mnist.shape[0] * 0.8)
 
 x_train, x_test = mnist[:train_num,:784], mnist[train_num:,:784]
 t_train, t_test = mnist[:train_num,784:], mnist[train_num:,784:]
