@@ -5,6 +5,26 @@ import pygame
 from pygame.locals import *
 import numpy as np
 from collections import deque
+import matplotlib.pyplot as plt
+
+
+def filter_show(f, nx=8, margin=3, scale=10):
+    """
+    c.f. https://gist.github.com/aidiary/07d530d5e08011832b12#file-draw_weight-py
+    """
+    FN, C, FH, FW = f.shape
+    ny = int(np.ceil(FN / nx))
+
+    fig = plt.figure()
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05)
+
+    for i in range(FN):
+        ax = fig.add_subplot(ny, nx, i + 1, xticks=[], yticks=[])
+        ax.imshow(f[i, 0], cmap=plt.cm.gray_r, interpolation='nearest')
+    plt.show()
+
+
+
 
 def rgb2gray(rgb):
     '''
@@ -21,7 +41,8 @@ def rgb2gray(rgb):
 
 def rebin(a, shape):
     sh = shape[0],a.shape[0]//shape[0],shape[1],a.shape[1]//shape[1]
-    return a.reshape(sh).mean(-1).mean(1)
+    a_sh = a.reshape(sh).mean(-1).mean(1)
+    return a_sh.reshape(1,1,sh[0],sh[2])
 
 # 2 - Initialize the game
 pygame.init()
@@ -256,8 +277,11 @@ while True :
 
 
         aa = rebin(rgb2gray(a), (64,48))
+        print(aa.shape)
+        # aaa = rgb2gray(a)
+        filter_show(aa)
 
-        aaa = rgb2gray(a)
+
 
         # surf = pygame.surfarray.make_surface(aaa)
         # display = pygame.display.set_mode((640, 480))
