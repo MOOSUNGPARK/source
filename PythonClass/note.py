@@ -2,9 +2,6 @@ import tensorflow as tf
 import numpy as np
 from dataset.mnist import load_mnist
 
-# 데이터 정규화/ 클래스화/ 검증데이터(훈련 데이터의 10%) 추가해서 1000에폭 중 100에폭마다 검증데이터로 정확도 확인하게 /
-# 배치 크기를 200으로 늘리고 그 중 랜덤으로 100개의 미니배치 뽑아서 학습시키기
-# 배치 정규화
 
 ##### mnist 데이터 불러오기 및 정제 #####
 
@@ -16,16 +13,26 @@ from dataset.mnist import load_mnist
 # print('input shape :', input.shape, '| target shape :', target.shape)
 # a = np.concatenate((input, target), axis=1)
 # np.savetxt('mnist.csv', a[:10000], delimiter=',')
-############################################
+# print('mnist.csv saved')
+###########################################
 
 # 파일 로드 및 변수 설정
+save_status = False
+load_status = False
+
 mnist = np.loadtxt('mnist.csv', delimiter=',', unpack=False, dtype='float32')
-print(mnist.shape)
+print('mnist.csv loaded')
+print('mnist shape :',mnist.shape)
 
 train_num = int(mnist.shape[0] * 0.8)
+validation_num = int(train_num * 0.1)
 
-x_train, x_test = mnist[:train_num,:784], mnist[train_num:,:784]
-t_train, t_test = mnist[:train_num,784:], mnist[train_num:,784:]
+x_validation, x_train, x_test = mnist[:validation_num,:784], \
+                                mnist[validation_num:train_num,:784], \
+                                mnist[train_num:,:784]
+t_validation, t_train, t_test = mnist[:validation_num,784:], \
+                                mnist[validation_num:train_num,784:], \
+                                mnist[train_num:,784:]
 
 print('x train shape :',x_train.shape, '| x target shape :',x_test.shape)
 print('t train shape :',t_train.shape, '| t target shape :',t_test.shape)
@@ -55,7 +62,6 @@ optimizer = tf.train.AdamOptimizer(learning_rate=0.05).minimize(cost, global_ste
 # optimizer = tf.train.MomentumOptimizer(learning_rate=0.01)
 ############################################
 
-
 ##### mnist 학습시키기 #####
 sess = tf.Session()
 saver = tf.train.Saver(tf.global_variables())
@@ -63,7 +69,7 @@ saver = tf.train.Saver(tf.global_variables())
 
 cp = tf.train.get_checkpoint_state('./save') # save 폴더를 checkpoint로 설정
 # checkpoint가 설정되고, 폴더가 실제로 존재하는 경우 restore 메소드로 변수, 학습 정보 불러오기
-if cp and tf.train.checkpoint_exists(cp.model_checkpoint_path):
+if load_status and cp and tf.train.checkpoint_exists(cp.model_checkpoint_path):
     saver.restore(sess, cp.model_checkpoint_path)
     print(sess.run(global_step),'회 학습한 데이터 로드 완료')
 # 그렇지 않은 경우 일반적인 sess.run()으로 tensorflow 실행
@@ -72,34 +78,40 @@ else:
     print('새로운 학습 시작')
 
 # epoch, batch 설정
-epoch = 1000
-batch_size = 100
-total_batch = int(x_train.shape[0] / batch_size)
+epoch = 300
+batch_size = 200
+mini_batch_size = 100
+total_batch = int(x_train.shape[0]/batch_size)
+total_size = x_train.shape[0]
+
+# 정확도 계산 함수
+correct_prediction = tf.equal(tf.argmax(T, 1), tf.argmax(Y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 # 설정한 epoch 만큼 루프
 for each_epoch in range(epoch):
     total_cost = 0
-
     # 각 epoch 마다 batch 크기만큼 데이터를 뽑아서 학습
-    for idx in range(0, total_batch, batch_size):
-        batch_x, batch_y = x_train[idx : idx+batch_size], t_train[idx : idx+batch_size]
+    for idx in range(0, total_size, batch_size):
+        batch_mask = np.random.randint(low=idx, high=idx + batch_size, size=mini_batch_size)
+        batch_x, batch_y = x_train[batch_mask], t_train[batch_mask]
 
         _, cost_val = sess.run([optimizer, cost], feed_dict={X : batch_x, T : batch_y})
         total_cost += cost_val
 
+    if (each_epoch) %50 == 0:
+        print('=================================\n{}번째 검증 데이터 정확도 : {:.3f}'
+              '\n================================='.format(each_epoch,
+                                                           sess.run(accuracy, feed_dict={X: x_validation, T: t_validation})))
     print('Epoch:', '%04d' % (each_epoch + 1),
           'Avg. cost =', '{:.8f}'.format(total_cost / total_batch),
           )
-
 print('최적화 완료!')
 
 # 최적화가 끝난 뒤, 변수와 학습 정보 저장
-saver.save(sess, './save/mnist_dnn.ckpt', global_step=global_step)
+if save_status :
+    saver.save(sess, './save/mnist_dnn.ckpt', global_step=global_step)
 
 ##### 학습 결과 확인 #####
-# equal 메소드로 (True, False, True, ....) 형식으로 출력
-correct_prediction = tf.equal(tf.argmax(T, 1), tf.argmax(Y, 1))
-# tf.cast로 True, False 등을 float32 형태로 변경 True -> 1.0, False -> 0.0
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 print('Train 정확도 :', sess.run(accuracy, feed_dict={X: x_train, T: t_train}))
 print('Test 정확도:', sess.run(accuracy, feed_dict={X: x_test, T: t_test}))
