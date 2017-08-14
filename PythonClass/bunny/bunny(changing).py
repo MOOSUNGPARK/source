@@ -274,10 +274,15 @@ while True :
         # print(a[a==255])
 
         a = pygame.surfarray.array3d(screen)
-
-
-        aa = rebin(rgb2gray(a), (64,48))
+        # img = Image.fromarray(a)
+        #  image = a.resize((64,48), Image.ANTIALIAS)
+        # print(img.shape)
+        print(type(a))
+        aa = np.pad(rebin(rgb2gray(a), (32,24)), ((0,0),(0,0),(0,0),(4,4)),'constant', constant_values=0 )
         print(aa.shape)
+        # aa = np.pad(aa, ((0,0),(0,0),(0,0),(8,8)),'constant', constant_values=0 )
+        # print(aa.shape)
+
         # aaa = rgb2gray(a)
         filter_show(aa)
 

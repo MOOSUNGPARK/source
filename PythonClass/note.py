@@ -1,117 +1,88 @@
-import tensorflow as tf
+import gym
 import numpy as np
-from dataset.mnist import load_mnist
+import random
+import tensorflow as tf
+import matplotlib.pyplot as plt
+import scipy.misc
+import os
 
 
-##### mnist 데이터 불러오기 및 정제 #####
+# 신경망 구현
+class Qnetwork():
+    def __init__(self, h_size):
+        # 신경망은 게임으로부터 벡터화된 배열로 프레임을 받아서
+        # 이것을 리사이즈 하고, 4개의 콘볼루션 레이어를 통해 처리한다.
 
-############################################
-# mnist 데이터 중 10000개 저장
-# (x_train, t_train), (x_test, t_test) = load_mnist(flatten=True, one_hot_label=True)
-# input = np.concatenate((x_train, x_test), axis=0)
-# target = np.concatenate((t_train, t_test), axis=0)
-# print('input shape :', input.shape, '| target shape :', target.shape)
-# a = np.concatenate((input, target), axis=1)
-# np.savetxt('mnist.csv', a[:10000], delimiter=',')
-# print('mnist.csv saved')
-###########################################
+        # 입력값을 받는 부분 21168 차원은 84*84*3 의 차원이다.
+        self.scalarInput = tf.placeholder(shape=[None, 21168], dtype=tf.float32)
+        # conv2d 처리를 위해 84x84x3 으로 다시 리사이즈
+        self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 84, 84, 3])
 
-# 파일 로드 및 변수 설정
-save_status = False
-load_status = False
+        # 첫번째 콘볼루션은 8x8 커널을 4 스트라이드로 32개의 activation map을 만든다
+        # 출력 크기는 (image 크기 - 필터 크기) / 스트라이드 + 1 이다.
+        # zero padding이 없는 VALID 옵션이기 때문에
+        # (84-8)/4 + 1
+        # 20x20x32 의 activation volumn이 나온다
+        self.conv1 = tf.contrib.layers.convolution2d(inputs=self.imageIn, num_outputs=32, kernel_size=[8, 8], stride=[4, 4], padding='VALID',
+            biases_initializer=None)
+        # 두번째 콘볼루션은 4x4 커널을 2 스트라이드로 64개의 activation map을 만든다.
+        # 출력 크기는 9x9x64
+        self.conv2 = tf.contrib.layers.convolution2d(inputs=self.conv1, num_outputs=64, kernel_size=[4, 4], stride=[2, 2], padding='VALID',
+            biases_initializer=None)
+        # 세번째 콘볼루션은 3x3 커널을 1 스트라이드로 64개의 activation map을 만든다.
+        # 출력 크기는 7x7x64
+        self.conv3 = tf.contrib.layers.convolution2d(inputs=self.conv2, num_outputs=64, kernel_size=[3, 3], stride=[1, 1], padding='VALID',
+            biases_initializer=None)
+        # 네번째 콘볼루션은 7x7 커널을 1 스트라이드 512개의 activation map을 만든다.
+        # 출력 크기는 1x1x512
+        self.conv4 = tf.contrib.layers.convolution2d(inputs=self.conv3, num_outputs=512, kernel_size=[7, 7], stride=[1, 1], padding='VALID',
+            biases_initializer=None)
 
-mnist = np.loadtxt('mnist.csv', delimiter=',', unpack=False, dtype='float32')
-print('mnist.csv loaded')
-print('mnist shape :',mnist.shape)
+        # 마지막 콘볼루션 레이어의 출력을 가지고 2로 나눈다.
+        # streamAC, streamVC 는 각각 1x1x256
+        self.streamAC, self.streamVC = tf.split(3, 2, self.conv4)
+        # 이를 벡터화한다. streamA 와 streamV는 256 차원씩이다.
+        self.streamA = tf.contrib.layers.flatten(self.streamAC)
+        self.streamV = tf.contrib.layers.flatten(self.streamVC)
+        # 256개의 노드를 곱해서 각각 A와 V를 구하는 가중치
+        self.AW = tf.Variable(tf.random_normal([256, env.actions]))
+        self.VW = tf.Variable(tf.random_normal([256, 1]))
+        # 점수화 한다.
+        self.Advantage = tf.matmul(self.streamA, self.AW)
+        self.Value = tf.matmul(self.streamV, self.VW)
 
-train_num = int(mnist.shape[0] * 0.8)
-validation_num = int(train_num * 0.1)
+        # 가치 함수 값에 이득에서 이득의 평균을 빼준 값들을 더해준다.
+        self.Qout = self.Value + tf.sub(self.Advantage,
+                                        tf.reduce_mean(self.Advantage, reduction_indices=1, keep_dims=True))
+        # 이것으로 행동을 고른다.
+        self.predict = tf.argmax(self.Qout, 1)
 
-x_validation, x_train, x_test = mnist[:validation_num,:784], \
-                                mnist[validation_num:train_num,:784], \
-                                mnist[train_num:,:784]
-t_validation, t_train, t_test = mnist[:validation_num,784:], \
-                                mnist[validation_num:train_num,784:], \
-                                mnist[train_num:,784:]
+        # 타겟과 예측 Q value 사이의 차이의 제곱합이 손실이다.
+        # 타겟Q를 받는 부분
+        self.targetQ = tf.placeholder(shape=[None], dtype=tf.float32)
+        # 행동을 받는 부분
+        self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
 
-print('x train shape :',x_train.shape, '| x target shape :',x_test.shape)
-print('t train shape :',t_train.shape, '| t target shape :',t_test.shape)
+        # 행동을 one_hot 인코딩 하는 부분 (tf.one_hot은 내 컴퓨터에서 GPU 에러를 내기에 다음의 해법을 찾아 적용)
+        def one_hot_patch(x, depth):
+            sparse_labels = tf.reshape(x, [-1, 1])
+            derived_size = tf.shape(sparse_labels)[0]
+            indices = tf.reshape(tf.range(0, derived_size, 1), [-1, 1])
+            concated = tf.concat(1, [indices, sparse_labels])
+            outshape = tf.concat(0, [tf.reshape(derived_size, [1]), tf.reshape(depth, [1])])
+            return tf.sparse_to_dense(concated, outshape, 1.0, 0.0)
 
-global_step = tf.Variable(0, trainable=False, name='global_step')
-X = tf.placeholder(tf.float32,[None, 784])
-T = tf.placeholder(tf.float32,[None, 10])
-W = tf.Variable(tf.random_uniform([784,10], -1e-7, 1e-7)) # [784,10] 형상을 가진 -1e-7 ~ 1e-7 사이의 균등분포 어레이
-b = tf.Variable(tf.random_uniform([10], -1e-7, 1e-7))    # [10] 형상을 가진 -1~1 사이의 균등분포 벡터
-Y = tf.add(tf.matmul(X,W), b) # tf.matmul(X,W) + b 와 동일
+        self.actions_onehot = one_hot_patch(self.actions, env.actions)
 
-############################################
-# 그외 가중치 초기화 방법
-# W = tf.Variable(tf.random_uniform([784,10], -1, 1)) # [784,10] 형상을 가진 -1~1 사이의 균등분포 어레이
-# W = tf.get_variable(name="W", shape=[784, 10], initializer=tf.contrib.layers.xavier_initializer()) # xavier 초기값
-# W = tf.get_variable(name='W', shape=[784, 10], initializer=tf.contrib.layers.variance_scaling_initializer()) # he 초기값
-# b = tf.Variable(tf.zeros([10]))
-############################################
+        # 각 네트워크의 행동의 Q 값을 골라내는 것
+        # action 번째를 뽑고 싶지만 tensor는 인덱스로 쓸 수 없어서 이렇게 하는듯(내 생각)
+        self.Q = tf.reduce_sum(tf.mul(self.Qout, self.actions_onehot), reduction_indices=1)
 
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=T, logits=Y))
-optimizer = tf.train.AdamOptimizer(learning_rate=0.05).minimize(cost, global_step=global_step)
-
-############################################
-# 그외 옵티마이저
-# optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
-# optimizer = tf.train.AdagradOptimizer(learning_rate=0.01)
-# optimizer = tf.train.MomentumOptimizer(learning_rate=0.01)
-############################################
-
-##### mnist 학습시키기 #####
-sess = tf.Session()
-saver = tf.train.Saver(tf.global_variables())
-
-
-cp = tf.train.get_checkpoint_state('./save') # save 폴더를 checkpoint로 설정
-# checkpoint가 설정되고, 폴더가 실제로 존재하는 경우 restore 메소드로 변수, 학습 정보 불러오기
-if load_status and cp and tf.train.checkpoint_exists(cp.model_checkpoint_path):
-    saver.restore(sess, cp.model_checkpoint_path)
-    print(sess.run(global_step),'회 학습한 데이터 로드 완료')
-# 그렇지 않은 경우 일반적인 sess.run()으로 tensorflow 실행
-else:
-    sess.run(tf.global_variables_initializer())
-    print('새로운 학습 시작')
-
-# epoch, batch 설정
-epoch = 300
-batch_size = 200
-mini_batch_size = 100
-total_batch = int(x_train.shape[0]/batch_size)
-total_size = x_train.shape[0]
-
-# 정확도 계산 함수
-correct_prediction = tf.equal(tf.argmax(T, 1), tf.argmax(Y, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-# 설정한 epoch 만큼 루프
-for each_epoch in range(epoch):
-    total_cost = 0
-    # 각 epoch 마다 batch 크기만큼 데이터를 뽑아서 학습
-    for idx in range(0, total_size, batch_size):
-        batch_mask = np.random.randint(low=idx, high=idx + batch_size, size=mini_batch_size)
-        batch_x, batch_y = x_train[batch_mask], t_train[batch_mask]
-
-        _, cost_val = sess.run([optimizer, cost], feed_dict={X : batch_x, T : batch_y})
-        total_cost += cost_val
-
-    if (each_epoch) %50 == 0:
-        print('=================================\n{}번째 검증 데이터 정확도 : {:.3f}'
-              '\n================================='.format(each_epoch,
-                                                           sess.run(accuracy, feed_dict={X: x_validation, T: t_validation})))
-    print('Epoch:', '%04d' % (each_epoch + 1),
-          'Avg. cost =', '{:.8f}'.format(total_cost / total_batch),
-          )
-print('최적화 완료!')
-
-# 최적화가 끝난 뒤, 변수와 학습 정보 저장
-if save_status :
-    saver.save(sess, './save/mnist_dnn.ckpt', global_step=global_step)
-
-##### 학습 결과 확인 #####
-print('Train 정확도 :', sess.run(accuracy, feed_dict={X: x_train, T: t_train}))
-print('Test 정확도:', sess.run(accuracy, feed_dict={X: x_test, T: t_test}))
+        # 각각의 차이
+        self.td_error = tf.square(self.targetQ - self.Q)
+        # 손실
+        self.loss = tf.reduce_mean(self.td_error)
+        # 최적화 방법 adam
+        self.trainer = tf.train.AdamOptimizer(learning_rate=0.0001)
+        # 업데이트 함수
+        self.updateModel = self.trainer.minimize(self.loss)

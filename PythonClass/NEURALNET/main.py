@@ -1,4 +1,4 @@
-from p02_cnn_image_classification.ensemble_cnn_model_bn import Model
+from PythonClass.NEURALNET.ensemble_cnn_model_bn import Model
 import tensorflow as tf
 import numpy as np
 import time
@@ -9,7 +9,7 @@ from PIL import ImageGrab
 batch_size = 100
 num_models = 5
 
-# train & test °ü·Ã variable
+# train & test ï¿½ï¿½ï¿½ï¿½ variable
 train_file_list = ['data/train_data_' + str(i) + '.csv' for i in range(1, 21)]
 test_file_list = ['data/test_data_' + str(i) + '.csv' for i in range(1, 11)]
 
@@ -20,8 +20,8 @@ def data_setting(data):
 
 def read_data(*filename):
     ####################################################################################################################
-    ## ¢Ã Data Loading
-    ##  - °¢°¢ÀÇ ÆÄÀÏ¿¡ ´ëÇØ load ÈÄ ÀüÃ³¸®¸¦ ¼öÇà
+    ## ï¿½ï¿½ Data Loading
+    ##  - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½ load ï¿½ï¿½ ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     ####################################################################################################################
     data1 = np.loadtxt(filename[0], delimiter=',')
     data2 = np.loadtxt(filename[1], delimiter=',')
@@ -34,15 +34,15 @@ def image_screeshot():
     im = ImageGrab.grab()
     im.show()
 
-# monitoring °ü·Ã parameter
+# monitoring ï¿½ï¿½ï¿½ï¿½ parameter
 mon_epoch_list = []
 mon_cost_list = [[] for m in range(num_models)]
 mon_color_list = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
 mon_label_list = ['model'+str(m+1) for m in range(num_models)]
 
 ################################################################################################################
-## ¢Ã Train Monitoring - Created by ¹Ú»ó¹ü
-##  - ½Ç½Ã°£À¸·Î train cost °ªÀ» monitoring ÇÏ´Â ±â´É
+## ï¿½ï¿½ Train Monitoring - Created by ï¿½Ú»ï¿½ï¿½
+##  - ï¿½Ç½Ã°ï¿½ï¿½ï¿½ï¿½ï¿½ train cost ï¿½ï¿½ï¿½ï¿½ monitoring ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½
 ################################################################################################################
 def monitor_train_cost():
     for cost, color, label in zip(mon_cost_list, mon_color_list[0:len(mon_label_list)], mon_label_list):
@@ -54,12 +54,12 @@ def monitor_train_cost():
     plt.grid(True)
 
 ########################################################################################################################
-## ¢Ã Data Training
-##  - train data : 20,000 °³
-##  - epoch : 20, batch_size : 100, model : 5°³
+## ï¿½ï¿½ Data Training
+##  - train data : 20,000 ï¿½ï¿½
+##  - epoch : 20, batch_size : 100, model : 5ï¿½ï¿½
 ########################################################################################################################
 with tf.Session() as sess:
-    # ½ÃÀÛ ½Ã°£ Ã¼Å©
+    # ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ Ã¼Å©
     stime = time.time()
 
     models = []
@@ -70,7 +70,7 @@ with tf.Session() as sess:
     saver = tf.train.Saver()
     print('Learning Started!')
 
-    # early stopping °ü·Ã parameter
+    # early stopping ï¿½ï¿½ï¿½ï¿½ parameter
     early_stopping_list = []
     last_epoch = -1
     epoch = 0
@@ -95,8 +95,8 @@ with tf.Session() as sess:
         drawnow(monitor_train_cost)
 
         ################################################################################################################
-        ## ¢Ã early stopping - Created by ¹èÁØÈ£
-        ##  - prev epoch °ú curr epoch ÀÇ cost ¸¦ ºñ±³ÇØ¼­ curr epoch ÀÇ cost °¡ ´õ Å« °æ¿ì Á¾·áÇÏ´Â ±â´É
+        ## ï¿½ï¿½ early stopping - Created by ï¿½ï¿½ï¿½ï¿½È£
+        ##  - prev epoch ï¿½ï¿½ curr epoch ï¿½ï¿½ cost ï¿½ï¿½ ï¿½ï¿½ï¿½Ø¼ï¿½ curr epoch ï¿½ï¿½ cost ï¿½ï¿½ ï¿½ï¿½ Å« ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½
         ################################################################################################################
         saver.save(sess, 'log/epoch_' + str(epoch + 1) +'.ckpt')
         early_stopping_list.append(avg_cost_list)
@@ -119,16 +119,16 @@ with tf.Session() as sess:
 
     image_screeshot()
 
-    # Á¾·á ½Ã°£ Ã¼Å©
+    # ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ Ã¼Å©
     etime = time.time()
     print('consumption time : ', round(etime-stime, 6))
 
 tf.reset_default_graph()
 
 ########################################################################################################################
-## ¢Ã Data Test
-##  - test data : 10,000 °³
-##  - batch_size : 100, model : 5°³
+## ï¿½ï¿½ Data Test
+##  - test data : 10,000 ï¿½ï¿½
+##  - batch_size : 100, model : 5ï¿½ï¿½
 ########################################################################################################################
 with tf.Session() as sess:
     models = []
