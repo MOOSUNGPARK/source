@@ -1,6 +1,3 @@
-# py -3.5 -m pip install SomePackage  # specifically Python 3.5
-# c:\users\sunki\appdata\local\programs\python\python35\lib\site-packages
-# python C:\Users\sunki\tensor_gpu(3.5)\Lib\site-packages\tensorflow\tensorboard/tensorboard.py --logdir=C:\python\source\PythonClass\gym_portpolio\summary\breakout_a3c
 from skimage.color import rgb2gray
 from skimage.transform import resize
 from keras.layers import Dense, Flatten, Input
@@ -18,9 +15,14 @@ import gym
 # 멀티쓰레딩을 위한 글로벌 변수
 global episode
 episode = 0
-EPISODES = 8
+EPISODES = 99999999
+
 # 환경 생성
-env_name = "BreakoutDeterministic-v4"
+env_name = "SpaceInvaders-v0"
+
+# weight 로드 여부
+load_weight = False
+load_path = "./save_model/invader219"
 
 
 # 브레이크아웃에서의 A3CAgent 클래스(글로벌신경망)
@@ -32,8 +34,8 @@ class A3CAgent:
         # A3C 하이퍼파라미터
         self.discount_factor = 0.99
         self.no_op_steps = 30
-        self.actor_lr = 2.5e-4
-        self.critic_lr = 2.5e-4
+        self.actor_lr = 1e-4
+        self.critic_lr = 1e-4
         # 쓰레드의 갯수
         self.threads = 8
 
@@ -47,30 +49,39 @@ class A3CAgent:
         K.set_session(self.sess)
         self.sess.run(tf.global_variables_initializer())
 
-        self.summary_placeholders, self.update_ops, self.summary_op = \
-            self.setup_summary()
-        self.summary_writer = \
-            tf.summary.FileWriter('summary/breakout_a3c', self.sess.graph)
+        self.summary_placeholders, self.update_ops, self.summary_op = self.setup_summary()
+        self.summary_writer = tf.summary.FileWriter('summary/invader', self.sess.graph)
 
     # 쓰레드를 만들어 학습을 하는 함수
     def train(self):
+        # 저장횟수
+        cnt = 0
+
+        # weight 불러오기
+        if load_weight :
+            self.load_model(load_path)
+            cnt = int(load_path[20:])
+            print('Weight loaded')
+
         # 쓰레드 수만큼 Agent 클래스 생성
         agents = [Agent(self.action_size, self.state_size,
                         [self.actor, self.critic], self.sess,
                         self.optimizer, self.discount_factor,
                         [self.summary_op, self.summary_placeholders,
-                         self.update_ops, self.summary_writer])
-                  for _ in range(self.threads)]
+                         self.update_ops, self.summary_writer]) for _ in range(self.threads)]
 
         # 각 쓰레드 시작
         for agent in agents:
             time.sleep(1)
             agent.start()
 
-        # 10분(600초)에 한번씩 모델을 저장
+        # 10분에 한번씩 모델을 저장
         while True:
             time.sleep(60 * 10)
-            self.save_model("./save_model/breakout_a3c")
+            cnt += 1
+            self.save_model("./save_model/invader" + str(cnt))
+
+
 
     # 정책신경망과 가치신경망을 생성
     def build_model(self):
@@ -153,12 +164,9 @@ class A3CAgent:
         tf.summary.scalar('Average Max Prob/Episode', episode_avg_max_q)
         tf.summary.scalar('Duration/Episode', episode_duration)
 
-        summary_vars = [episode_total_reward,
-                        episode_avg_max_q,
-                        episode_duration]
+        summary_vars = [episode_total_reward, episode_avg_max_q, episode_duration]
 
-        summary_placeholders = [tf.placeholder(tf.float32)
-                                for _ in range(len(summary_vars))]
+        summary_placeholders = [tf.placeholder(tf.float32) for _ in range(len(summary_vars))]
         update_ops = [summary_vars[i].assign(summary_placeholders[i])
                       for i in range(len(summary_vars))]
         summary_op = tf.summary.merge_all()
@@ -167,8 +175,7 @@ class A3CAgent:
 
 # 액터러너 클래스(쓰레드)
 class Agent(threading.Thread):
-    def __init__(self, action_size, state_size, model, sess,
-                 optimizer, discount_factor, summary_ops):
+    def __init__(self, action_size, state_size, model, sess, optimizer, discount_factor, summary_ops):
         threading.Thread.__init__(self)
 
         # A3CAgent 클래스에서 상속
@@ -204,14 +211,14 @@ class Agent(threading.Thread):
             done = False
             dead = False
 
-            score, start_life = 0, 5
+            score, start_life = 0, 3
             observe = env.reset()
             next_observe = observe
 
-            # 0~30 상태동안 정지
-            for _ in range(random.randint(1, 30)):
-                observe = next_observe
-                next_observe, _, _, _ = env.step(1)
+            # # 0~30 상태동안 정지
+            # for _ in range(random.randint(1, 30)):
+            #     observe = next_observe
+            #     next_observe, _, _, _ = env.step(1)
 
             state = pre_processing(next_observe, observe)
             history = np.stack((state, state, state, state), axis=2)
@@ -223,7 +230,7 @@ class Agent(threading.Thread):
                 observe = next_observe
                 action, policy = self.get_action(history)
 
-                # 1: 정지, 2: 왼쪽, 3: 오른쪽
+                # 1: shoot, 2: 오른쪽, 3: 왼쪽
                 if action == 0:
                     real_action = 1
                 elif action == 1:
@@ -379,4 +386,3 @@ def pre_processing(next_observe, observe):
 if __name__ == "__main__":
     global_agent = A3CAgent(action_size=3)
     global_agent.train()
-
