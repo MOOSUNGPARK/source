@@ -66,6 +66,7 @@ import tensorflow as tf
 import numpy as np
 import time
 
+
 class Model:
     def __init__(self, sess, name):
         self.sess = sess
@@ -103,7 +104,7 @@ class Model:
 
                 self.W2_sub = tf.get_variable(name='W2_sub', shape=[3, 3, 20, 20], dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())
                 self.L2_sub = tf.nn.conv2d(input=self.L1_sub, filter=self.W2_sub, strides=[1, 1, 1, 1], padding='VALID')  # 122x122 -> 120x120
-                self.L3_sub = self.BN(input=self.L2_sub, scale=True, training=self.training, name='Conv2_sub_BN')
+                self.L2_sub = self.BN(input=self.L2_sub, scale=True, training=self.training, name='Conv2_sub_BN')
                 self.L2_sub = self.parametric_relu(self.L2_sub, 'R2_sub')
 
                 self.W3_sub = tf.get_variable(name='W3_sub', shape=[3, 3, 20, 20], dtype=tf.float32, initializer=tf.contrib.layers.variance_scaling_initializer())

@@ -69,7 +69,7 @@ def pre_processing(next_observe, observe):
 if __name__ == "__main__":
     env = gym.make(env_name)
     agent = Agent(action_size=3)
-    agent.load_model("save_model2/invader49_actor.h5")
+    agent.load_model("save_model3/invader4_actor.h5")
 
     step = 0
     while episode < EPISODES:
