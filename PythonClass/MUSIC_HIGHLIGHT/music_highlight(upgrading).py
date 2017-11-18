@@ -8,7 +8,7 @@ import numpy as np
 import os
 
 ################## 플레이 정보 ##################
-play_duration = 10                # 노래 재생 시간
+play_duration = 15                # 노래 재생 시간
 file_loc = 'c:/python/data/music' # 노래 폴더 위치
 show_chroma = False               # 크로마그램 출력
 ###############################################
@@ -133,15 +133,15 @@ class Song(object):
         shorterline = line      # 패턴 반복 확인 시 사용할 기준 대각선의 길이
         repeatedcnt = []        # 시간대별 반복횟수 저장할 리스트
 
-        for cn in range(len(chroma)-line):
+        for rn in range(len(chroma)-line):
             correctcnt = 0      # 패턴 일치 횟수
-            for rn in range(len(chroma)-line):
+            for cn in range(len(chroma)-line):
                 cnt = 0
                 while chroma[rn+cnt][cn+cnt] != 0 and cnt < line:
                     cnt += 1
                 if cnt == line: # 패턴 일치할 경우 correctcnt 하나씩 증가
                     correctcnt += 1
-            repeatedcnt.append([cn,correctcnt]) # 시간대와 시간대별 일치횟수를 리스트에 저장
+            repeatedcnt.append([rn,correctcnt]) # 시간대와 시간대별 일치횟수를 리스트에 저장
 
         #--- 이하 리턴절은 3가지의 시나리오로 나뉘어짐 ---#
 
@@ -182,7 +182,9 @@ class Play(object):
         mixer.music.load(song.music_dict[song.music])
         print('Music Start!')
         mixer.music.play(start=highlight)
-        time.wait(play_duration * 1000)
+        time.wait(play_duration * 850)
+        mixer.music.fadeout(play_duration * 150)
+        time.wait(play_duration * 150)
         quit()
 
 ################## 기타 함수 클래스 ##################
