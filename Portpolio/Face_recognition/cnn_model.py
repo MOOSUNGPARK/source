@@ -3,9 +3,10 @@ import numpy as np
 import time
 
 class Model:
-    def __init__(self, sess, name):
+    def __init__(self, sess, name, label_cnt):
         self.sess = sess
         self.name = name
+        self.label_cnt = label_cnt
         self._build_net()
 
     def _build_net(self):
@@ -16,7 +17,7 @@ class Model:
 
                 self.X = tf.placeholder(tf.float32, [None, 126*126], name='x_data')
                 X_img = tf.reshape(self.X, shape=[-1,126,126,1])
-                self.Y = tf.placeholder(tf.float32, [None, 2], name='y_data')
+                self.Y = tf.placeholder(tf.float32, [None, self.label_cnt], name='y_data')
 
             with tf.name_scope('conv_layer1') as scope:
                 self.W1_sub = tf.get_variable(name='W1_sub', shape=[3,3,1,20], dtype=tf.float32,
@@ -88,28 +89,16 @@ class Model:
                 self.L7 = self.BN(input=self.L7, scale=True, training=self.training, name='Conv7_sub_BN')
                 self.L_fc2 = self.parametric_relu(self.L7, 'R_fc2')
 
-            self.W_out = tf.get_variable(name='W_out', shape=[1000,4], dtype=tf.float32,
+            self.W_out = tf.get_variable(name='W_out', shape=[1000,self.label_cnt], dtype=tf.float32,
                                          initializer=tf.contrib.layers.variance_scaling_initializer())
-            self.b_out = tf.Variable(tf.constant(value=0.001, shape=[4], name='b_out'))
+            self.b_out = tf.Variable(tf.constant(value=0.001, shape=[self.label_cnt], name='b_out'))
             self.logits = tf.matmul(self.L_fc2, self.W_out) + self.b_out
 
 
-        self.L2_reg = 0.01/(2*tf.to_float(tf.shape(self.Y[0]))) * tf.reduce_sum(tf.squre(self.W_out))
+        self.L2_reg = 0.01/(2*tf.to_float(tf.shape(self.Y[0]))) * tf.reduce_sum(tf.square(self.W_out))
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.Y)) + self.L2_reg
         self.optimizer = tf.train.AdamOptimizer(learning_rate=0.005).minimize(self.cost)
         self.accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.arg_max(self.logits, 1), tf.arg_max(self.Y, 1)), dtype=tf.float32))
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     def tensorflow_summary(self):

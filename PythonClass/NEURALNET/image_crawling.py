@@ -13,16 +13,16 @@ import numpy as np
 
 class GoogleImageCrawler:
     __CHROME_DRIVER_PATH = 'C:\\python\\software\\chrome_driver\\'
-    # __IMAGE_PATH = ['C:\\python\\data\\face\\happy\\', 'C:\\python\\data\\face\\argry\\', 'C:\\python\\data\\face\\sad\\', 'C:\\python\\data\\face\\surprised\\']
-    __IMAGE_PATH = ['C:\\python\\data\\face\\happy\\', 'C:\\python\\data\\face\\argry\\']
+    __IMAGE_PATH = ['C:\\python\\data\\face\\happy\\', 'C:\\python\\data\\face\\argry\\', 'C:\\python\\data\\face\\sad\\', 'C:\\python\\data\\face\\surprised\\']
+    # __IMAGE_PATH = ['C:\\python\\data\\face\\happy\\', 'C:\\python\\data\\face\\argry\\']
     __DATA_PATH = 'C:\\python\\data\\face\\'
 
     __SEARCH_HAPPY = ['happy human face', '행복한 사람 얼굴']
     __SEARCH_ANGRY = ['angry human face', '화난 사람 얼굴']
     __SEARCH_SAD = ['sad human face', '슬픈 사람 얼굴']
     __SEARCH_SURPRISED = ['surprised human face', '놀란 사람 얼굴']
-    # __SEARCH_KEYWORD = [__SEARCH_HAPPY, __SEARCH_ANGRY, __SEARCH_SAD, __SEARCH_SURPRISED]
-    __SEARCH_KEYWORD = [__SEARCH_HAPPY, __SEARCH_ANGRY]
+    __SEARCH_KEYWORD = [__SEARCH_HAPPY, __SEARCH_ANGRY, __SEARCH_SAD, __SEARCH_SURPRISED]
+    # __SEARCH_KEYWORD = [__SEARCH_HAPPY, __SEARCH_ANGRY]
 
 
     def __init__(self):
@@ -186,23 +186,23 @@ class GoogleImageCrawler:
                 for y in range(1, y_shape - 1):
                     if x == 1 and y == 1:
                         temp_data += str(data[0][x][y])
-                        temp_data2 += str(data[0][x][y] * 0.9)
-                        temp_data3 += str(data[0][x][y] * 0.8)
-                        temp_data4 += str(data[0][x][y] * 0.7)
+                        temp_data2 += str(data[0][x][y] * 0.8)
+                        temp_data3 += str(data[0][x][y] * 0.6)
+                        temp_data4 += str(data[0][x][y] * 0.4)
                         temp_data5 += str(data[0][127-x][y])
-                        temp_data6 += str(data[0][127-x][y] * 0.9)
-                        temp_data7 += str(data[0][127-x][y] * 0.8)
-                        temp_data8 += str(data[0][127-x][y] * 0.7)
+                        temp_data6 += str(data[0][127-x][y] * 0.8)
+                        temp_data7 += str(data[0][127-x][y] * 0.6)
+                        temp_data8 += str(data[0][127-x][y] * 0.4)
 
                     else:
                         temp_data += ',' + str(data[0][x][y])
-                        temp_data2 += ',' + str(data[0][x][y] * 0.9)
-                        temp_data3 += ',' + str(data[0][x][y] * 0.8)
-                        temp_data4 += ',' + str(data[0][x][y] * 0.7)
+                        temp_data2 += ',' + str(data[0][x][y] * 0.8)
+                        temp_data3 += ',' + str(data[0][x][y] * 0.6)
+                        temp_data4 += ',' + str(data[0][x][y] * 0.4)
                         temp_data5 += ',' + str(data[0][127-x][y])
-                        temp_data6 += ',' + str(data[0][127-x][y] * 0.9)
-                        temp_data7 += ',' + str(data[0][127-x][y] * 0.8)
-                        temp_data8 += ',' + str(data[0][127-x][y] * 0.7)
+                        temp_data6 += ',' + str(data[0][127-x][y] * 0.8)
+                        temp_data7 += ',' + str(data[0][127-x][y] * 0.6)
+                        temp_data8 += ',' + str(data[0][127-x][y] * 0.4)
 
             temp_data += ',' + str(data[1])
             temp_data2 += ',' + str(data[1])
@@ -242,9 +242,9 @@ class GoogleImageCrawler:
         # self._image_to_thumbnail()
         # print('image to thumbnail end.')
 
-        print('rgb to gray start.')
+        # print('rgb to gray start.')
         self._extract_rgb_from_image()
-        print('rgb to gray end.')
+        # print('rgb to gray end.')
 
         self.driver.quit()
 
