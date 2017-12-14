@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.contrib.layers import *
+# prelu/ rmsprop / lr = 0.01
 
 class Model():
     def __init__(self, sess, depth, label_cnt):

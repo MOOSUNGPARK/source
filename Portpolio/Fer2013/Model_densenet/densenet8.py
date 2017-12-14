@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.contrib.layers import *
+# relu/ rmsprop / lr = 0.01
 
-# prelu / RMSprop / lr = 0.01 / l2_reg = 1e-4
 class Model():
     def __init__(self, sess, depth, label_cnt):
         self.Sess = sess
@@ -13,15 +13,15 @@ class Model():
 
     def _build_graph(self):
         with tf.name_scope('initialize_scope'):
-            self.X = tf.placeholder(dtype=tf.float32, shape=[None, 126 * 126], name='X_data')
-            X_img = tf.reshape(self.X, shape=[-1, 126, 126, 1])
+            self.X = tf.placeholder(dtype=tf.float32, shape=[None, 48 * 48], name='X_data')
+            X_img = tf.reshape(self.X, shape=[-1, 48, 48, 1])
             self.Y = tf.placeholder(dtype=tf.int64, shape=[None, self.Label_Cnt], name='Y_data')
             self.training = tf.placeholder(dtype=tf.bool, name='training')
             self.dropout_rate = tf.placeholder(dtype=tf.float32, name='dropout_rate')
             self.learning_rate = tf.get_variable('learning_rate', initializer=0.01, trainable=False)
 
-        def conv(l, kernel, channel, stride, padding='SAME'):
-            return conv2d(inputs=l, num_outputs=channel, kernel_size=kernel, stride=stride, padding=padding,
+        def conv(l, kernel, channel, stride):
+            return conv2d(inputs=l, num_outputs=channel, kernel_size=kernel, stride=stride, padding='SAME',
                           weights_initializer=variance_scaling_initializer(), biases_initializer=None,
                           weights_regularizer=l2_regularizer(1e-4))
 
@@ -29,13 +29,13 @@ class Model():
             with tf.variable_scope(name):
                 '''bottleneck layer (DenseNet-B)'''
                 l = batch_norm(inputs=l, decay=0.99, updates_collections=None, scale=True, is_training=self.training)
-                l = self.parametric_relu(l, 'Bottle' + str(block_number) + '_' + str(idx))
+                l = tf.nn.relu(l, 'Bottle' + str(block_number) + '_' + str(idx))
                 l = conv(l, 1, 4 * self.Growth_Rate, 1)
                 l = dropout(inputs=l, keep_prob=self.dropout_rate, is_training=self.training)
 
                 '''basic dense layer'''
                 l = batch_norm(inputs=l, decay=0.99, updates_collections=None, scale=True, is_training=self.training)
-                l = self.parametric_relu(l, 'Dense' +  str(block_number) + '_' + str(idx))
+                l = tf.nn.relu(l, 'Dense' +  str(block_number) + '_' + str(idx))
                 l = conv(l, 3, self.Growth_Rate, 1)
                 l = dropout(inputs=l, keep_prob=self.dropout_rate, is_training=self.training)
                 # l = tf.concat([c,l], axis=3)
@@ -47,7 +47,7 @@ class Model():
             with tf.variable_scope(name):
                 '''compression transition layer (DenseNet-C)'''
                 l = batch_norm(inputs=l, decay=0.99, updates_collections=None, scale=True, is_training=self.training)
-                l = self.parametric_relu(l, name + '_' + str(1))
+                l = tf.nn.relu(l, name + '_' + str(1))
                 l = conv(l, 3, int(in_channel * self.Compression_Factor), 1)
                 l = avg_pool2d(inputs=l, kernel_size=[2,2], stride=2, padding='SAME')
                 l = dropout(inputs=l, keep_prob=self.dropout_rate, is_training=self.training)
@@ -55,12 +55,11 @@ class Model():
 
         def dense_net():
             l = conv(X_img, 3, 16, 1)
-            l = max_pool2d(inputs=l, kernel_size=[4,4], stride=4, padding='SAME')
-            # l = max_pool2d(inputs=l, kernel_size=[2,2], stride=2, padding='SAME')
+            # l = batch_norm(inputs=l, decay=0.99, updates_collections=None, scale=True, is_training=self.training)
+            l = max_pool2d(inputs=l, kernel_size=[2,2], stride=2, padding='SAME')
 
             with tf.variable_scope('dense_block1'):
                 pl = tf.identity(l)
-                print(pl)
                 for idx in range(self.N):
                     l = add_layer('dense_layer1_{}'.format(idx), pl, 1, idx)
                     pl = tf.concat([pl,l], axis=3)
@@ -80,12 +79,10 @@ class Model():
                 for idx in range(self.N):
                     l = add_layer('dense_layer3_{}'.format(idx), l, 3, idx)
                     pl = tf.concat([pl,l], axis=3)
-                print(pl
-                      )
+
             l = batch_norm(inputs=pl, decay=0.99, updates_collections=None, scale=True, is_training=self.training)
-            l = self.parametric_relu(l, 'output')
-            # l = max_pool2d(inputs=l, kernel_size=[2,2], stride=2, padding='SAME')
-            l = avg_pool2d(inputs=l, kernel_size=[8,8], stride=1, padding='VALID') # kernel_size 변경
+            l = tf.nn.relu(l, 'output')
+            l = avg_pool2d(inputs=l, kernel_size=[6,6], stride=1, padding='VALID') # kernel_size 변경
             l = tf.reshape(l, shape=[-1, 1 * 1 * 256])
             l = dropout(inputs=l, keep_prob=self.dropout_rate, is_training=self.training)
             # with tf.name_scope('fc_layer') as scope:

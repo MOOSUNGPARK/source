@@ -1,4 +1,4 @@
-from PythonClass.NEURALNET.ensemble_cnn_model_bn import Model
+from PythonClass.NEURALNET.ensemble1 import Model
 import tensorflow as tf
 import numpy as np
 import time

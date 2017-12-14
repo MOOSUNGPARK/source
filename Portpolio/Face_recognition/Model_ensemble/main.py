@@ -1,14 +1,17 @@
-from Portpolio.Face_recognition.cnn_model import Model
-import tensorflow as tf
-import numpy as np
 import time
+
 import matplotlib.pyplot as plt
-from drawnow import drawnow
+import numpy as np
+import tensorflow as tf
 from PIL import ImageGrab
+from drawnow import drawnow
+
+from Portpolio.Face_recognition.Model_ensemble.cnn_model1 import Model
 
 batch_size = 100
 num_models = 5
 label_cnt = 4
+epochs = 20
 
 train_file = 'c:\\python\\source\\Portpolio\\Face_recognition\\data\\train_data.csv'
 test_file = 'c:\\python\\source\\Portpolio\\Face_recognition\\data\\test_data.csv'
@@ -93,7 +96,7 @@ with tf.Session() as sess:
                 ep_check += 1
             early_stopping_list.pop(0)
         epoch += 1
-        if epoch == 20:
+        if epoch == epochs:
             break
         eetime = time.time()
         print('Epoch: ', '%04d' % (epoch), 'cost = ', avg_cost_list, ' - ', diff, ', epoch{} time'.format(epoch),

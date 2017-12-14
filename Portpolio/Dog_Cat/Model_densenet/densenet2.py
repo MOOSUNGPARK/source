@@ -1,7 +1,8 @@
 import tensorflow as tf
 from tensorflow.contrib.layers import *
 
-# prelu / RMSprop / lr = 0.01 / l2_reg = 1e-4
+# prelu / RMSprop / lr = 0.005 / l2_reg = 1e-3
+
 class Model():
     def __init__(self, sess, depth, label_cnt):
         self.Sess = sess
@@ -18,12 +19,12 @@ class Model():
             self.Y = tf.placeholder(dtype=tf.int64, shape=[None, self.Label_Cnt], name='Y_data')
             self.training = tf.placeholder(dtype=tf.bool, name='training')
             self.dropout_rate = tf.placeholder(dtype=tf.float32, name='dropout_rate')
-            self.learning_rate = tf.get_variable('learning_rate', initializer=0.01, trainable=False)
+            self.learning_rate = tf.get_variable('learning_rate', initializer=0.005, trainable=False)
 
         def conv(l, kernel, channel, stride, padding='SAME'):
             return conv2d(inputs=l, num_outputs=channel, kernel_size=kernel, stride=stride, padding=padding,
                           weights_initializer=variance_scaling_initializer(), biases_initializer=None,
-                          weights_regularizer=l2_regularizer(1e-4))
+                          weights_regularizer=l2_regularizer(1e-3))
 
         def add_layer(name, l, block_number, idx):
             with tf.variable_scope(name):
@@ -56,18 +57,15 @@ class Model():
         def dense_net():
             l = conv(X_img, 3, 16, 1)
             l = max_pool2d(inputs=l, kernel_size=[4,4], stride=4, padding='SAME')
-            # l = max_pool2d(inputs=l, kernel_size=[2,2], stride=2, padding='SAME')
 
             with tf.variable_scope('dense_block1'):
                 pl = tf.identity(l)
-                print(pl)
                 for idx in range(self.N):
                     l = add_layer('dense_layer1_{}'.format(idx), pl, 1, idx)
                     pl = tf.concat([pl,l], axis=3)
                 l = add_transition('transition1', pl)
 
             with tf.variable_scope('dense_block2'):
-                # pl = deepcopy(l)
                 pl = tf.identity(l)
                 for idx in range(self.N):
                     l = add_layer('dense_layer2_{}'.format(idx), l, 2, idx)
@@ -75,13 +73,11 @@ class Model():
                 l = add_transition('transition2', pl)
 
             with tf.variable_scope('dense_block3'):
-                # pl = deepcopy(l)
                 pl = tf.identity(l)
                 for idx in range(self.N):
                     l = add_layer('dense_layer3_{}'.format(idx), l, 3, idx)
                     pl = tf.concat([pl,l], axis=3)
-                print(pl
-                      )
+
             l = batch_norm(inputs=pl, decay=0.99, updates_collections=None, scale=True, is_training=self.training)
             l = self.parametric_relu(l, 'output')
             # l = max_pool2d(inputs=l, kernel_size=[2,2], stride=2, padding='SAME')
@@ -95,7 +91,7 @@ class Model():
             #     logits = tf.matmul(l, W_fc) + b_fc
             logits = fully_connected(inputs=l, num_outputs=self.Label_Cnt, activation_fn=None,
                                      weights_initializer=variance_scaling_initializer(),
-                                     weights_regularizer=l2_regularizer(1e-4))
+                                     weights_regularizer=l2_regularizer(1e-3))
             return logits
 
 
@@ -104,6 +100,7 @@ class Model():
         loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.Y)
         loss = tf.reduce_mean(loss, name='cross_entropy_loss')
         reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+        print(reg_losses)
         self.loss = tf.add_n([loss] + reg_losses, name='loss')
         self.optimizer = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
         self.accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.arg_max(self.logits,1), tf.arg_max(self.Y,1)), dtype=tf.float32))
