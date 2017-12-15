@@ -10,11 +10,14 @@ def txt_one_hot(data, vocab):
     return _data
 
 def load_txt_vocab(loc):
-    txt = ''
-    # with open(loc, 'r', encoding='UTF8') as f:
-    with open(loc, 'r') as f:
-
-        txt += f.read()
+    try :
+        txt = ''
+        with open(loc, 'r') as f:
+            txt += f.read()
+    except:
+        txt = ''
+        with open(loc, 'r', encoding='UTF8') as f:
+            txt += f.read()
     txt = txt.lower()
     vocab = sorted(list(set(txt)))
     c_to_i_vocab = dict((c,i) for i,c in enumerate(vocab))

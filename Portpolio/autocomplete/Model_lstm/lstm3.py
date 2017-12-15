@@ -3,7 +3,7 @@ from tensorflow.contrib import rnn
 from tensorflow.contrib.layers import *
 import numpy as np
 
-# layer_norm x / softsign / RMSprop / lr = 0.001 / epoch = 10000 / hidden_size = 256 / layers_cnt = 3
+# layer_norm o / softsign / RMSprop / lr = 0.001 / epoch = 10000 / hidden_size = 256 / layers_cnt = 2
 
 class Model:
     def __init__(self, session, in_size, out_size, name='model'):
@@ -14,8 +14,7 @@ class Model:
         self.out_size = out_size
         self.layers_cnt = 3
         self.lr = 0.001
-        self.state_size = self.layers_cnt * 2 * self.hidden_size
-        self.rnn_last_state = None #np.zeros((self.state_size))
+        self.rnn_last_state = None
         self._build_net()
 
     def _build_net(self):
@@ -23,7 +22,6 @@ class Model:
             self.X = tf.placeholder(dtype=tf.float32, shape=[None, None, self.in_size], name='X_data')
             self.Y = tf.placeholder(dtype=tf.float32, shape=[None, None, self.out_size], name='Y_data')
             self.Y_label = tf.reshape(self.Y, [-1, self.out_size])
-            # self.rnn_init_value = tf.placeholder(dtype=tf.float32, shape=[None, self.state_size], name='Rnn_init_value')
             self.dropout_rate = tf.placeholder(dtype=tf.float32, name='dropout_rate')
 
         def add_lstm_layer(name):
@@ -68,7 +66,6 @@ class Model:
             return l
 
         def lstm_model():
-            # outputs, new_state = add_lstm_layer('LSTM')
             outputs, new_state = add_lstm_layernorm_layer('LSTM')
 
             output_shape = tf.shape(outputs)
@@ -87,7 +84,7 @@ class Model:
                                                                         self.dropout_rate:0.5})
         return loss
 
-    def generate(self, x_data, init_state=True):
+    def generate(self, x_data):
         out, rnn_next_state = self.sess.run([self.final_out, self.rnn_new_state],
                                             feed_dict={self.X:[x_data], self.dropout_rate:1.0})
         self.rnn_last_state = rnn_next_state

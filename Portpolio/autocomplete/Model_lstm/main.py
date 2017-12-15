@@ -3,10 +3,10 @@ import numpy as np
 import time
 import sys
 import Portpolio.autocomplete.Model_lstm.util as Util
-from Portpolio.autocomplete.Model_lstm.lstm_practice import Model
+from Portpolio.autocomplete.Model_lstm.lstm2 import Model
 
 ckpt_file = ""
-TEST_PREFIX = "제1조"  # Prefix to prompt the network in test mode
+TEST_PREFIX = "eminem"  # Prefix to prompt the network in test mode
 
 print("Usage:")
 print('\t\t ', sys.argv[0], ' [ckpt model to load] [prefix, e.g., "The "]')
@@ -16,7 +16,7 @@ if len(sys.argv) == 3:
     TEST_PREFIX = sys.argv[2]
 
 ########################
-loc = 'C:\\python\\source\\Portpolio\\autocomplete\\data\\대한민국헌법.txt'
+loc = 'C:\\python\\source\\Portpolio\\autocomplete\\data\\eminem.txt'
 
 TRAIN = True
 txt, vocab, vocab_to_char = Util.load_txt_vocab(loc=loc)
@@ -26,8 +26,8 @@ batch_size = 64  # 128
 time_steps = 100  # 50
 shape = [batch_size, time_steps, input_size]
 possible_batch_range = range(data.shape[0] - time_steps - 1)
-epochs = 3000  # 20000
-Generated_sentence_length = 1000  # Number of test characters of text to generate after training the network
+epochs = 10000
+Generated_sentence_length = 1200
 
 # Initialize the network
 config = tf.ConfigProto()
@@ -41,12 +41,29 @@ with tf.Session() as sess:
 
     if ckpt_file == '' or TRAIN:
         stime = time.time()
+        best_loss = np.infty
+        early_stopping_cnt = 0
+
 
         for epoch in range(epochs):
             sstime = time.time()
 
             x_batch, y_batch = Util.make_batch(data, possible_batch_range, shape)
             loss = model.train(x_batch, y_batch)
+
+
+
+            if loss < best_loss :
+                best_loss = loss
+                early_stopping_cnt = 0
+                saver.save(sess, 'C:\\python\\source\\Portpolio\\autocomplete\\log\\model.ckpt')
+            else :
+                early_stopping_cnt += 1
+
+            if early_stopping_cnt >= int(epochs * 0.05) :
+                early_stopping_cnt = 0
+                model.lr /= 10
+                print('Learning rate reduced to', model.lr)
 
             if epoch % 100 == 0 :
                 eetime = time.time()
@@ -56,22 +73,20 @@ with tf.Session() as sess:
         etime = time.time()
         print('Total training Time :', round(etime - stime, 6))
 
-        saver.save(sess, 'C:\\python\\source\\Portpolio\\autocomplete\\log\\model.ckpt')
-
     else:
         saver.restore(sess, ckpt_file)
 
     TEST_PREFIX = TEST_PREFIX.lower()
 
     for idx in range(len(TEST_PREFIX)):
-        out = model.generate(Util.txt_one_hot(TEST_PREFIX[idx], vocab), idx==0)
+        out = model.generate(Util.txt_one_hot(TEST_PREFIX[idx], vocab))
 
     Generated_sentence = TEST_PREFIX
 
     for idx in range(Generated_sentence_length):
         element = np.random.choice(range(len(vocab)), p=out)
         Generated_sentence += vocab_to_char[element]
-        out = model.generate(Util.txt_one_hot(vocab_to_char[element], vocab), False)
+        out = model.generate(Util.txt_one_hot(vocab_to_char[element], vocab))
 
     print('Generated Sentence :\n', Generated_sentence)
 

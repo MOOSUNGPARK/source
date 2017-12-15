@@ -12,9 +12,8 @@ class Model:
         self.in_size = in_size
         self.hidden_size = 256
         self.out_size = out_size
-        self.layers_cnt = 2
-        self.lr = 0.003
-        self.state_size = self.layers_cnt * 2 * self.hidden_size
+        self.layers_cnt = 3
+        self.lr = 0.001
         self.rnn_last_state = None
         self._build_net()
 
@@ -76,7 +75,7 @@ class Model:
                                                                         self.dropout_rate:0.5})
         return loss
 
-    def generate(self, x_data, init_state=True):
+    def generate(self, x_data):
         out, rnn_next_state = self.sess.run([self.final_out, self.rnn_new_state],
                                             feed_dict={self.X:[x_data], self.dropout_rate:1.0})
         self.rnn_last_state = rnn_next_state

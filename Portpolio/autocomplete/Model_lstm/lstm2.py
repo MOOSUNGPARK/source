@@ -10,12 +10,11 @@ class Model:
         self.scope = name
         self.sess = session
         self.in_size = in_size
-        self.hidden_size = 256
+        self.hidden_size = 100
         self.out_size = out_size
-        self.layers_cnt = 3
+        self.layers_cnt = 2
         self.lr = 0.001
-        self.state_size = self.layers_cnt * 2 * self.hidden_size
-        self.rnn_last_state = np.zeros((self.state_size))
+        self.rnn_last_state = None
         self._build_net()
 
     def _build_net(self):
@@ -23,7 +22,6 @@ class Model:
             self.X = tf.placeholder(dtype=tf.float32, shape=[None, None, self.in_size], name='X_data')
             self.Y = tf.placeholder(dtype=tf.float32, shape=[None, None, self.out_size], name='Y_data')
             self.Y_label = tf.reshape(self.Y, [-1, self.out_size])
-            self.rnn_init_value = tf.placeholder(dtype=tf.float32, shape=[None, self.state_size], name='Rnn_init_value')
             self.dropout_rate = tf.placeholder(dtype=tf.float32, name='dropout_rate')
 
         def add_lstm_layer(name):
@@ -35,7 +33,7 @@ class Model:
                     cell = rnn.DropoutWrapper(cell, output_keep_prob=self.dropout_rate)
                 cells.append(cell)
             lstm = rnn.MultiRNNCell(cells, state_is_tuple=False)
-            outputs, state = tf.nn.dynamic_rnn(lstm, self.X, initial_state=self.rnn_init_value,
+            outputs, state = tf.nn.dynamic_rnn(lstm, self.X, initial_state=self.rnn_last_state,
                                                dtype=tf.float32, scope=name)
 
             return outputs, state
@@ -44,7 +42,7 @@ class Model:
             cell = rnn.LayerNormBasicLSTMCell(self.hidden_size, activation=tf.nn.softsign,
                                               dropout_keep_prob=self.dropout_rate, layer_norm=True)
             lstm = rnn.MultiRNNCell([cell] * self.layers_cnt, state_is_tuple=False)
-            outputs, state = tf.nn.dynamic_rnn(lstm, self.X, initial_state=self.rnn_init_value,
+            outputs, state = tf.nn.dynamic_rnn(lstm, self.X, initial_state=self.rnn_last_state,
                                                dtype=tf.float32, scope=name)
             return outputs, state
 
@@ -73,22 +71,14 @@ class Model:
         self.optimizer = tf.train.RMSPropOptimizer(learning_rate=self.lr).minimize(self.loss)
 
     def train(self, x_data, y_data):
-        init_value = np.zeros((len(x_data), self.state_size))
         loss, _ = self.sess.run([self.loss, self.optimizer], feed_dict={self.X:x_data, self.Y:y_data,
-                                                                        self.rnn_init_value: init_value,
                                                                         self.dropout_rate:0.5})
         return loss
 
-    def generate(self, x_data, init_state=True):
-        if init_state:
-            init_value = np.zeros((self.state_size,))
-        else:
-            init_value = self.rnn_last_state
-
+    def generate(self, x_data):
         out, rnn_next_state = self.sess.run([self.final_out, self.rnn_new_state],
-                                            feed_dict={self.X:[x_data], self.rnn_init_value:[init_value],
-                                                       self.dropout_rate:1.0})
-        self.rnn_last_state = rnn_next_state[0]
+                                            feed_dict={self.X:[x_data], self.dropout_rate:1.0})
+        self.rnn_last_state = rnn_next_state
 
         return out[0][0]
 
