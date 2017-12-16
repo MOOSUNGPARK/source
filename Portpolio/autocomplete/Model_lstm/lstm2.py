@@ -27,18 +27,17 @@ class Model:
         def add_lstm_layer(name):
             cells = []
             for idx in range(self.layers_cnt):
-                cell = rnn.BasicLSTMCell(self.hidden_size, forget_bias=1.0, state_is_tuple=False,
-                                         activation=tf.nn.softsign)
+                cell = rnn.BasicLSTMCell(self.hidden_size, forget_bias=1.0, activation=tf.nn.softsign)
                 if not idx == self.layers_cnt - 1 :
                     cell = rnn.DropoutWrapper(cell, output_keep_prob=self.dropout_rate)
                 cells.append(cell)
-            lstm = rnn.MultiRNNCell(cells, state_is_tuple=False)
+            lstm = rnn.MultiRNNCell(cells)
             outputs, state = tf.nn.dynamic_rnn(lstm, self.X, initial_state=self.rnn_last_state,
                                                dtype=tf.float32, scope=name)
 
             return outputs, state
 
-        def add_lstm_layernorm_layer(name):
+        def add_layernorm_lstm_layer(name):
             cell = rnn.LayerNormBasicLSTMCell(self.hidden_size, activation=tf.nn.softsign,
                                               dropout_keep_prob=self.dropout_rate, layer_norm=True)
             lstm = rnn.MultiRNNCell([cell] * self.layers_cnt, state_is_tuple=False)

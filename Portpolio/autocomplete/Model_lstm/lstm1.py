@@ -39,7 +39,7 @@ class Model:
 
             return outputs, state
 
-        def add_lstm_layernorm_layer(name):
+        def add_layernorm_lstm_layer(name):
             cell = rnn.LayerNormBasicLSTMCell(self.hidden_size, activation=tf.nn.softsign,
                                               dropout_keep_prob=self.dropout_rate, layer_norm=True)
             lstm = rnn.MultiRNNCell([cell] * self.layers_cnt, state_is_tuple=False)

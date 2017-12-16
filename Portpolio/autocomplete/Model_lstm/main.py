@@ -3,10 +3,12 @@ import numpy as np
 import time
 import sys
 import Portpolio.autocomplete.Model_lstm.util as Util
-from Portpolio.autocomplete.Model_lstm.lstm2 import Model
+from Portpolio.autocomplete.Model_lstm.lstm4 import Model
+
+# validation / 중간 test / saver
 
 ckpt_file = ""
-TEST_PREFIX = "eminem"  # Prefix to prompt the network in test mode
+TEST_PREFIX = "제1조"  # Prefix to prompt the network in test mode
 
 print("Usage:")
 print('\t\t ', sys.argv[0], ' [ckpt model to load] [prefix, e.g., "The "]')
@@ -16,14 +18,14 @@ if len(sys.argv) == 3:
     TEST_PREFIX = sys.argv[2]
 
 ########################
-loc = 'C:\\python\\source\\Portpolio\\autocomplete\\data\\eminem.txt'
+loc = 'C:\\python\\source\\Portpolio\\autocomplete\\data\\대한민국헌법.txt'
 
 TRAIN = True
 txt, vocab, vocab_to_char = Util.load_txt_vocab(loc=loc)
 data = Util.txt_one_hot(txt, vocab)
 input_size = class_size = len(vocab)
-batch_size = 64  # 128
-time_steps = 100  # 50
+batch_size = 128  # 128
+time_steps = 50  # 50
 shape = [batch_size, time_steps, input_size]
 possible_batch_range = range(data.shape[0] - time_steps - 1)
 epochs = 10000
