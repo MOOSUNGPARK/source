@@ -6,7 +6,6 @@
 
 
 import random
-
 from copy import copy, deepcopy
 
 EMPTY = 0
@@ -49,13 +48,13 @@ def gameover(state):
             if state[i][j] == EMPTY:
                 return EMPTY
     return DRAW
-	
+
 
 class Human(object):
     def __init__(self, player):
         self.player = player
+
     def action(self, state):
-        printboard(state)
         action = None
         while action not in range(1, 10):
             action = int(input('Your move?'))
@@ -71,15 +70,14 @@ class Human(object):
             9: (2, 2)
         }
         return switch_map[action]
-      
+
     def episode_over(self, winner):
         if winner == DRAW:
             print('Game over! It was a draw.')
         else:
             print('Game over! Winner: Player {0}'.format(winner))
 
-			
-			
+
 def play(agent1, agent2):
     state = emptystate()
     for i in range(9):
@@ -89,22 +87,47 @@ def play(agent1, agent2):
             move = agent2.action(state)
         state[move[0]][move[1]] = (i % 2) + 1
         winner = gameover(state)
+
+        printboard(state)
         if winner != EMPTY:
             return winner
-    return winner
-
 
 
 class Sarsa_Agent(object):
-    def __init__(self, player, verbose=False, lossval=0):
+    def __init__(self, player, lossval=0, learning_val=True):
         self.values = {}
         self.player = player
         self.lossval = lossval
-        self.epsilon = 0.1
+        self.learning_val = learning_val
+        self.epsilon = 0.1 if self.learning_val else 0
         self.alpha = 0.99
-        self.gamma = 0.9
+        self.gamma = 0.99
         self.prevstate = None
         self.prevscore = 0
+
+    def statetuple(self, state):
+        return (tuple(state[0]), tuple(state[1]), tuple(state[2]))
+
+    def lookup(self, state):
+        key = self.statetuple(state)
+        if not key in self.values:
+            self.add(key)
+        return self.values[key]
+
+    def add(self, state):
+        winner = gameover(state)
+        tup = self.statetuple(state)
+        self.values[tup] = self.winnerval(winner)
+
+    def winnerval(self, winner):
+        if winner == self.player:
+            return 1
+        elif winner == EMPTY:
+            return 0.5
+        elif winner == DRAW:
+            return 0
+        else:
+            return self.lossval
 
     def episode_over(self, winner):
         self.learning(self.winnerval(winner))
@@ -112,15 +135,12 @@ class Sarsa_Agent(object):
         self.prevscore = 0
 
     def action(self, state):
-        if sum(state[0]+state[1]+state[1]) == 0 :
-            self.gamma = 0.9
-        else:
-            self.gamma *= self.gamma
         r = random.random()
-        if r < self.epsilon :
+        if r < self.epsilon:
             move = self.random(state)
         else:
             move = self.greedy(state)
+
         state[move[0]][move[1]] = self.player
         self.learning(self.lookup(state))
         self.prevstate = self.statetuple(state)
@@ -150,43 +170,22 @@ class Sarsa_Agent(object):
                         maxmove = (i, j)
         return maxmove
 
-    def learning(self, nextval):
-        if self.prevstate != None :
-            self.values[self.prevstate] += self.alpha * ((self.gamma * nextval) - self.prevscore)
+    def learning(self, score):
+        if self.prevstate != None:
+            self.values[self.prevstate] += self.alpha * ((self.gamma * score) - self.prevscore)
 
-    def lookup(self, state):
-        key = self.statetuple(state)
-        if not key in self.values:
-            self.add(key)
-        return self.values[key]
 
-    def add(self, state):
-        winner = gameover(state)
-        tup = self.statetuple(state)
-        self.values[tup] = self.winnerval(winner)
-
-    def winnerval(self, winner):
-        if winner == self.player:
-            return 1
-        elif winner == EMPTY:
-            return 0.5
-        elif winner == DRAW:
-            return 0
-        else:
-            return self.lossval
-
-    def statetuple(self, state):
-        return (tuple(state[0]), tuple(state[1]), tuple(state[2]))
 
 
 class QLearning_Agent(object):
-    def __init__(self, player, verbose=False, lossval=0):
+    def __init__(self, player, verbose=False, lossval=0, learning_val=True):
         self.values = {}
         self.player = player
         self.lossval = lossval
+        self.learning_val = learning_val
         self.epsilon = 0.1
         self.alpha = 0.99
-        self.gamma = 0.9
+        self.gamma = 0.99
         self.prevstate = None
         self.prevscore = 0
 
@@ -196,12 +195,8 @@ class QLearning_Agent(object):
         self.prevscore = 0
 
     def action(self, state):
-        if sum(state[0]+state[1]+state[1]) == 0 :
-            self.gamma = 0.9
-        else:
-            self.gamma *= self.gamma
-
-        if random.random() < self.epsilon :
+        r = random.random()
+        if r < self.epsilon:
             move = self.random(state)
             learning_move = self.greedy(state)
         else:
@@ -234,6 +229,8 @@ class QLearning_Agent(object):
                 if state[i][j] == EMPTY:
                     state[i][j] = self.player
                     val = self.lookup(state)
+                    # if self.learning_val == False:
+                    #     print(str(i * 3 + j + 1), str(val))
                     state[i][j] = EMPTY
                     if val > maxval:
                         maxval = val
@@ -241,7 +238,7 @@ class QLearning_Agent(object):
         return maxmove
 
     def learning(self, nextval):
-        if self.prevstate != None :
+        if self.prevstate != None:
             self.values[self.prevstate] += self.alpha * ((self.gamma * nextval) - self.prevscore)
 
     def lookup(self, state):
@@ -269,21 +266,42 @@ class QLearning_Agent(object):
         return (tuple(state[0]), tuple(state[1]), tuple(state[2]))
 
 
-
 if __name__ == "__main__":
     p1 = Sarsa_Agent(1, lossval=-1)
     p2 = Sarsa_Agent(2, lossval=-1)
-    for i in range(10000):
-        if i % 10 == 0:
-            print('Game: {0}'.format(i))
-        winner = play(p1, p2)
-        p1.episode_over(winner)
-        p2.episode_over(winner)
     while True:
-        p1 = Human(1)
-        winner = play(p1, p2)
-        p1.episode_over(winner)
-        p2.episode_over(winner)
+        winner = play(p1,p2)
 
+
+    p1 = Human(1)
+    p2 = Human(2)
+    while True:
+        winner = play(p1, p2)
+
+    p1 = Human(1)
+    p2 = Human(2)
+    while True:
+        winner = play(p1, p2)
+
+
+
+
+            #
+    #
+    # p1 = Sarsa_Agent(1, lossval=-1)
+    # p2 = Sarsa_Agent(2, lossval=-1)
+    # for i in range(10000):
+    #     if i % 1000 == 0:
+    #         print('Game: {0}'.format(i))
+    #     winner = play(p1, p2)
+    #     p1.episode_over(winner)
+    #     p2.episode_over(winner)
+    #     p1.epsilon = 0
+    #     p2.epsilon = 0
+    # while True:
+    #     print(p1.epsilon)
+    #     winner = play(p1, p2)
+    #     p1.episode_over(winner)
+    #     p2.episode_over(winner)
 
 

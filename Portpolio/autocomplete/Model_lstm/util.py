@@ -40,3 +40,17 @@ def make_batch(data, batch_range, shape):
 
     return x_batch, y_batch
 
+def make_batch2(data, batch_idx_list, shape):
+    batch_size, time_steps, size = shape
+    x_batch = np.zeros((batch_size, time_steps, size))
+    y_batch = np.zeros((batch_size, time_steps, size))
+
+    for step in range(time_steps):
+        x_idx = [idx + step for idx in batch_idx_list]
+        y_idx = [idx + step + 1 for idx in batch_idx_list]
+
+        x_batch[:,step,:] = data[x_idx, :]
+        y_batch[:,step,:] = data[y_idx, :]
+
+    return x_batch, y_batch
+

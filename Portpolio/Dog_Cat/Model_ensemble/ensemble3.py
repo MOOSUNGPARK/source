@@ -51,11 +51,11 @@ class Model():
             def cnn_model():
                 l = add_convlayer('Conv1_sub1', X_img, 3, 20, padding='VALID', pool_yn=False, dropout_yn=False)
                 l = add_convlayer('Conv1_sub2', l, 3, 20, padding='VALID', pool_yn=False, dropout_yn=False)
-                l = add_convlayer('Conv1_sub3', l, 3, 20, padding='VALID')
-                l = add_convlayer('Conv2', l, 3, 40)
+                l = add_convlayer('Conv1_sub3', l, 3, 20, padding='VALID') # 120 * 120 -> 60 * 60
+                l = add_convlayer('Conv2', l, 3, 40) # 60 * 60 * 20 -> 30 * 30 * 40
                 l = add_convlayer('Conv3', l, 3, 80)
                 l = add_convlayer('Conv4', l, 3, 160)
-                l = add_convlayer('Conv5', l, 3, 320)
+                l = add_convlayer('Conv5', l, 3, 320) # 4 * 4 * 320 shape= [None, 4, 4, 320]
                 l = tf.reshape(l, shape = [-1, 4 * 4 * 320])
                 l = dropout(inputs=l, keep_prob=self.dropout_rate, is_training=self.training)
                 l = add_fclayer('Fc1', l, 4 * 4 * 320, 1000)

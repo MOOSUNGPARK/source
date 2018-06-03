@@ -3,12 +3,12 @@ import numpy as np
 import time
 import sys
 import Portpolio.autocomplete.Model_lstm.util as Util
-from Portpolio.autocomplete.Model_lstm.lstm4 import Model
+from Portpolio.autocomplete.Model_lstm.lstm1 import Model
 
 # validation / 중간 test / saver
 
 ckpt_file = ""
-TEST_PREFIX = "제1조"  # Prefix to prompt the network in test mode
+TEST_PREFIX = "내 랩은 "  # Prefix to prompt the network in test mode
 
 print("Usage:")
 print('\t\t ', sys.argv[0], ' [ckpt model to load] [prefix, e.g., "The "]')
@@ -18,18 +18,19 @@ if len(sys.argv) == 3:
     TEST_PREFIX = sys.argv[2]
 
 ########################
-loc = 'C:\\python\\source\\Portpolio\\autocomplete\\data\\대한민국헌법.txt'
+loc = 'C:\\python\\source\\Portpolio\\autocomplete\\data\\랩4.txt'
 
 TRAIN = True
 txt, vocab, vocab_to_char = Util.load_txt_vocab(loc=loc)
 data = Util.txt_one_hot(txt, vocab)
 input_size = class_size = len(vocab)
-batch_size = 128  # 128
-time_steps = 50  # 50
+batch_size = 256  # 128
+time_steps = 40  # 50
 shape = [batch_size, time_steps, input_size]
 possible_batch_range = range(data.shape[0] - time_steps - 1)
 epochs = 10000
-Generated_sentence_length = 1200
+Generated_sentence_length = 600
+topn_words_show = 5
 
 # Initialize the network
 config = tf.ConfigProto()
@@ -54,7 +55,6 @@ with tf.Session() as sess:
             loss = model.train(x_batch, y_batch)
 
 
-
             if loss < best_loss :
                 best_loss = loss
                 early_stopping_cnt = 0
@@ -70,6 +70,22 @@ with tf.Session() as sess:
             if epoch % 100 == 0 :
                 eetime = time.time()
                 print('Epoch :', epoch, '\t\tLoss :', loss, '\t\tConsumption Time :', round( (eetime - sstime) * 100, 6))
+
+                for idx in range(len(TEST_PREFIX)):
+                    out = model.generate(Util.txt_one_hot(TEST_PREFIX[idx], vocab))
+
+            if epoch % 1000 == 0 :
+                Generated_sentence = TEST_PREFIX
+
+                for idx in range(int(Generated_sentence_length * 0.1)):
+                    out[np.argsort(out)[:-topn_words_show]] = 0
+                    out = out / np.sum(out)
+                    element = np.random.choice(range(len(vocab)), p=out)
+                    Generated_sentence += vocab_to_char[element]
+                    out = model.generate(Util.txt_one_hot(vocab_to_char[element], vocab))
+                Model.rnn_last_state = None
+
+                print('Generated Sentence :\n', Generated_sentence)
 
         print('Learning Finished!')
         etime = time.time()

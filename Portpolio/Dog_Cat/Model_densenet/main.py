@@ -5,11 +5,12 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageGrab
 from drawnow import drawnow
-from Portpolio.Dog_Cat.Model_densenet.densenet4 import Model
+from Portpolio.Dog_Cat.Model_densenet.densenet9 import Model
 
-epochs = 30
+epochs = 50
 batch_size = 50
 value_num = 3
+layer_cnt = 40
 label_cnt = 2
 
 # train_file = 'c:\\python\\source\\Portpolio\\Dog_Cat\\data\\train_data.csv'
@@ -65,7 +66,7 @@ def restore_model_params(model_params):
 with tf.Session() as sess:
     stime = time.time()
 
-    m = Model(sess, 40, label_cnt)
+    m = Model(sess, layer_cnt, label_cnt)
 
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
@@ -92,7 +93,7 @@ with tf.Session() as sess:
         validation_loss = 0.
 
         if epoch+1 in (int(0.5 * epochs), int(0.75 * epochs)):
-            m.learning_rate = m.learning_rate / 10
+            m.learning_rate /= 10
 
         for idx in range(0, len(train_file_list), 2):
             train_total_x, train_total_y, train_total_size = read_data(train_file_list[idx], train_file_list[idx+1])
