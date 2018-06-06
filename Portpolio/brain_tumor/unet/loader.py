@@ -680,6 +680,16 @@ class DataLoader:
 
         return trainX, trainY, valX, valY
 
+    # 1. INTER_NEAREST is the fastest method and creates blocky images by just
+    # choosing 1 pixel to replace several pixels.
+    # 2. INTER_AREA is a fast method that gets the average of several pixels, which
+    # is good for shrinking an image but not so good for enlarging an image.
+    # 3. INTER_LINEAR uses bilinear interpolation to resize the image by combining
+    # several pixels nicely (the best choice in many situations).
+    # 4. INTER_CUBIC uses bicubic interpolation to use more advanced resizing that
+    # linear, so is slightly slower but looks slightly better sometimes and
+    # slightly worse other times.
+
     def read_image_grey_resized(self, data_list):
         if type(data_list) != str:
             data_list = data_list
