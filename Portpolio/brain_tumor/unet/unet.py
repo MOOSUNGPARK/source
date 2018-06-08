@@ -53,6 +53,10 @@ class Model:
             self.X = tf.placeholder(tf.float32, [self.batch_size, n_channel, img_size, img_size], name='X')
             self.Y = tf.placeholder(tf.float32, [self.batch_size, n_class, img_size, img_size], name='Y')
 
+
+
+
+
         # 네트워크의 출력 결과물입니다.
         self.logits = self.neural_net()
 

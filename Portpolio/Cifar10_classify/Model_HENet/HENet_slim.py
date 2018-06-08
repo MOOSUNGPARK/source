@@ -213,7 +213,7 @@ class HENet():
                         with slim.arg_scope([slim.batch_norm],
                                             is_training = self.training,
                                             scale = True,
-                                            decay = cfg.BATCHNORM_DECAY_RATE,
+                                            decay2 = cfg.BATCHNORM_DECAY_RATE,
                                             zero_debias_moving_mean = True,
                                             activation_fn = self.select_activation_fn(cfg.ACTIVATION_FN),
                                             fused = True):
@@ -259,4 +259,5 @@ class HENet():
             return self.swish
 
         elif fn.lower() == 'elu' :
+
             return tf.nn.elu

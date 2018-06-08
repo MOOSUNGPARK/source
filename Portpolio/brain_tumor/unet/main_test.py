@@ -1,5 +1,5 @@
 """
-2D U-net을 기반으로한 이미지 세그먼테이션 테스트 모듈입니다. main_test.py로 구동을 하며 Tester.py가 학습모듈, unet.py가 모델모듈, loader.py가 데이터로딩모듈, utils.py가 모델에서 사용하는 함수들이 담긴 모듈입니다.
+2D U-net을 기반으로한 이미지 세그먼테이션 테스트 모듈입니다. main_test.py로 구동을 하며 Tester.py가 학습모듈, Unet.py가 모델모듈, loader.py가 데이터로딩모듈, utils.py가 모델에서 사용하는 함수들이 담긴 모듈입니다.
 
 main_test.py는 학습을 실행시키는 메인 파일로 파일 경로와 기초적인 하이퍼 파라메터의 값을 넣어줍니다.
 

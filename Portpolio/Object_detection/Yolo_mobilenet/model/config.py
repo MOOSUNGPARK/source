@@ -2,8 +2,10 @@ import os
 
 
 ############### DATA SET & PATH ###############
-TRAIN_DATA_PATH = 'C:\\python\\source\\Portpolio\\Object_detection\\Yolo_mobilenet\\data\\train'
-TEST_DATA_PATH = 'C:\\python\\source\\Portpolio\\Object_detection\\Yolo_mobilenet\\data\\test'
+TRAIN_DATA_PATH = 'D:\\dataset\\PASCAL_VOC2007\\data\\train'
+TEST_DATA_PATH = 'D:\\dataset\\PASCAL_VOC2007\\data\\test'
+
+
 PASCAL_PATH = os.path.join(TRAIN_DATA_PATH, 'pascal_voc')
 CACHE_PATH = os.path.join(PASCAL_PATH, 'cache')
 OUTPUT_DIR = os.path.join(PASCAL_PATH, 'output')

@@ -2,9 +2,9 @@
 2D U-net Based Image Segmentation Deep-learning module.
 'main_train.py' for train run,
 'main_test.py' for test run,
-'unet.py' for model,
+'Unet.py' for model,
 'loader.py' for data load pipeline,
-'utils.py' for utility functions used at 'unet.py',
+'utils.py' for utility functions used at 'Unet.py',
 'performance_eval.py' for tensorboard,
 'Trainer.py' for training pipeline,
 'Tester.py' for testing pipeline.
@@ -84,8 +84,8 @@ if __name__ == "__main__":
     label_only_data_path = '/home/bjh/new_train_img_label_only'
     filtered_label_only_data_path = '/home/bjh/new_train_img_label_filtered/abnorm'
 
-    tr_seperated_data_path = '/home/bjh/Brain_Aneurysm_new_dataset/train'
-    val_seperated_data_path = '/home/bjh/Brain_Aneurysm_new_dataset/test'
+    tr_seperated_data_path = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\train\\'
+    val_seperated_data_path = 'D:\\dataset\\Brain_Aneurysm_new_dataset\\test\\'
 
     # unet_trainer = Trainer(training_data_path=[filtered_label_only_data_path], model_path='./model', validation_percentage=10,
     #                        initial_learning_rate=0.004, decay_step=2500, decay_rate=0.9, epoch=200, img_size=256,

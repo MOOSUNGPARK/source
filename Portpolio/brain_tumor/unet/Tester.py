@@ -6,7 +6,7 @@
 
 import tensorflow as tf
 import loader
-import unet
+import Unet
 import time
 import os
 import cv2
@@ -38,7 +38,7 @@ class Tester:
         # 데이터로더 모듈로 학습데이터와 라벨데이터의 경로리스트와 데이터셋 개수를 가져옵니다
         self.img_list, self.data_count = self.data_loader.data_list_load(self.test_path, mode='test')
 
-        self.model = unet.Model(upsampling_mode=self.upsampling_mode, downsampling_option=self.downsampling_option,
+        self.model = Unet.Model(upsampling_mode=self.upsampling_mode, downsampling_option=self.downsampling_option,
                                 normalization_mode=self.normalization_mode, img_size=img_size,
                                 n_channel=1, n_class=self.label_channel,
                                 batch_size=self.batch_size, model_root_channel=self.model_root_channel)
