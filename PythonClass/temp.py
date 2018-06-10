@@ -24,7 +24,16 @@ import numpy as np
 # print(np.shape(a))
 # print(len(np.shape(a)))
 
-a, b, c = [], [], []
-print(a)
-print(b)
-print(c)
+# a, b, c = [], [], []
+# print(a)
+# print(b)
+# print(c)
+
+a = 'label2'
+b = 'label'
+
+if 'label' in a :
+    print('a')
+
+if 'label' in b:
+    print('b')
