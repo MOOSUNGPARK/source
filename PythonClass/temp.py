@@ -32,8 +32,12 @@ import numpy as np
 a = 'label2'
 b = 'label'
 
-if 'label' in a :
-    print('a')
+# if 'label' in a :
+#     print('a')
+#
+# if 'label' in b:
+#     print('b')
 
-if 'label' in b:
-    print('b')
+c = ['1', '2', '3']
+d = [i + a for i in c]
+print(d)
