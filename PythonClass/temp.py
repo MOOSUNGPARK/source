@@ -38,6 +38,6 @@ b = 'label'
 # if 'label' in b:
 #     print('b')
 
-c = ['1', '2', '3']
-d = [i + a for i in c]
-print(d)
+dir_name = ['merged', 'pred', 'label', 'compare']
+path_list = [('{0}imgs{0}{1}{0}' + name).format(1, 2) for name in dir_name]
+print(path_list)
