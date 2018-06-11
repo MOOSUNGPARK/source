@@ -43,10 +43,10 @@ class densenet():
 
                 with tf.variable_scope(name):
                     l = convlayer(name + '_bottle', l, 1, 4 * cfg.GROWTH_RATE, 1)
-                    l = slim.dropout(l, scope = name + '_bottle_dropout')
+                    l = slim.dropout(l, scope = name + '_bottle_dropout1')
 
-                    l = convlayer(name + '_bottle', l, 3, cfg.GROWTH_RATE, 1)
-                    l = slim.dropout(l, scope=name + '_bottle_dropout')
+                    l = convlayer(name + '_notbottle', l, 3, cfg.GROWTH_RATE, 1)
+                    l = slim.dropout(l, scope=name + '_bottle_dropout2')
 
                 return l
 
