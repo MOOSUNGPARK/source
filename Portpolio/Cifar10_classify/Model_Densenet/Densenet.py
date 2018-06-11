@@ -136,17 +136,17 @@ class densenet():
 
                             l = dense_block('dense_block2', l, 12)
                             print(l)
-                            l = transition_layer('transition1', l, 196)
+                            l = transition_layer('transition2', l, 196)
                             print(l)
 
                             l = dense_block('dense_block3', l, 24)
                             print(l)
-                            l = transition_layer('transition1', l, 232)
+                            l = transition_layer('transition3', l, 232)
                             print(l)
 
                             l = dense_block('dense_block4', l, 16)
                             print(l)
-                            l = transition_layer('transition1', l, 260)
+                            l = transition_layer('transition4', l, 260)
                             print(l)
 
                             logits = global_avgpooling('GAP', l)
