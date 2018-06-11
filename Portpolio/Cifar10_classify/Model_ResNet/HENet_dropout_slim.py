@@ -37,6 +37,8 @@ class HENet():
                                     )
                     l = slim.batch_norm(l, scope = name + '_batchnorm')
 
+                    l = slim.dropout(l, scope = name + '_dropout')
+
                     return l
 
 
@@ -74,6 +76,8 @@ class HENet():
                         l = slim.batch_norm(l, scope = name + '_batchnorm')
                     else :
                         l = slim.batch_norm(l, activation_fn = None, scope = name + '_batchnorm')
+
+                    l = slim.dropout(l, scope = name + '_dropout')
 
                     return l
 
@@ -217,20 +221,23 @@ class HENet():
                                             zero_debias_moving_mean = True,
                                             activation_fn = self.select_activation_fn(cfg.ACTIVATION_FN),
                                             fused = True):
+                            with slim.arg_scope([slim.dropout],
+                                                is_training = self.training,
+                                                keep_prob = cfg.DROPOUT_KEEP_PROB):
 
-                            l = convlayer('conv0', self.X, 24, 1)
-                            print(l)
-                            l = stage('stage1', l, 24, 48, 6, 4, 3)
-                            print(l)
-                            l = stage('stage2', l, 48, 96, 8, 6, 3)
-                            print(l)
-                            l = stage('stage3', l, 96, 96, 12, 8, 3)
-                            print(l)
-                            l = stage('stage4', l, 96, 192, 12, 8, 1, last_stage = True)
-                            print(l)
-                            l = tf.reshape(l, shape=[-1, 192])
-                            print(l)
-                            logits = fclayer('fc5', l, self.label_cnt, out_layer=True)
+                                l = convlayer('conv0', self.X, 24, 1)
+                                print(l)
+                                l = stage('stage1', l, 24, 48, 6, 4, 3)
+                                print(l)
+                                l = stage('stage2', l, 48, 96, 8, 6, 3)
+                                print(l)
+                                l = stage('stage3', l, 96, 96, 12, 8, 3)
+                                print(l)
+                                l = stage('stage4', l, 96, 192, 12, 8, 1, last_stage = True)
+                                print(l)
+                                l = tf.reshape(l, shape=[-1, 192])
+                                print(l)
+                                logits = fclayer('fc5', l, self.label_cnt, out_layer=True)
 
                 return logits
 
