@@ -39,7 +39,7 @@ class resnet():
 
                     return l
 
-            def residual_block(name, l, num_filter, stride) :
+            def residual_block(name, l, num_filter, stride, shortcut=True) :
 
                 with tf.variable_scope(name):
 
@@ -69,7 +69,7 @@ class resnet():
                                      scope = name + '_bottleneck2')
 
                     # Element wise add
-                    hl = fl + l
+                    hl = fl + l if shortcut else fl
 
                     hl = slim.batch_norm(hl, scope = name + '_batchnorm3')
 
@@ -109,7 +109,7 @@ class resnet():
                         with slim.arg_scope([slim.batch_norm],
                                             is_training = self.training,
                                             scale = True,
-                                            decay2 = cfg.BATCHNORM_DECAY_RATE,
+                                            decay = cfg.BATCHNORM_DECAY_RATE,
                                             zero_debias_moving_mean = True,
                                             activation_fn = self.select_activation_fn(cfg.ACTIVATION_FN),
                                             fused = True):
@@ -118,35 +118,36 @@ class resnet():
                             l = convlayer('conv0', self.X, 64, 1)
                             print(l)
 
-                            l = residual_block('res_block1', l, 64, 2)
+                            l = residual_block('res_block1', l, 64, 2, shortcut=False)
                             print(l)
                             l = residual_block('res_block2', l, 64, 1)
                             print(l)
                             l = residual_block('res_block3', l, 64, 1)
                             print(l)
 
-                            l = residual_block('res_block1', l, 128, 2)
+                            l = residual_block('res_block1', l, 128, 2, shortcut=False)
                             print(l)
                             l = residual_block('res_block1', l, 128, 1)
                             print(l)
                             l = residual_block('res_block1', l, 128, 1)
                             print(l)
                             l = residual_block('res_block1', l, 128, 1)
-
-                            l = residual_block('res_block1', l, 256, 2)
-                            print(l)
-                            l = residual_block('res_block1', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block1', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block1', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block1', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block1', l, 256, 1)
                             print(l)
 
-                            l = residual_block('res_block1', l, 512, 2)
+                            l = residual_block('res_block1', l, 256, 2, shortcut=False)
+                            print(l)
+                            l = residual_block('res_block1', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block1', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block1', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block1', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block1', l, 256, 1)
+                            print(l)
+
+                            l = residual_block('res_block1', l, 512, 2, shortcut=False)
                             print(l)
                             l = residual_block('res_block1', l, 512, 1)
                             print(l)
