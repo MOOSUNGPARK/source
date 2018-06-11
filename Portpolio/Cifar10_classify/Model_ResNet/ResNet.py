@@ -94,7 +94,7 @@ class resnet():
                                      )
                     l = tf.nn.avg_pool(l,
                                        ksize=[1, ksize, ksize, 1],
-                                       strides=1,
+                                       strides=[1, 1, 1, 1],
                                        padding='VALID',
                                        name = name + '_GAP_Avgpool'
                                        )
