@@ -158,7 +158,7 @@ class resnet():
                             l = residual_block('res_block16', l, 512, 1)
                             print(l)
 
-                            ksize, nchannel = tf.shape(l)[1], tf.shape(l)[-1]
+                            ksize = l.get_shape().as_list()[1]
                             logits = tf.nn.avg_pool(l,
                                                     ksize=[1, ksize, ksize, 1],
                                                     strides=[1, 1, 1, 1],
