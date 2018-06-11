@@ -59,8 +59,11 @@ a = '.\\'
 
 print((a + '{}_{}_{}_{}'.format(*b)))
 
-
-
+a = '1'
+b = [12,4]
+print(type(a))
+if type(a) == str :
+    print(1)
 
 import PythonClass.note
 #
