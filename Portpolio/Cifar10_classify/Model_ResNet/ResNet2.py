@@ -79,10 +79,10 @@ class resnet():
 
                 with tf.variable_scope(name):
                     ksize = l.get_shape().as_list()[1]
-                    num_filter= l.get_shape().as_list()[-1]
+                    nchannel= l.get_shape().as_list()[-1]
 
                     gap_filter = tf.get_variable(name='gap_filter',
-                                                 shape=[1, 1, num_filter, cfg.LABEL_CNT],
+                                                 shape=[1, 1, nchannel, cfg.LABEL_CNT],
                                                  dtype=tf.float32,
                                                  initializer=variance_scaling_initializer()
                                                  )
@@ -101,24 +101,6 @@ class resnet():
                     l = tf.reduce_mean(l, axis=[1,2]
                                        )
 
-                return l
-
-            def residual_block_layer(l, num_blocks, num_filter, start_idx):
-                l = residual_block('res_block' + str(start_idx),
-                                   l,
-                                   num_filter,
-                                   2,
-                                   shortcut=False
-                                   )
-                print(l)
-
-                for idx in range(num_blocks -1):
-                    l = residual_block('res_block' + str(start_idx + idx + 1),
-                                       l,
-                                       num_filter,
-                                       1
-                                       )
-                    print(l)
                 return l
 
             def cnn_model():
@@ -140,11 +122,51 @@ class resnet():
 
                             l = convlayer('conv0', self.X, 64, 1)
                             print(l)
-                            l = residual_block_layer(l, 3, 64, 1)
-                            l = residual_block_layer(l, 4, 128, 4)
-                            l = residual_block_layer(l, 6, 256, 8)
-                            l = residual_block_layer(l, 3, 512, 14)
+
+                            l = residual_block('res_block1', l, 64, 2, shortcut=False)
+                            print(l)
+                            l = residual_block('res_block2', l, 64, 1)
+                            print(l)
+                            l = residual_block('res_block3', l, 64, 1)
+                            print(l)
+
+                            l = residual_block('res_block4', l, 128, 2, shortcut=False)
+                            print(l)
+                            l = residual_block('res_block5', l, 128, 1)
+                            print(l)
+                            l = residual_block('res_block6', l, 128, 1)
+                            print(l)
+                            l = residual_block('res_block7', l, 128, 1)
+                            print(l)
+
+                            l = residual_block('res_block8', l, 256, 2, shortcut=False)
+                            print(l)
+                            l = residual_block('res_block9', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block10', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block11', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block12', l, 256, 1)
+                            print(l)
+                            l = residual_block('res_block13', l, 256, 1)
+                            print(l)
+
+                            l = residual_block('res_block14', l, 512, 2, shortcut=False)
+                            print(l)
+                            l = residual_block('res_block15', l, 512, 1)
+                            print(l)
+                            l = residual_block('res_block16', l, 512, 1)
+                            print(l)
+
+                            # ksize = l.get_shape().as_list()[1]
+                            # l = tf.nn.avg_pool(l, ksize=[1, ksize, ksize, 1], strides=[1, 1, 1, 1], padding='VALID')
+
                             logits = global_avgpooling('GAP', l)
+                            # print(l)
+                            # l = tf.reshape(l, shape=[-1, 512])
+                            # print(l)
+                            # logits = fclayer('fc17', l, self.label_cnt, out_layer=True)
                             print(logits)
 
                 return logits
