@@ -177,10 +177,11 @@ class resnet():
                             # ksize = l.get_shape().as_list()[1]
                             # l = tf.nn.avg_pool(l, ksize=[1, ksize, ksize, 1], strides=[1, 1, 1, 1], padding='VALID')
 
-                            l = global_avgpooling('GAP', l)
-                            l = tf.reshape(l, shape=[-1, 512])
-                            print(l)
-                            logits = fclayer('fc17', l, self.label_cnt, out_layer=True)
+                            logits = global_avgpooling('GAP', l)
+                            # print(l)
+                            # l = tf.reshape(l, shape=[-1, 512])
+                            # print(l)
+                            # logits = fclayer('fc17', l, self.label_cnt, out_layer=True)
                             print(logits)
 
                 return logits
