@@ -29,15 +29,44 @@ import numpy as np
 # print(b)
 # print(c)
 
-a = 'label2'
-b = 'label'
-
-# if 'label' in a :
-#     print('a')
+# a = 'label2'
+# b = 'label'
 #
-# if 'label' in b:
-#     print('b')
+# # if 'label' in a :
+# #     print('a')
+# #
+# # if 'label' in b:
+# #     print('b')
+#
+# dir_name = ['merged', 'pred', 'label', 'compare']
+# path_list = [('{0}imgs{0}{1}{0}' + name).format(1, 2) for name in dir_name]
+# print(path_list)
+#
+# import time
+# # year,mon,day,hour,min, *_ = time.localtime()
+#
+# # print(year, mon, day, hour, min)
+# a = [None] * 5
+# print(a)
+import time
+#
+*b, _, _, _, _= time.localtime()
 
-dir_name = ['merged', 'pred', 'label', 'compare']
-path_list = [('{0}imgs{0}{1}{0}' + name).format(1, 2) for name in dir_name]
-print(path_list)
+print(b)
+
+
+a = '.\\'
+
+print((a + '{}_{}_{}_{}'.format(*b)))
+
+
+
+
+import PythonClass.note
+#
+# path = '.\\note.py'
+# with open(path, 'rt') as f:
+#     data = f.read()
+#
+# with open('.\\a.txt', 'at') as f:
+#     f.write(data + '\n')
