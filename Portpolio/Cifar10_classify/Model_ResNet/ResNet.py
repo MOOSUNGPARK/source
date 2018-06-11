@@ -66,8 +66,8 @@ class resnet():
                                      num_outputs = num_filter,
                                      kernel_size = 1,
                                      stride = 1,
-                                     scope = name + '_bottleneck2')
-
+                                     scope = name + '_bottleneck2'
+                                     )
                     # Element wise add
                     hl = fl + l if shortcut else fl
 
@@ -75,26 +75,30 @@ class resnet():
 
                     return hl
 
-            def global_avgpooling(name, l):
-
-                with tf.variable_scope(name):
-                    ksize, nchannel = tf.shape(l)[1], tf.shape(l)[-1]
-
-                    gap_filter = tf.get_variable(name='gap_filter',
-                                                 shape=[1, 1, nchannel, cfg.LABEL_CNT],
-                                                 dtype=tf.float32,
-                                                 initializer=variance_scaling_initializer())
-                    l = tf.nn.conv2d(l,
-                                     filter =gap_filter,
-                                     strides=[1, 1, 1, 1],
-                                     padding='SAME',
-                                     name= name + '_GAP_Conv' )
-                    l = tf.nn.avg_pool(l,
-                                       ksize=[1, ksize, ksize, 1],
-                                       strides=1,
-                                       padding='VALID',
-                                       name = name + '_GAP_Avgpool')
-                    l = tf.reduce_mean(l, axis=[1,2])
+            # def global_avgpooling(name, l):
+            #
+            #     with tf.variable_scope(name):
+            #         ksize, nchannel = tf.shape(l)[1], tf.shape(l)[-1]
+            #
+            #         gap_filter = tf.get_variable(name='gap_filter',
+            #                                      shape=[1, 1, nchannel, cfg.LABEL_CNT],
+            #                                      dtype=tf.float32,
+            #                                      initializer=variance_scaling_initializer()
+            #                                      )
+            #         l = tf.nn.conv2d(l,
+            #                          filter =gap_filter,
+            #                          strides=[1, 1, 1, 1],
+            #                          padding='SAME',
+            #                          name= name + '_GAP_Conv'
+            #                          )
+            #         l = tf.nn.avg_pool(l,
+            #                            ksize=[1, ksize, ksize, 1],
+            #                            strides=1,
+            #                            padding='VALID',
+            #                            name = name + '_GAP_Avgpool'
+            #                            )
+            #         l = tf.reduce_mean(l, axis=[1,2]
+            #                            )
 
                 return l
 
@@ -154,7 +158,14 @@ class resnet():
                             l = residual_block('res_block16', l, 512, 1)
                             print(l)
 
-                            logits = global_avgpooling('GAP', l)
+                            ksize, nchannel = tf.shape(l)[1], tf.shape(l)[-1]
+                            logits = tf.nn.avg_pool(l,
+                                                    ksize=[1, ksize, ksize, 1],
+                                                    strides=[1, 1, 1, 1],
+                                                    padding='VALID')
+
+
+                            # logits = global_avgpooling('GAP', l)
                             print(logits)
 
                 return logits
