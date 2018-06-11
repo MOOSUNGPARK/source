@@ -59,8 +59,8 @@ class densenet():
                                 scope = name + '_conv')
 
                 l = tf.nn.avg_pool(l,
-                                   ksize=2,
-                                   strides=2,
+                                   ksize = [1, 2, 2, 1],
+                                   strides = [1, 2, 2, 1],
                                    padding='SAME',
                                    name = name + '_Avgpool'
                                    )
