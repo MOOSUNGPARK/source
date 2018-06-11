@@ -100,7 +100,22 @@ class resnet():
             #         l = tf.reduce_mean(l, axis=[1,2]
             #                            )
 
+                # return l
+
+
+
+            def fclayer(name, l, num_filter, out_layer=False, dropout_yn=False):
+
+                with tf.variable_scope(name):
+                    l = slim.fully_connected(l, num_filter, activation_fn=None, scope = name + '_fc')
+
+                    if not out_layer:
+                        l = slim.batch_norm(inputs=l, scope = name + '_batchnorm')
+
+                        if dropout_yn:
+                            l = slim.dropout(l, scope=name + '_dropout')
                 return l
+
 
             def cnn_model():
 
@@ -159,13 +174,10 @@ class resnet():
                             print(l)
 
                             ksize = l.get_shape().as_list()[1]
-                            logits = tf.nn.avg_pool(l,
-                                                    ksize=[1, ksize, ksize, 1],
-                                                    strides=[1, 1, 1, 1],
-                                                    padding='VALID')
-
-
-                            # logits = global_avgpooling('GAP', l)
+                            l = tf.nn.avg_pool(l, ksize=[1, ksize, ksize, 1], strides=[1, 1, 1, 1], padding='VALID')
+                            l = tf.reshape(l, shape=[-1, 512])
+                            print(l)
+                            logits = fclayer('fc17', l, self.label_cnt, out_layer=True)
                             print(logits)
 
                 return logits
