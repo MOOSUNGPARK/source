@@ -47,23 +47,23 @@ import numpy as np
 #
 # # print(year, mon, day, hour, min)
 # a = [None] * 5
-# print(a)
-import time
+# # print(a)
+# import time
+# #
+# *b, _, _, _, _= time.localtime()
 #
-*b, _, _, _, _= time.localtime()
-
-print(b)
-
-
-a = '.\\'
-
-print((a + '{}_{}_{}_{}'.format(*b)))
-
-a = '1'
-b = [12,4]
-print(type(a))
-if type(a) == str :
-    print(1)
+# print(b)
+#
+#
+# a = '.\\'
+#
+# print((a + '{}_{}_{}_{}'.format(*b)))
+#
+# a = '1'
+# b = [12,4]
+# print(type(a))
+# if type(a) == str :
+#     print(1)
 
 import PythonClass.note
 #
@@ -73,3 +73,12 @@ import PythonClass.note
 #
 # with open('.\\a.txt', 'at') as f:
 #     f.write(data + '\n')
+
+# a = [ 1,2,3,4,5,6 ]
+# b, c = a[0], a[2]
+# for idx, i in enumerate(a, 3):
+#     print(idx, i)
+
+
+for idx in range(5,2):
+    print(idx)

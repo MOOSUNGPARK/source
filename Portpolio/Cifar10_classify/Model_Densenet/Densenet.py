@@ -50,14 +50,16 @@ class densenet():
 
                 return l
 
-            def transition_layer(name, l, num_filter):
+            def transition_layer(name, l):
+                num_filter = l.get_shape().as_list()[-1]
+
                 l = slim.batch_norm(l, activation_fn = None, scope = name + '_batchnorm')
                 l = slim.conv2d(l,
                                 num_outputs = cfg.THETA * num_filter,
                                 kernel_size = 1,
                                 stride = 1,
-                                scope = name + '_conv')
-
+                                scope = name + '_conv'
+                                )
                 l = tf.nn.avg_pool(l,
                                    ksize = [1, 2, 2, 1],
                                    strides = [1, 2, 2, 1],
@@ -68,7 +70,6 @@ class densenet():
 
             def dense_block(name, l, num_layer):
                 hl = tf.identity(l)
-
 
                 for idx in range(num_layer):
                     l = dense_layer(name + '_layer{}'.format(idx), hl)
@@ -107,7 +108,7 @@ class densenet():
 
             def cnn_model():
 
-                with tf.variable_scope('resnet'):
+                with tf.variable_scope('densenet'):
                     with slim.arg_scope([slim.conv2d, slim.separable_convolution2d, slim.fully_connected],
                                         activation_fn = None,
                                         weights_initializer  = variance_scaling_initializer(),
@@ -120,33 +121,29 @@ class densenet():
                                             zero_debias_moving_mean = True,
                                             activation_fn = self.select_activation_fn(cfg.ACTIVATION_FN),
                                             fused = True):
-                            # def residual_block(name, l, num_filter, stride):
 
 
                             l = convlayer('conv0', self.X, 3, 24, 1)
                             print(l)
 
-                            # def dense_block(name, l, num_layer):
-                            # def transition_layer(name, l, num_filter):
-
                             l = dense_block('dense_block1', l, 6)
                             print(l)
-                            l = transition_layer('transition1', l, 96)
+                            l = transition_layer('transition1', l)
                             print(l)
 
                             l = dense_block('dense_block2', l, 12)
                             print(l)
-                            l = transition_layer('transition2', l, 196)
+                            l = transition_layer('transition2', l)
                             print(l)
 
                             l = dense_block('dense_block3', l, 24)
                             print(l)
-                            l = transition_layer('transition3', l, 232)
+                            l = transition_layer('transition3', l)
                             print(l)
 
                             l = dense_block('dense_block4', l, 16)
                             print(l)
-                            l = transition_layer('transition4', l, 260)
+                            l = transition_layer('transition4', l)
                             print(l)
 
                             logits = global_avgpooling('GAP', l)

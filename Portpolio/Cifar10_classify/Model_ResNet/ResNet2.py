@@ -81,6 +81,7 @@ class resnet():
                     ksize = l.get_shape().as_list()[1]
                     nchannel= l.get_shape().as_list()[-1]
 
+                    # gap_filter shape = [h,w,input_filter, output_filter]
                     gap_filter = tf.get_variable(name='gap_filter',
                                                  shape=[1, 1, nchannel, cfg.LABEL_CNT],
                                                  dtype=tf.float32,
@@ -159,14 +160,7 @@ class resnet():
                             l = residual_block('res_block16', l, 512, 1)
                             print(l)
 
-                            # ksize = l.get_shape().as_list()[1]
-                            # l = tf.nn.avg_pool(l, ksize=[1, ksize, ksize, 1], strides=[1, 1, 1, 1], padding='VALID')
-
                             logits = global_avgpooling('GAP', l)
-                            # print(l)
-                            # l = tf.reshape(l, shape=[-1, 512])
-                            # print(l)
-                            # logits = fclayer('fc17', l, self.label_cnt, out_layer=True)
                             print(logits)
 
                 return logits

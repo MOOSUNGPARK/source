@@ -81,6 +81,7 @@ class resnet():
                     ksize = l.get_shape().as_list()[1]
                     num_filter= l.get_shape().as_list()[-1]
 
+                    # gap_filter shape = [h,w,input_filter, output_filter]
                     gap_filter = tf.get_variable(name='gap_filter',
                                                  shape=[1, 1, num_filter, cfg.LABEL_CNT],
                                                  dtype=tf.float32,
