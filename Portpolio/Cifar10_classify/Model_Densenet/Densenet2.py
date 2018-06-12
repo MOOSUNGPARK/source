@@ -3,7 +3,7 @@ from tensorflow.contrib.layers import *
 import tensorflow.contrib.slim as slim
 import config as cfg
 
-class resnet():
+class densenet():
     def __init__(self, name, label_cnt):
         self.name = name
         self.label_cnt = label_cnt
@@ -25,64 +25,68 @@ class resnet():
                                                                 cfg.DECAY_RATE,
                                                                 cfg.STAIRCASE, name='learning_rate')
 
-            def convlayer(name, l, num_filter, stride) :
+
+            # BN - Relu - Conv
+            def convlayer(name, l, kernel_size, num_filter, stride) :
 
                 with tf.variable_scope(name):
-
+                    l = slim.batch_norm(l, scope = name + '_batchnorm')
                     l = slim.conv2d(l,
                                     num_outputs = num_filter,
-                                    kernel_size = 3,
+                                    kernel_size = kernel_size,
                                     stride = stride,
                                     scope = name + '_conv'
                                     )
-                    l = slim.batch_norm(l, scope = name + '_batchnorm')
-
                     return l
 
-            def residual_block(name, l, num_filter, stride, shortcut=True) :
+            def dense_layer(name, l):
 
                 with tf.variable_scope(name):
+                    l = convlayer(name + '_bottle', l, 1, 4 * cfg.GROWTH_RATE, 1)
+                    l = slim.dropout(l, scope = name + '_bottle_dropout1')
 
-                    # Bottleneck 1
-                    fl = slim.conv2d(l,
-                                     num_outputs = int(num_filter / 4),
-                                     kernel_size = 1,
-                                     stride = 1,
-                                     scope = name + '_bottleneck1'
-                                     )
-                    fl = slim.batch_norm(fl, scope = name + '_batchnorm1')
+                    l = convlayer(name + '_notbottle', l, 3, cfg.GROWTH_RATE, 1)
+                    l = slim.dropout(l, scope=name + '_bottle_dropout2')
 
-                    # Conv
-                    fl = slim.conv2d(fl,
-                                     num_outputs = int(num_filter / 4),
-                                     kernel_size = 3,
-                                     stride = stride,
-                                     scope = name + '_conv'
-                                     )
-                    fl = slim.batch_norm(fl, scope = name + '_batchnorm2')
+                return l
 
-                    # Bottleneck 2
-                    fl = slim.conv2d(fl,
-                                     num_outputs = num_filter,
-                                     kernel_size = 1,
-                                     stride = 1,
-                                     scope = name + '_bottleneck2'
-                                     )
-                    # Element wise add
-                    hl = fl + l if shortcut else fl
+            def transition_layer(name, l):
+                num_filter = l.get_shape().as_list()[-1]
 
-                    hl = slim.batch_norm(hl, scope = name + '_batchnorm3')
+                l = slim.batch_norm(l, activation_fn = None, scope = name + '_batchnorm')
+                l = slim.conv2d(l,
+                                num_outputs = cfg.THETA * num_filter,
+                                kernel_size = 1,
+                                stride = 1,
+                                scope = name + '_conv'
+                                )
+                l = tf.nn.avg_pool(l,
+                                   ksize = [1, 2, 2, 1],
+                                   strides = [1, 2, 2, 1],
+                                   padding='SAME',
+                                   name = name + '_Avgpool'
+                                   )
+                return l
 
-                    return hl
+            def dense_block(name, l, num_layer):
+                hl = tf.identity(l)
+
+                for idx in range(num_layer):
+                    l = dense_layer(name + '_layer{}'.format(idx), hl)
+                    hl = tf.concat([hl, l], axis=3)
+
+                return hl
+
 
             def global_avgpooling(name, l):
 
                 with tf.variable_scope(name):
                     ksize = l.get_shape().as_list()[1]
-                    nchannel= l.get_shape().as_list()[-1]
+                    num_filter= l.get_shape().as_list()[-1]
 
+                    # gap_filter shape = [h,w,input_filter, output_filter]
                     gap_filter = tf.get_variable(name='gap_filter',
-                                                 shape=[1, 1, nchannel, cfg.LABEL_CNT],
+                                                 shape=[1, 1, num_filter, cfg.LABEL_CNT],
                                                  dtype=tf.float32,
                                                  initializer=variance_scaling_initializer()
                                                  )
@@ -98,14 +102,13 @@ class resnet():
                                        padding='VALID',
                                        name = name + '_GAP_Avgpool'
                                        )
-                    l = tf.reduce_mean(l, axis=[1,2]
-                                       )
+                    l = tf.reduce_mean(l, axis=[1,2])
 
                 return l
 
             def cnn_model():
 
-                with tf.variable_scope('resnet'):
+                with tf.variable_scope('densenet'):
                     with slim.arg_scope([slim.conv2d, slim.separable_convolution2d, slim.fully_connected],
                                         activation_fn = None,
                                         weights_initializer  = variance_scaling_initializer(),
@@ -118,55 +121,32 @@ class resnet():
                                             zero_debias_moving_mean = True,
                                             activation_fn = self.select_activation_fn(cfg.ACTIVATION_FN),
                                             fused = True):
-                            # def residual_block(name, l, num_filter, stride):
 
-                            l = convlayer('conv0', self.X, 64, 1)
-                            print(l)
 
-                            l = residual_block('res_block1', l, 64, 2, shortcut=False)
-                            print(l)
-                            l = residual_block('res_block2', l, 64, 1)
-                            print(l)
-                            l = residual_block('res_block3', l, 64, 1)
+                            l = convlayer('conv0', self.X, 3, 24, 1)
                             print(l)
 
-                            l = residual_block('res_block4', l, 128, 2, shortcut=False)
+                            l = dense_block('dense_block1', l, 6)
                             print(l)
-                            l = residual_block('res_block5', l, 128, 1)
-                            print(l)
-                            l = residual_block('res_block6', l, 128, 1)
-                            print(l)
-                            l = residual_block('res_block7', l, 128, 1)
+                            l = transition_layer('transition1', l)
                             print(l)
 
-                            l = residual_block('res_block8', l, 256, 2, shortcut=False)
+                            l = dense_block('dense_block2', l, 12)
                             print(l)
-                            l = residual_block('res_block9', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block10', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block11', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block12', l, 256, 1)
-                            print(l)
-                            l = residual_block('res_block13', l, 256, 1)
+                            l = transition_layer('transition2', l)
                             print(l)
 
-                            l = residual_block('res_block14', l, 512, 2, shortcut=False)
+                            l = dense_block('dense_block3', l, 24)
                             print(l)
-                            l = residual_block('res_block15', l, 512, 1)
-                            print(l)
-                            l = residual_block('res_block16', l, 512, 1)
+                            l = transition_layer('transition3', l)
                             print(l)
 
-                            # ksize = l.get_shape().as_list()[1]
-                            # l = tf.nn.avg_pool(l, ksize=[1, ksize, ksize, 1], strides=[1, 1, 1, 1], padding='VALID')
+                            l = dense_block('dense_block4', l, 16)
+                            print(l)
+                            l = transition_layer('transition4', l)
+                            print(l)
 
                             logits = global_avgpooling('GAP', l)
-                            # print(l)
-                            # l = tf.reshape(l, shape=[-1, 512])
-                            # print(l)
-                            # logits = fclayer('fc17', l, self.label_cnt, out_layer=True)
                             print(logits)
 
                 return logits
