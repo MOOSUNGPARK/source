@@ -63,3 +63,4 @@ import numpy as np
 # b = [12,4]
 # print(type(a))
 # if type(a) == str :
+print(pow(2,5))
