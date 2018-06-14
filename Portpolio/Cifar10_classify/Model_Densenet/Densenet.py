@@ -121,33 +121,36 @@ class densenet():
                                             zero_debias_moving_mean = True,
                                             activation_fn = self.select_activation_fn(cfg.ACTIVATION_FN),
                                             fused = True):
+                            with slim.arg_scope([slim.dropout],
+                                                is_training = self.training,
+                                                keep_prob = cfg.DROPOUT_KEEP_PROB):
 
 
-                            l = convlayer('conv0', self.X, 3, 24, 1)
-                            print(l)
+                                l = convlayer('conv0', self.X, 3, 24, 1)
+                                print(l)
 
-                            l = dense_block('dense_block1', l, 6)
-                            print(l)
-                            l = transition_layer('transition1', l)
-                            print(l)
+                                l = dense_block('dense_block1', l, 6)
+                                print(l)
+                                l = transition_layer('transition1', l)
+                                print(l)
 
-                            l = dense_block('dense_block2', l, 12)
-                            print(l)
-                            l = transition_layer('transition2', l)
-                            print(l)
+                                l = dense_block('dense_block2', l, 12)
+                                print(l)
+                                l = transition_layer('transition2', l)
+                                print(l)
 
-                            l = dense_block('dense_block3', l, 24)
-                            print(l)
-                            l = transition_layer('transition3', l)
-                            print(l)
+                                l = dense_block('dense_block3', l, 24)
+                                print(l)
+                                l = transition_layer('transition3', l)
+                                print(l)
 
-                            l = dense_block('dense_block4', l, 16)
-                            print(l)
-                            l = transition_layer('transition4', l)
-                            print(l)
+                                l = dense_block('dense_block4', l, 16)
+                                print(l)
+                                l = transition_layer('transition4', l)
+                                print(l)
 
-                            logits = global_avgpooling('GAP', l)
-                            print(logits)
+                                logits = global_avgpooling('GAP', l)
+                                print(logits)
 
                 return logits
 

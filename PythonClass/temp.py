@@ -63,15 +63,3 @@ import numpy as np
 # b = [12,4]
 # print(type(a))
 # if type(a) == str :
-#     print(1)
-
-l = [2,3]
-k = [3,6]
-
-def a(l, k, idx):
-    l[idx] *= 2
-    k[idx] *= 2
-    return k
-
-print(a(l,k,1))
-print(l)
