@@ -65,20 +65,13 @@ import numpy as np
 # if type(a) == str :
 #     print(1)
 
-import PythonClass.note
-#
-# path = '.\\note.py'
-# with open(path, 'rt') as f:
-#     data = f.read()
-#
-# with open('.\\a.txt', 'at') as f:
-#     f.write(data + '\n')
+l = [2,3]
+k = [3,6]
 
-# a = [ 1,2,3,4,5,6 ]
-# b, c = a[0], a[2]
-# for idx, i in enumerate(a, 3):
-#     print(idx, i)
+def a(l, k, idx):
+    l[idx] *= 2
+    k[idx] *= 2
+    return k
 
-
-for idx in range(5,2):
-    print(idx)
+print(a(l,k,1))
+print(l)
