@@ -63,4 +63,23 @@ import numpy as np
 # b = [12,4]
 # print(type(a))
 # if type(a) == str :
-print(pow(2,5))
+
+def dense_block_v1(name, inputs, group_n, drop_rate, training, n_layer):
+    hl = tf.identity(inputs)
+
+    for idx in range(n_layer):
+        l = dense_layer(name, hl, group_n, drop_rate, training, idx)
+        hl = tf.concat([hl, l], axis=3)
+
+    return hl
+from copy import deepcopy
+
+a = [1,2,3,4,5]
+
+b = a[0]
+
+for i in range(len(a)):
+    a[i] = str(b) + str(a[i])
+    b = deepcopy(a[i])
+
+print(a)
