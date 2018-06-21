@@ -49,7 +49,7 @@ COORD_SCALE = 5.0
 # solver parameter
 #
 
-GPU = ''
+GPU = '6'
 
 LEARNING_RATE = 0.0001
 
