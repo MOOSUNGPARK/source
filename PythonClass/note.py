@@ -6,11 +6,17 @@ import mritopng
 # # pydicom.dcmwrite('00014_X_029692.jpg')
 
 
+#
+# import pydicom
+# import pylab
+# dFile=pydicom.read_file('d:\\00014_X_029692.dcm') #path to file
+# # pylab.imshow(dFile.pixel_array,cmap=pylab.cm.bone) # pylab readings and conversion
+# pylab.imsave('d:\\00014_X_029692_convert.jpg', dFile.pixel_array, cmap=pylab.cm.bone)
+# # pylab.show() #Dispaly
+#
+import numpy as np
+a= int(1)
 
-import pydicom
-import pylab
-dFile=pydicom.read_file('d:\\00014_X_029692.dcm') #path to file
-# pylab.imshow(dFile.pixel_array,cmap=pylab.cm.bone) # pylab readings and conversion
-pylab.imsave('d:\\00014_X_029692_convert.jpg', dFile.pixel_array, cmap=pylab.cm.bone)
-# pylab.show() #Dispaly
-
+b = np.array([1,2,3])
+print(min(b))
+print(min(a))
